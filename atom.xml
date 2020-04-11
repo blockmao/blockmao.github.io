@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blockmao.github.io</id>
     <title>黑猫科技博客</title>
-    <updated>2020-04-11T14:37:00.962Z</updated>
+    <updated>2020-04-11T15:09:13.184Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blockmao.github.io"/>
     <link rel="self" href="https://blockmao.github.io/atom.xml"/>
@@ -15,7 +15,21 @@
         <link href="https://blockmao.github.io/gb8Y95DIJ/">
         </link>
         <updated>2020-04-11T07:51:42.000Z</updated>
-        <content type="html"><![CDATA[<blockquote>
+        <summary type="html"><![CDATA[<ul>
+<li>不可变String</li>
+<li>重载 “+” 与StringBuilder</li>
+<li>格式化输出</li>
+<li>正则表达式</li>
+</ul>
+]]></summary>
+        <content type="html"><![CDATA[<ul>
+<li>不可变String</li>
+<li>重载 “+” 与StringBuilder</li>
+<li>格式化输出</li>
+<li>正则表达式</li>
+</ul>
+<!-- more -->
+<blockquote>
 <p><strong>可以证明，字符串操作是计算机程序设计中最常见的行为。</strong></p>
 </blockquote>
 <h2 id="不可变string">不可变String</h2>
@@ -245,7 +259,10 @@ System.out.println(phone);
         <link href="https://blockmao.github.io/0wSmAUG7K/">
         </link>
         <updated>2020-04-11T07:35:32.000Z</updated>
+        <summary type="html"><![CDATA[<p>SPI是Service Provider Interface的缩写，可以使用它扩展框架和更换的组件。JDK提供了java.util.ServiceLoader工具类，在使用某个服务接口时，它可以帮助我们查找该服务接口的实现类，加载和初始化，前提条件是基于它的约定。</p>
+]]></summary>
         <content type="html"><![CDATA[<p>SPI是Service Provider Interface的缩写，可以使用它扩展框架和更换的组件。JDK提供了java.util.ServiceLoader工具类，在使用某个服务接口时，它可以帮助我们查找该服务接口的实现类，加载和初始化，前提条件是基于它的约定。</p>
+<!-- more -->
 <p>大多数开发人员可能不熟悉，却经常使用它。举个例子，获取MySQL数据库连接，代码如下：</p>
 <pre><code class="language-java">public class MySQLConnect {
 

@@ -4,7 +4,7 @@
 <meta name="description" content=""/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Java基础：SPI详解 | 黑猫科技博客</title>
-<link rel="shortcut icon" href="https://blockmao.github.io/favicon.ico?v=1586615813621">
+<link rel="shortcut icon" href="https://blockmao.github.io/favicon.ico?v=1586616623186">
 <link href="https://cdn.bootcss.com/font-awesome/5.11.2/css/all.css" rel="stylesheet">
 <link rel="stylesheet" href="https://blockmao.github.io/styles/main.css">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
@@ -101,6 +101,7 @@
                 </div>
                 <div class="post-content">
                     <p>SPI是Service Provider Interface的缩写，可以使用它扩展框架和更换的组件。JDK提供了java.util.ServiceLoader工具类，在使用某个服务接口时，它可以帮助我们查找该服务接口的实现类，加载和初始化，前提条件是基于它的约定。</p>
+<!-- more -->
 <p>大多数开发人员可能不熟悉，却经常使用它。举个例子，获取MySQL数据库连接，代码如下：</p>
 <pre><code class="language-java">public class MySQLConnect {
 
