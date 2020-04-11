@@ -2,11 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blockmao.github.io</id>
     <title>黑猫科技博客</title>
-    <updated>2020-04-11T07:16:46.994Z</updated>
+    <updated>2020-04-11T07:17:38.022Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blockmao.github.io"/>
     <link rel="self" href="https://blockmao.github.io/atom.xml"/>
-    <subtitle>温故而知新</subtitle>
     <logo>https://blockmao.github.io/images/avatar.png</logo>
     <icon>https://blockmao.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, 黑猫科技博客</rights>
