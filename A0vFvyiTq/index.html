@@ -1,0 +1,284 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+<meta name="description" content=""/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>CentOS 7 下 yum 安装 Docker CE | 黑猫科技博客</title>
+<link rel="shortcut icon" href="https://blockmao.github.io/favicon.ico?v=1586591722080">
+<link href="https://cdn.bootcss.com/font-awesome/5.11.2/css/all.css" rel="stylesheet">
+<link rel="stylesheet" href="https://blockmao.github.io/styles/main.css">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dockerfile.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dart.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/go.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+
+<!-- DEMO JS -->
+<!--<script src="media/scripts/index.js"></script>-->
+
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+</head>
+<body>
+<div class="main gt-bg-theme-color-first">
+    <nav class="navbar navbar-expand-lg">
+    <div class="navbar-brand">
+        <img class="user-avatar" src="/images/avatar.png" alt="头像">
+        <div class="site-name gt-c-content-color-first">
+            黑猫科技博客
+        </div>
+    </div>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <i class="fas fa-bars gt-c-content-color-first" style="font-size: 18px"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="navbar-nav mr-auto" style="text-align: center">
+            
+                <div class="nav-item">
+                    
+                        <a href="/" class="menu gt-a-link">
+                            首页
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/archives" class="menu gt-a-link">
+                            归档
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/tags" class="menu gt-a-link">
+                            标签
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/post/about" class="menu gt-a-link">
+                            关于
+                        </a>
+                    
+                </div>
+            
+        </div>
+    </div>
+</nav>
+    <div class="post-container">
+        <div class="post-detail gt-bg-theme-color-second">
+            <article class="gt-post-content">
+                <h2 class="post-title">
+                    CentOS 7 下 yum 安装 Docker CE
+                </h2>
+                <div class="post-info">
+                    <time class="post-time gt-c-content-color-first">
+                        · 2020-04-11 ·
+                    </time>
+                    
+                        <a href="https://blockmao.github.io/0hQkaRzl1/" class="post-tags">
+                            # docker
+                        </a>
+                    
+                </div>
+                <div class="post-content">
+                    <blockquote>
+<p><strong>原文地址</strong>：<a href="https://qizhanming.com/blog/2019/01/25/how-to-install-docker-ce-on-centos-7">CentOS 7 下 yum 安装 Docker CE</a></p>
+</blockquote>
+<p><a name="d5i3v"></a></p>
+<h2 id="前言">前言</h2>
+<p><br />Docker 使用越来越多，安装也很简单，本次记录一下基本的步骤。<br /><br>
+<br />Docker 目前支持 CentOS 7 及以后的版本，内核要求至少为 3.10。<br /><br>
+<br />Docker 官网有安装步骤，本文只是记录一下，您也可以参考 <a href="https://docs.docker.com/install/linux/docker-ce/centos/">Get Docker CE for CentOS</a><br /></p>
+<p><a name="6JkKE"></a></p>
+<h3 id="环境说明">环境说明</h3>
+<p><br />CentOS 7（Minimal Install）<br /></p>
+<pre><code class="language-bash">$ cat /etc/redhat-release 
+CentOS Linux release 7.6.1810 (Core)
+</code></pre>
+<p><a name="y8QOP"></a></p>
+<h2 id="准备工作">准备工作</h2>
+<p><a name="ZK0VP"></a></p>
+<h3 id="操作系统要求">操作系统要求</h3>
+<p>CentOS 7 以后都可以安装 Docker 了，也可以确认一下。<br /></p>
+<pre><code class="language-bash">$ uname -a
+Linux localhost.localdomain 3.10.0-957.1.3.el7.x86_64 #1 SMP Thu Nov 29 14:49:43 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
+</code></pre>
+<p><br />Docker 需要用到 <code>centos-extra</code> 这个源，如果您关闭了，需要重启启用，可以参考 <a href="https://wiki.centos.org/AdditionalResources/Repositories">Available Repositories for CentOS</a>。<br /></p>
+<p><a name="ylc8Y"></a></p>
+<h3 id="卸载旧版本">卸载旧版本</h3>
+<p><br />旧版本的 Docker 被叫做 <code>docker</code> 或 <code>docker-engine</code>，如果您安装了旧版本的 Docker ，您需要卸载掉它。<br /></p>
+<pre><code class="language-bash">$ sudo yum remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-engine
+</code></pre>
+<p><br />旧版本的内容在 <code>/var/lib/docker</code> 下，目录中的镜像(images), 容器(containers), 存储卷(volumes), 和 网络配置（networks）都可以保留。<br />Docker CE 包，目前的包名为 <code>docker-ce</code>。<br>
+<a name="3vgIu"></a></p>
+<h2 id="安装">安装</h2>
+<p><a name="dWg0t"></a></p>
+<h3 id="安装准备">安装准备</h3>
+<p>为了方便添加软件源，支持 devicemapper 存储类型，安装如下软件包<br /></p>
+<pre><code class="language-bash">$ sudo yum update
+$ sudo yum install -y yum-utils \
+  device-mapper-persistent-data \
+  lvm2
+</code></pre>
+<p><a name="VD3WR"></a></p>
+<h3 id="添加-yum-软件源">添加 yum 软件源</h3>
+<p><br />添加 Docker 稳定版本的 yum 软件源<br /></p>
+<pre><code class="language-bash">$ sudo yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+</code></pre>
+<p><a name="rPtX0"></a></p>
+<h3 id="安装-docker">安装 Docker</h3>
+<p><br />更新一下 yum 软件源的缓存，并安装 Docker。<br /></p>
+<pre><code class="language-bash">$ sudo yum update
+$ sudo yum install docker-ce
+</code></pre>
+<p><br />如果弹出 GPG key 的接收提示，请确认是否为 <code>060a 61c5 1b55 8a7f 742b 77aa c52f eb6b 621e 9f35</code>，如果是，可以接受并继续安装。<br /><br>
+<br />至此，Docker 已经安装完成了，Docker 服务是没有启动的，操作系统里的 docker 组被创建，但是没有用户在这个组里。<br /></p>
+<blockquote>
+<p><strong><code>注意</code></strong><br>
+默认的 docker 组是没有用户的（也就是说需要使用 sudo 才能使用 docker 命令）。<br>
+您可以将用户添加到 docker 组中（此用户就可以直接使用 docker 命令了）。</p>
+</blockquote>
+<p><br />加入 docker 用户组命令<br /></p>
+<pre><code class="language-bash">$ sudo usermod -aG docker USER_NAME
+</code></pre>
+<p><br />用户更新组信息后，重新登录系统即可生效。<br>
+<a name="AIOUx"></a></p>
+<h3 id="安装指定版本">安装指定版本</h3>
+<p>如果想安装指定版本的 Docker，可以查看一下版本并安装。<br /></p>
+<pre><code class="language-bash">$ yum list docker-ce --showduplicates | sort -r
+docker-ce.x86_64  3:18.09.1-3.el7                     docker-ce-stable
+docker-ce.x86_64  3:18.09.0-3.el7                     docker-ce-stable
+docker-ce.x86_64  18.06.1.ce-3.el7                    docker-ce-stable
+docker-ce.x86_64  18.06.0.ce-3.el7                    docker-ce-stable
+</code></pre>
+<p><br />可以指定版本安装,版本号可以忽略 <code>:</code> 和 <code>el7</code>，如 <code>docker-ce-18.09.1</code><br /></p>
+<pre><code>$ sudo yum install docker-ce-&lt;VERSION STRING&gt;
+</code></pre>
+<p><br />至此，指定版本的 Docker 也安装完成，同样，操作系统内 docker 服务没有启动，只创建了 docker 组，而且组里没有用户。<br>
+<a name="eSjoh"></a></p>
+<h3 id="启动-docker">启动 Docker</h3>
+<p><br />如果想添加到开机启动<br /></p>
+<pre><code class="language-bash">$ sudo systemctl enable docker
+</code></pre>
+<p><br />启动 docker 服务<br /></p>
+<pre><code class="language-bash">$ sudo systemctl start docker
+</code></pre>
+<p><a name="a6v4n"></a></p>
+<h3 id="验证安装">验证安装</h3>
+<p>验证 Docker CE 安装是否正确，可以运行 <code>hello-world</code> 镜像<br /></p>
+<pre><code class="language-bash">$ sudo docker run hello-world
+</code></pre>
+<p><a name="VTVH7"></a></p>
+<h2 id="docker-compose安装">Docker Compose安装</h2>
+<p><br />官网安装步骤地址：<a href="https://docs.docker.com/compose/install/#install-compose">https://docs.docker.com/compose/install/#install-compose</a></p>
+<p>1、Run this command to download the latest version of Docker Compose<br /></p>
+<pre><code class="language-bash">sudo curl -L &quot;https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)&quot; -o /usr/local/bin/docker-compose
+</code></pre>
+<p><br />2、Apply executable permissions to the binary:<br /></p>
+<pre><code class="language-bash">sudo chmod +x /usr/local/bin/docker-compose
+</code></pre>
+<p><br />3、Optionally, install command completion for the bash and zsh shell.<br /><br>
+<br />4、Test the installation<br /></p>
+<pre><code class="language-bash">docker-compose --version
+</code></pre>
+<p><a name="zt1v8"></a></p>
+<h2 id="更新和卸载-docker">更新和卸载 Docker</h2>
+<p><br />使用 yum 管理，更新和卸载都很方便。<br /></p>
+<p><a name="yNB8N"></a></p>
+<h3 id="更新-docker-ce">更新 Docker CE</h3>
+<pre><code class="language-bash">$ sudo yum update docker-ce
+</code></pre>
+<p><a name="SBKxu"></a></p>
+<h3 id="卸载-docker-ce">卸载 Docker CE</h3>
+<pre><code class="language-bash">$ sudo yum remove docker-ce
+</code></pre>
+<p><a name="q1ht7"></a></p>
+<h3 id="删除本地文件">删除本地文件</h3>
+<p><br />注意，docker 的本地文件，包括镜像(images), 容器(containers), 存储卷(volumes)等，都需要手工删除。默认目录存储在 <code>/var/lib/docker</code>。<br /></p>
+<pre><code class="language-bash">$ sudo rm -rf /var/lib/docker
+</code></pre>
+<p><a name="RDRS3"></a></p>
+<h2 id="结论">结论</h2>
+<p><br />本文演示了 CentOS 7 下 yum 安装 Docker CE 的步骤。<br>
+<a name="JIh33"></a></p>
+<h2 id="参考资料">参考资料</h2>
+<p><br /><a href="https://docs.docker.com/install/linux/docker-ce/centos/">Get Docker CE for CentOS</a><br /><a href="https://wiki.centos.org/AdditionalResources/Repositories">Available Repositories for CentOS</a></p>
+
+                </div>
+            </article>
+        </div>
+
+        
+            <div class="next-post">
+                <div class="next gt-c-content-color-first">下一篇</div>
+                <a href="https://blockmao.github.io/OQBr_T227/" class="post-title gt-a-link">
+                    Spring @Value用法小结，#与$的区别
+                </a>
+            </div>
+        
+
+        
+
+        <div class="site-footer gt-c-content-color-first">
+    <div class="slogan gt-c-content-color-first"></div>
+    <div class="social-container">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    </div>
+    <div class="footer-info">
+        
+    </div>
+    <div>
+        Theme by <a href="https://imhanjie.com/" target="_blank">imhanjie</a>, Powered by <a
+                href="https://github.com/getgridea/gridea" target="_blank">Gridea | <a href="https://blockmao.github.io/atom.xml" target="_blank">RSS</a></a>
+    </div>
+</div>
+
+<script>
+    hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+</div>
+</body>
+</html>

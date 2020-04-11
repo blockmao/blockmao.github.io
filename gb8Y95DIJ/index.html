@@ -1,0 +1,375 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+<meta name="description" content=""/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Java基础：字符串String | 黑猫科技博客</title>
+<link rel="shortcut icon" href="https://blockmao.github.io/favicon.ico?v=1586591722080">
+<link href="https://cdn.bootcss.com/font-awesome/5.11.2/css/all.css" rel="stylesheet">
+<link rel="stylesheet" href="https://blockmao.github.io/styles/main.css">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dockerfile.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dart.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/go.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+
+<!-- DEMO JS -->
+<!--<script src="media/scripts/index.js"></script>-->
+
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+</head>
+<body>
+<div class="main gt-bg-theme-color-first">
+    <nav class="navbar navbar-expand-lg">
+    <div class="navbar-brand">
+        <img class="user-avatar" src="/images/avatar.png" alt="头像">
+        <div class="site-name gt-c-content-color-first">
+            黑猫科技博客
+        </div>
+    </div>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <i class="fas fa-bars gt-c-content-color-first" style="font-size: 18px"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="navbar-nav mr-auto" style="text-align: center">
+            
+                <div class="nav-item">
+                    
+                        <a href="/" class="menu gt-a-link">
+                            首页
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/archives" class="menu gt-a-link">
+                            归档
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/tags" class="menu gt-a-link">
+                            标签
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/post/about" class="menu gt-a-link">
+                            关于
+                        </a>
+                    
+                </div>
+            
+        </div>
+    </div>
+</nav>
+    <div class="post-container">
+        <div class="post-detail gt-bg-theme-color-second">
+            <article class="gt-post-content">
+                <h2 class="post-title">
+                    Java基础：字符串String
+                </h2>
+                <div class="post-info">
+                    <time class="post-time gt-c-content-color-first">
+                        · 2020-04-11 ·
+                    </time>
+                    
+                        <a href="https://blockmao.github.io/PcuQ_BSca/" class="post-tags">
+                            # Java基础
+                        </a>
+                    
+                </div>
+                <div class="post-content">
+                    <blockquote>
+<p><strong>可以证明，字符串操作是计算机程序设计中最常见的行为。</strong></p>
+</blockquote>
+<h2 id="不可变string">不可变String</h2>
+<p>String对象是不可变的。查看JDK文档你就会发现，String类中每一个看起来会修改String值的方法，实际上都是创建了一个全新的String对象，以包含修改后的字符串内容，而最初的String对象则丝毫未变。</p>
+<pre><code class="language-java">public class Immutable {
+
+    public static String upcase(String s){
+        return  s.toUpperCase();
+    }
+
+    public static void main(String[] args) {
+        String q = &quot;howdy&quot;;
+        System.out.println(q);
+        String qq = upcase(q);
+        System.out.println(qq);
+        System.out.println(q);
+    }
+}
+</code></pre>
+<h2 id="重载-与stringbuilder">重载 “+” 与StringBuilder</h2>
+<p>不可变性会带来一定的效率问题。用于String的“+”与“+=”是Java中仅有的两个重载过的操作符，而Java并不允许程序重载任何操作符。</p>
+<p>操作符 “+” 可以用来连接String：</p>
+<pre><code class="language-java">public class Concatenation {
+
+    public static void main(String[] args) {
+        String mango = &quot;mango&quot;;
+        String s = &quot;abc&quot; + mango;
+        System.out.println(s);
+    }
+}
+</code></pre>
+<p>想看看以上代码到底是如何工作的吗，可以用JDK自带的工具javap来反编译以上代码，可以得到以下的字节码：</p>
+<figure data-type="image" tabindex="1"><img src="https://upload-images.jianshu.io/upload_images/2889214-8ab86b0285d9dcbf.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240#width=" alt="" loading="lazy"></figure>
+<p>编译器自动引入了java.lang.StringBuilder类（因为它更高效），通过调用append方法将字符串连接起来，最后调用toString方法生成最终结果。</p>
+<h3 id="避免循环体内使用">避免循环体内使用 &quot;+=&quot;</h3>
+<pre><code class="language-java">public String implicit(String[] fields) {
+    String result = &quot;&quot;;
+    for (int i = 0; i &lt; fields.length; i++) {
+        result += fields[i];
+    }
+    return result;
+}
+</code></pre>
+<p>通过反编译得如下字节码：</p>
+<figure data-type="image" tabindex="2"><img src="https://upload-images.jianshu.io/upload_images/2889214-8cd5414821484264.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240#width=" alt="" loading="lazy"></figure>
+<p>StringBuilder是在循环体内构造的，这意味着每经过循环一次，就会创建一个新的StringBuilder对象。</p>
+<h3 id="无意识的递归">无意识的递归</h3>
+<pre><code class="language-java">public class InfiniteRecursion {
+
+    @Override
+    public String toString() {
+        // 打印InfiniteRecursion对象的内存地址
+        return &quot; InfiniteRecursion adress: &quot; + this + &quot;\n&quot;;
+    }
+
+    public static void main(String[] args) {
+        InfiniteRecursion infiniteRecursion  = new InfiniteRecursion();
+        System.out.println(infiniteRecursion);
+    }
+}
+</code></pre>
+<p>运行以上程序出现如下结果：</p>
+<figure data-type="image" tabindex="3"><img src="https://upload-images.jianshu.io/upload_images/2889214-b41c42bd105ac064.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240#width=" alt="" loading="lazy"></figure>
+<p><code>&quot; InfiniteRecursion adress: &quot; + this</code>这里发生了自动类型转换，由InfiniteRecursion类型转换成String类型。因为编译器发现String对象后面跟着一个 “+”，而后面的对象不是String，编译器调用this.toString()方法进行类型转换，因此发生了递归调用。</p>
+<p>如果你真的想要打印出对象的内存地址，应该调用Object.toString()方法。所以不该使用this，而是应该调用super.toString()方法。</p>
+<h2 id="格式化输出">格式化输出</h2>
+<p>Java SE5推出了C语言中printf()风格的格式化输出这一功能，不需要使用重载的 “+”操作符来连接引用号内的字符串或者字符串常量，而是使用特殊的占位符来表示数据将来的位置。</p>
+<pre><code class="language-java">public static void main(String[] args) {
+    int x = 5;
+    double y = 5.332;
+
+    // the old way
+    System.out.println(&quot;Row 1：[&quot; + x + &quot; &quot; + y + &quot;]&quot;);
+
+    // the new way
+    System.out.printf(&quot;Row 1：[%d %f]\n&quot;, x, y);
+    
+    // or
+    System.out.format(&quot;Row 1：[%d %f]\n&quot;, x, y);
+}
+</code></pre>
+<p>运行以上程序，首先将x的值插入到%d的位置，然后将y的值插入%f的位置。这些占位符被称为<strong>格式修饰符</strong>，它们不但说明了将插入什么类型的变量，以及如何对其格式化。</p>
+<h3 id="formatter类">Formatter类</h3>
+<p>在Java中，所有新的格式化功能都由java.util.Formatter类处理。可以将Formatter类看作一个翻译器，它将你的格式化字符串与数据翻译成需要的结果。</p>
+<pre><code class="language-java">Formatter formatter = new Formatter(System.out);
+formatter.format(&quot;Row 1：[%d %f]\n&quot;, x, y);
+</code></pre>
+<h3 id="stringformat">String.format()</h3>
+<p>String.format()是一个static方法，它接受与Formatter.format()方法一样的参数，但返回一个String对象。</p>
+<h3 id="格式化说明符">格式化说明符</h3>
+<p>在插入数据时，如果想要控制空格与对齐，你需要更精细复杂的格式修饰符。以下是其抽象的语法：</p>
+<pre><code>%[argument_index$][flags][width][.precision]conversion
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>argument_index</td>
+<td>需要将参数列表中第几个参数进行格式化</td>
+</tr>
+<tr>
+<td>flags</td>
+<td>一些特殊的格式，比如‘-’代表向左对齐</td>
+</tr>
+<tr>
+<td>width</td>
+<td>输出的最小的宽度，适用于所有的参数类型</td>
+</tr>
+<tr>
+<td>[.precision]</td>
+<td>参数为String，则表示打印String输出字符的最大数量；参数为float，则表示小数点最大位数。不使用于int</td>
+</tr>
+<tr>
+<td>conversion</td>
+<td>接受的参数类型，如s代表后面接String类型的参数；d代表接int型的参数</td>
+</tr>
+</tbody>
+</table>
+<p><a href="http://blog.csdn.net/XIAXIA__/article/details/41720485">参数详细说明</a></p>
+<h2 id="正则表达式">正则表达式</h2>
+<p>正则表达式是一种强大而灵活的文本处理工具。使用正则表达式，我们能够以编程的方式，构造复杂的文本模式，并对输入的字符串进行搜索。一旦找到了匹配这些模式的部分，你就能够随心所欲地对它们进行处理。</p>
+<blockquote>
+<p><strong>Java语言与其他语言相比对反斜杠<code>\</code>有不同的处理</strong>：</p>
+<p>在其他语言中，<code>\\</code>表示“我想要在正则表达式中插入一个普通的（字面上的）反斜杠，请不要给它做任何特殊的意义。” 而在Java中，<code>\\</code>的意思是“我要插入一个正则表达式的反斜杠，所以其后的字符具有特殊的意义。”</p>
+<p>例如，如果你想表示一位数字，那么正则表达式应该是<code>\\d</code>。如果你想插入一个普通的反斜杠，则应该这样<code>\\\\</code>。不过换行和制表符之类的东西只需使用单斜杠线：<code>\n\t</code>。</p>
+</blockquote>
+<h3 id="string类支持正则表达式的方法">String类支持正则表达式的方法</h3>
+<pre><code class="language-java">public String[] split(String regex)
+
+public String[] split(String regex, int limit) 
+
+public String replaceFirst(String regex, String replacement)
+
+public String replaceAll(String regex, String replacement) 
+
+public boolean matches(String regex)
+</code></pre>
+<h3 id="pattern和matcher">Pattern和Matcher</h3>
+<p>一般来说，比起功能有限的String类，我们更愿意构造功能强大的正则表达式对象。通过<code>Pattern.complie()</code>方法来编译你的正则表达式即可。它会根据你的String类型的正则表达式生成一个Pattern对象。接下来，把你想要检索的字符串传入Pattern对象的matcher()方法，matcher()方法会生成一个Matcher对象，它有很多功能可用。</p>
+<pre><code class="language-java">public class RegexExpression {
+
+    public static void main(String[] args) {
+        String phone = &quot;18926119073&quot;;
+        Pattern pattern = Pattern.compile(&quot;1([358][0-9]|4[579]|66
+                |7[0135678]|9[89])[0-9]{8}&quot;);
+        Matcher matcher = pattern.matcher(phone);
+        System.out.println(matcher.matches());
+    }
+}
+</code></pre>
+<h3 id="组">组</h3>
+<p>组是用括号划分的正则表达式，可以根据组的编号来引用某个组。组号为0表示整个表达式，组号1表示被第一对括号括起的组，依次类推。因此，在下面这个表达式：</p>
+<pre><code>A(B(C))D
+</code></pre>
+<p>中有三个组：组0是ABCD，组1是BC，组2是C。</p>
+<p>Mather提供了很多有用的方法具体使用查看API,使用Mather的替换方法可以实现隐藏手机号中间数字、隐藏用户名等。</p>
+<pre><code class="language-java">String phone = &quot;18926119073&quot;;
+Pattern pattern = Pattern.compile(&quot;(\\d{3})\\d{4}(\\d{4})&quot;);
+Matcher matcher = pattern.matcher(phone);
+phone = matcher.replaceAll(&quot;$1****$2&quot;);
+System.out.println(phone);
+</code></pre>
+<h3 id="用正则表达式扫描">用正则表达式扫描</h3>
+<p>Java SE5新增类Scanner类，它可以大大减轻扫描输入的工作。</p>
+<pre><code class="language-java">public class ScannerRead {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(&quot;Sir Robin of Camelot
+        \n22 1.61803&quot;));
+        System.out.println(&quot;What is your name?&quot;);
+        String name = scanner.nextLine();
+        System.out.println(name);
+        System.out.println(&quot;(input: &lt;age&gt; &lt;double&gt;)&quot;);
+        System.out.println(scanner.nextInt()+&quot; &quot;+ scanner.nextDouble());
+    }
+}
+</code></pre>
+<blockquote>
+<p>Scanner的构造期可以接受任何类型的输入对象，包括File对象、InputStream、String或者Readable对象。</p>
+<p>Scanner所有的输入、分词以及翻译的操作都隐藏在不同类型的next方法中，普通的next()方法返回下一个String，所有的基本类型（除char之外）都有对应的next方法，包括BigDecimal和BigInteger。所有的next方法，只有在找到一个完整的分词之后才会返回，hasNext方法用以判断下一个输入分词是否所需的类型。</p>
+</blockquote>
+<p>在默认的情况下，Scanner根据空白符对输入进行分词，但是你可以用正则表达式指定自己所需的定界符：</p>
+<pre><code class="language-java">public class ScannerDelimiter {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(&quot;12,42,78,99&quot;);
+        scanner.useDelimiter(&quot;,&quot;);
+        while (scanner.hasNextInt()){
+            System.out.println(scanner.nextInt());
+        }
+    }
+}
+</code></pre>
+<p>除了能够扫描基本类型之外，你还可以使用自定义的正则表达式进行扫描。如下所示：</p>
+<pre><code class="language-java">public class ThreatAnalyzer {
+
+    static String threatData =
+            &quot;58.27.82.161@02/10/2005\n&quot; +
+            &quot;124.45.82.161@02/10/2005\n&quot; +
+            &quot;58.27.82.161@02/10/2005\n&quot; +
+            &quot;72.27.82.161@02/10/2005\n&quot; +
+             &quot;[Next log section with different data format]&quot;;
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(threatData);
+        String pattern = &quot;(\\d+[.]\\d+[.]\\d+[.]\\d+)@(\\d{2}/\\d{2}/\\d{4})&quot;;
+        while (scanner.hasNext(pattern)) {
+            scanner.next(pattern);
+            MatchResult match = scanner.match();
+            String ip = match.group(1);
+            String date = match.group(2);
+            System.out.format(&quot;Threat on %s from %s\n&quot;, date, ip);
+        }
+    }
+}
+</code></pre>
+
+                </div>
+            </article>
+        </div>
+
+        
+            <div class="next-post">
+                <div class="next gt-c-content-color-first">下一篇</div>
+                <a href="https://blockmao.github.io/0wSmAUG7K/" class="post-title gt-a-link">
+                    Java基础：SPI详解
+                </a>
+            </div>
+        
+
+        
+
+        <div class="site-footer gt-c-content-color-first">
+    <div class="slogan gt-c-content-color-first"></div>
+    <div class="social-container">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    </div>
+    <div class="footer-info">
+        
+    </div>
+    <div>
+        Theme by <a href="https://imhanjie.com/" target="_blank">imhanjie</a>, Powered by <a
+                href="https://github.com/getgridea/gridea" target="_blank">Gridea | <a href="https://blockmao.github.io/atom.xml" target="_blank">RSS</a></a>
+    </div>
+</div>
+
+<script>
+    hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+</div>
+</body>
+</html>

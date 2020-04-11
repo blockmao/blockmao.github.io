@@ -3,7 +3,7 @@
     <meta charset="utf-8"/>
 <meta name="description" content=""/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Spring @Value用法小结，#与$的区别 | 黑猫科技博客</title>
+<title>Java基础：SPI详解 | 黑猫科技博客</title>
 <link rel="shortcut icon" href="https://blockmao.github.io/favicon.ico?v=1586591722080">
 <link href="https://cdn.bootcss.com/font-awesome/5.11.2/css/all.css" rel="stylesheet">
 <link rel="stylesheet" href="https://blockmao.github.io/styles/main.css">
@@ -87,158 +87,147 @@
         <div class="post-detail gt-bg-theme-color-second">
             <article class="gt-post-content">
                 <h2 class="post-title">
-                    Spring @Value用法小结，#与$的区别
+                    Java基础：SPI详解
                 </h2>
                 <div class="post-info">
                     <time class="post-time gt-c-content-color-first">
                         · 2020-04-11 ·
                     </time>
                     
-                        <a href="https://blockmao.github.io/98uZ03lbC/" class="post-tags">
-                            # Spring
+                        <a href="https://blockmao.github.io/PcuQ_BSca/" class="post-tags">
+                            # Java基础
                         </a>
                     
                 </div>
                 <div class="post-content">
-                    <blockquote>
-<p>原文地址：<a href="https://www.cnblogs.com/larryzeal/p/5910149.html">https://www.cnblogs.com/larryzeal/p/5910149.html</a><br /></p>
-</blockquote>
-<h2 id="起因">起因</h2>
-<p><br />一直的用法是 <code>@Value(&quot;${jdbc.driverClass}&quot;)</code>这样，但在Spring官方文档里又看到 <code>@Value(&quot;#{a.b}&quot;)</code>的用法。<br /></p>
-<p><a name="54bbba80"></a></p>
-<h2 id="结论">结论</h2>
-<p><br />@Value的值有两类：<br /></p>
-<ul>
-<li><code>${ property : default_value }</code>：注入的是外部参数对应的property</li>
-<li><code>#{ obj.property? : default_value }</code>：SpEL表达式对应的内容</li>
-</ul>
-<p><br />那个 <code>default_value</code>，就是前面的值为空时的默认值。注意二者的不同。<br /></p>
-<p><a name="8cb94eb1"></a></p>
-<h2 id="例子">例子</h2>
-<p><br />1、使用STS 新建一个Spring Boot项目，依赖部分留空。<br /><br>
-<br />2、在application.properties 文件中添加如下内容：<br /></p>
-<pre><code class="language-properties">jdbc.driverClass=com.mysql
-jdbc.url=3306@local
-jdbc.user=admin
-jdbc.pwd=pwd
-</code></pre>
-<p><br />3、新建类ValueDemo，内容如下：<br /></p>
-<pre><code class="language-java">package cn.larry.spring;
+                    <p>SPI是Service Provider Interface的缩写，可以使用它扩展框架和更换的组件。JDK提供了java.util.ServiceLoader工具类，在使用某个服务接口时，它可以帮助我们查找该服务接口的实现类，加载和初始化，前提条件是基于它的约定。</p>
+<p>大多数开发人员可能不熟悉，却经常使用它。举个例子，获取MySQL数据库连接，代码如下：</p>
+<pre><code class="language-java">public class MySQLConnect {
 
-import javax.annotation.PostConstruct;
+    private final static String url =&quot;jdbc:mysql://localhost:3306/test&quot;;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+    private final static String username = &quot;root&quot;;
 
-@Component
-public class ValueDemo {
-    @Value(&quot;${jdbc.driverClass}&quot;)
-    private String driver;
-    
-    @PostConstruct
-    public void run(){
-        System.out.println(driver);
+    private final static String password = &quot;root&quot;;
+
+    public static Connection getConnection() throws SQLException {
+       // Class.forName(&quot;com.mysql.jdbc.Driver&quot;);
+       return DriverManager.getConnection(url,username,password);
     }
 
+    public static void main(String[] args) throws SQLException {
+        System.out.println(getConnection());
+    }
 }
 </code></pre>
-<p><br />4、启动Spring Boot项目，输出如下：<br /></p>
-<figure data-type="image" tabindex="1"><img src="https://blockmao.github.io/post-images/1586589021505.png" alt="" loading="lazy"></figure>
+<p>上述代码是可以运行成功的。接下来我们就分析下DriverManager.getConnection(url,username,password)的过程，探究其如何获取到数据库连接Connection？</p>
+<p>1、首先分析<code>loadInitialDrivers</code>方法，其源码如下：</p>
+<pre><code class="language-java">private static void loadInitialDrivers() {
+        
+    /**
+     * 获取ServiceLoader实例，loadedDrivers = 
+     * new ServiceLoader(Driver.class,Thread.currentThread().getContextClassLoader())
+     */
+    ServiceLoader&lt;Driver&gt; loadedDrivers = ServiceLoader.load(Driver.class);
+    /**
+      * 获取serviceLoader实例的迭代器,driversIterator = new LazyIterator(service, loader)
+      */
+    Iterator&lt;Driver&gt; driversIterator = loadedDrivers.iterator();
+
+    /**
+      * 应用程序加载器（Thread.currentThread().getContextClassLoader()）
+      * 加载classpath下META-INF/services/java.sql.Driver文件，
+      * 解析java.sql.Driver文件的内容将其存储在LazyIterator.pending实例变量中。
+      */
+    while(driversIterator.hasNext()) {
+        /**
+        * 通过反射实例化java.sql.Driver文件中的类（com.mysql.jdbc.Driver，
+            com.mysql.fabric.jdbc.FabricMySQLDriver）
+        */
+        driversIterator.next();
+    }
+}
+</code></pre>
 <blockquote>
-<p>这就是常用的 <code>${properties}</code>，很简单。继续。</p>
+<p>约定：当服务的提供者，提供了服务接口（java.sql.Driver）的一种实现之后，在jar包的META-INF/services/目录里同时创建一个以服务接口命名的文件。该文件里就是实现该服务接口的具体实现类。而当外部程序装配这个模块的时候，就能通过该jar包META-INF/services/里的配置文件找到具体的实现类名，并装载实例化，完成模块的注入。</p>
 </blockquote>
-<p><br />5、再新建一个类AnotherObj，内容如下：<br /></p>
-<pre><code class="language-java">package cn.larry.spring;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-@Component
-public class AnotherObj {
-    @Value(&quot;${jdbc.user}&quot;)
-    private String name;
-    @Value(&quot;${jdbc.pwd}&quot;)
-    private String pwd;
-
-    public String getName() {
-        return name;
+<p>2、com.mysql.jdbc.Driver类的初始化</p>
+<pre><code class="language-java">static {
+    try {
+        // registeredDrivers存储Dirver实例
+        java.sql.DriverManager.registerDriver(new Driver());
+    } catch (SQLException E) {
+        throw new RuntimeException(&quot;Can't register driver!&quot;);
     }
+}
+</code></pre>
+<p>3、获取数据库连接</p>
+<pre><code class="language-java">for(DriverInfo aDriver : registeredDrivers) {
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    if(isDriverAllowed(aDriver.driver, callerCL)) {
+        try {
+            // 获取Connection
+            Connection con = aDriver.driver.connect(url, info);
+            if (con != null) {
+                return (con);
+            }
+        } catch (SQLException ex) {
+            if (reason == null) {
+                reason = ex;
+            }
+        }
 
-    public String getPwd() {
-        return pwd;
-    }
-
-    public void setPwd(String pwd) {
-        this.pwd = pwd;
+    } else {
+        println(&quot;skipping: &quot; + aDriver.getClass().getName());
     }
 
 }
 </code></pre>
-<p><br />6、修改ValueDemo，如下：<br /></p>
-<pre><code class="language-java">package cn.larry.spring;
+<br/>
+<h2 id="使用示例">使用示例</h2>
+<p>1、目录结构</p>
+<figure data-type="image" tabindex="1"><img src="https://blockmao.github.io/post-images/1586590964854.png" alt="" loading="lazy"></figure>
+<p>2、示例代码</p>
+<pre><code class="language-java">
+public interface HelloService {
 
-import javax.annotation.PostConstruct;
+    String sayHello();
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+}
 
-@Component
-public class ValueDemo {
-    @Value(&quot;${jdbc.driverClass}&quot;)
-    private String driver;
-    
-    @Value(&quot;#{anotherObj.name}&quot;)
-    private String name;
-    
-    @PostConstruct
-    public void run(){
-        System.out.println(driver);
-        System.out.println(name);
+public class CHelloService implements HelloService {
+
+    @Override
+    public String sayHello() {
+        return &quot;Welcome to C world&quot;;
     }
-    
+
+}
+
+public class JavaHelloService implements HelloService {
+
+    @Override
+    public String sayHello() {
+        return &quot;Welcome to Java world&quot;;
+    }
+
 }
 </code></pre>
-<p>7、再次执行Spring Boot项目，结果如下：</p>
-<figure data-type="image" tabindex="2"><img src="https://blockmao.github.io/post-images/1586589066868.png" alt="" loading="lazy"></figure>
-<p>这里展示的是 <code>#{ SpEL }</code>的效果。</p>
-<p>8、有意思的是，二者可以结合使用，如：<code>#{ '${}' }</code> ，注意单引号，注意不能反过来，测试如下。</p>
-<p>application.properties文件中添加一行：<code>media=jdbc.url</code></p>
-<p>ValueDemo类修改如下：</p>
-<pre><code class="language-java">package cn.larry.spring;
+<p>3、com.codersm.study.jdk.spi.HelloService文件内容</p>
+<pre><code class="language-bash">com.codersm.study.jdk.spi.impl.CHelloService
+com.codersm.study.jdk.spi.impl.JavaHelloService
+</code></pre>
+<p>4、测试</p>
+<pre><code class="language-java">
+@Test
+public void testSpi() {
 
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-@Component
-public class ValueDemo {
-    @Value(&quot;${jdbc.driverClass}&quot;)
-    private String driver;
-    
-    @Value(&quot;#{anotherObj.name}&quot;)
-    private String name;
-    
-//    @Value(&quot;${ '#{anotherObj.media}' }&quot;) //这个不支持。
-    @Value(&quot;#{ '${media}' }&quot;)
-    private String media;
-    
-    @PostConstruct
-    public void run(){
-        System.out.println(driver);
-        System.out.println(name);
-        System.out.println(media);
+    ServiceLoader&lt;HelloService&gt; loaders = ServiceLoader.load(HelloService.class);
+    for (HelloService loader : loaders) {
+        System.out.println(loader.sayHello());
     }
-    
 }
 </code></pre>
-<p><br />9、执行Spring Boot项目，结果如下：<br /></p>
-<figure data-type="image" tabindex="3"><img src="https://blockmao.github.io/post-images/1586589095169.png" alt="" loading="lazy"></figure>
-<p><br />另外，默认值很浅显，也不再测试了。</p>
 
                 </div>
             </article>
@@ -247,8 +236,8 @@ public class ValueDemo {
         
             <div class="next-post">
                 <div class="next gt-c-content-color-first">下一篇</div>
-                <a href="https://blockmao.github.io/dong-tai-xiu-gai-java-ri-zhi-ji-bie/" class="post-title gt-a-link">
-                    动态修改Java日志级别
+                <a href="https://blockmao.github.io/A0vFvyiTq/" class="post-title gt-a-link">
+                    CentOS 7 下 yum 安装 Docker CE
                 </a>
             </div>
         
