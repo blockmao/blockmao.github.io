@@ -1,35 +1,106 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-    <id>https://blockmao.github.io</id>
-    <title>Gridea</title>
-    <updated>2020-04-11T05:26:02.487Z</updated>
-    <generator>https://github.com/jpmonette/feed</generator>
-    <link rel="alternate" href="https://blockmao.github.io"/>
-    <link rel="self" href="https://blockmao.github.io/atom.xml"/>
-    <subtitle>温故而知新</subtitle>
-    <logo>https://blockmao.github.io/images/avatar.png</logo>
-    <icon>https://blockmao.github.io/favicon.ico</icon>
-    <rights>All rights reserved 2020, Gridea</rights>
-    <entry>
-        <title type="html"><![CDATA[动态修改Java日志级别]]></title>
-        <id>https://blockmao.github.io/post/dong-tai-xiu-gai-java-ri-zhi-ji-bie/</id>
-        <link href="https://blockmao.github.io/post/dong-tai-xiu-gai-java-ri-zhi-ji-bie/">
-        </link>
-        <updated>2019-11-09T05:18:27.000Z</updated>
-        <summary type="html"><![CDATA[<p>作为开发人员，定位问题是我们的日常工作，而日志是我们定位问题非常重要的依据。传统方式定位问题时，往往是如下步骤：</p>
-<ol>
-<li>将日志级别设低，例如 DEBUG ；</li>
-<li>重启应用；</li>
-<li>复现问题，观察日志；</li>
-</ol>
-<p>实际上是可以动态修改日志级别，无需重启应用，立即生效。本文收集了3种动态修改日志级别的文章，分别是</p>
-<ol>
-<li><a href="http://www.itmuch.com/spring-boot/change-logger-level/">Spring Boot 2动态修改日志级别</a></li>
-<li><a href="https://blog.csdn.net/yusimiao/article/details/95032376">阿里在线诊断工具Arthas调整日志等级记录</a></li>
-<li><a href="https://tech.meituan.com/2017/02/17/change-log-level.html">美团日志级别动态调整——小工具解决大问题</a></li>
-</ol>
-]]></summary>
-        <content type="html"><![CDATA[<p>作为开发人员，定位问题是我们的日常工作，而日志是我们定位问题非常重要的依据。传统方式定位问题时，往往是如下步骤：</p>
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>动态修改Java日志级别 | Gridea</title>
+<link rel="shortcut icon" href="https://blockmao.github.io/favicon.ico?v=1586582728177">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://blockmao.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="动态修改Java日志级别 | Gridea - Atom Feed" href="https://blockmao.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="作为开发人员，定位问题是我们的日常工作，而日志是我们定位问题非常重要的依据。传统方式定位问题时，往往是如下步骤：
+
+将日志级别设低，例如 DEBUG ；
+重启应用；
+复现问题，观察日志；
+
+实际上是可以动态修改日志级别，无需重启应用，立即生..." />
+    <meta name="keywords" content="Java日志" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://blockmao.github.io">
+  <img class="avatar" src="https://blockmao.github.io/images/avatar.png?v=1586582728177" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              动态修改Java日志级别
+            </h2>
+            <div class="post-info">
+              <span>
+                2019-11-09
+              </span>
+              <span>
+                10 min read
+              </span>
+              
+                <a href="https://blockmao.github.io/tag/zcWXRfboy/" class="post-tag">
+                  # Java日志
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://blockmao.github.io/post-images/dong-tai-xiu-gai-java-ri-zhi-ji-bie.jpg" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>作为开发人员，定位问题是我们的日常工作，而日志是我们定位问题非常重要的依据。传统方式定位问题时，往往是如下步骤：</p>
 <ol>
 <li>将日志级别设低，例如 DEBUG ；</li>
 <li>重启应用；</li>
@@ -328,6 +399,83 @@ if (LogConstant.LOG4J_LOGGER_FACTORY.equals(type)) {
 </code></pre>
 </li>
 </ol>
-]]></content>
-    </entry>
-</feed>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#spirng-boot%E5%8A%A8%E6%80%81%E4%BF%AE%E6%94%B9%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB">Spirng Boot动态修改日志级别</a>
+<ul>
+<li><a href="#%E7%A4%BA%E4%BE%8B">示例</a></li>
+<li><a href="#%E6%B5%8B%E8%AF%95">测试</a></li>
+<li><a href="#%E5%8E%9F%E7%90%86">原理</a></li>
+</ul>
+</li>
+<li><a href="#arthas-ognl%E5%91%BD%E4%BB%A4%E5%8A%A8%E6%80%81%E4%BF%AE%E6%94%B9%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB">Arthas ognl命令动态修改日志级别</a></li>
+<li><a href="#%E7%BE%8E%E5%9B%A2%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB%E5%8A%A8%E6%80%81%E8%B0%83%E6%95%B4%E5%B0%8F%E5%B7%A5%E5%85%B7">美团日志级别动态调整小工具</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://blockmao.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
