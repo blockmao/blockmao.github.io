@@ -1,19 +1,166 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blockmao.github.io</id>
-    <title>Gridea</title>
-    <updated>2020-04-11T05:26:02.487Z</updated>
+    <title>黑猫科技博客</title>
+    <updated>2020-04-11T07:14:51.133Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blockmao.github.io"/>
     <link rel="self" href="https://blockmao.github.io/atom.xml"/>
     <subtitle>温故而知新</subtitle>
     <logo>https://blockmao.github.io/images/avatar.png</logo>
     <icon>https://blockmao.github.io/favicon.ico</icon>
-    <rights>All rights reserved 2020, Gridea</rights>
+    <rights>All rights reserved 2020, 黑猫科技博客</rights>
+    <entry>
+        <title type="html"><![CDATA[Spring @Value用法小结，#与$的区别]]></title>
+        <id>https://blockmao.github.io/OQBr_T227/</id>
+        <link href="https://blockmao.github.io/OQBr_T227/">
+        </link>
+        <updated>2020-04-11T07:03:46.000Z</updated>
+        <content type="html"><![CDATA[<blockquote>
+<p>原文地址：<a href="https://www.cnblogs.com/larryzeal/p/5910149.html">https://www.cnblogs.com/larryzeal/p/5910149.html</a><br /></p>
+</blockquote>
+<h2 id="起因">起因</h2>
+<p><br />一直的用法是 <code>@Value(&quot;${jdbc.driverClass}&quot;)</code>这样，但在Spring官方文档里又看到 <code>@Value(&quot;#{a.b}&quot;)</code>的用法。<br /></p>
+<p><a name="54bbba80"></a></p>
+<h2 id="结论">结论</h2>
+<p><br />@Value的值有两类：<br /></p>
+<ul>
+<li><code>${ property : default_value }</code>：注入的是外部参数对应的property</li>
+<li><code>#{ obj.property? : default_value }</code>：SpEL表达式对应的内容</li>
+</ul>
+<p><br />那个 <code>default_value</code>，就是前面的值为空时的默认值。注意二者的不同。<br /></p>
+<p><a name="8cb94eb1"></a></p>
+<h2 id="例子">例子</h2>
+<p><br />1、使用STS 新建一个Spring Boot项目，依赖部分留空。<br /><br>
+<br />2、在application.properties 文件中添加如下内容：<br /></p>
+<pre><code class="language-properties">jdbc.driverClass=com.mysql
+jdbc.url=3306@local
+jdbc.user=admin
+jdbc.pwd=pwd
+</code></pre>
+<p><br />3、新建类ValueDemo，内容如下：<br /></p>
+<pre><code class="language-java">package cn.larry.spring;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ValueDemo {
+    @Value(&quot;${jdbc.driverClass}&quot;)
+    private String driver;
+    
+    @PostConstruct
+    public void run(){
+        System.out.println(driver);
+    }
+
+}
+</code></pre>
+<p><br />4、启动Spring Boot项目，输出如下：<br /></p>
+<figure data-type="image" tabindex="1"><img src="https://blockmao.github.io/post-images/1586589021505.png" alt="" loading="lazy"></figure>
+<blockquote>
+<p>这就是常用的 <code>${properties}</code>，很简单。继续。</p>
+</blockquote>
+<p><br />5、再新建一个类AnotherObj，内容如下：<br /></p>
+<pre><code class="language-java">package cn.larry.spring;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class AnotherObj {
+    @Value(&quot;${jdbc.user}&quot;)
+    private String name;
+    @Value(&quot;${jdbc.pwd}&quot;)
+    private String pwd;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getPwd() {
+        return pwd;
+    }
+
+    public void setPwd(String pwd) {
+        this.pwd = pwd;
+    }
+
+}
+</code></pre>
+<p><br />6、修改ValueDemo，如下：<br /></p>
+<pre><code class="language-java">package cn.larry.spring;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ValueDemo {
+    @Value(&quot;${jdbc.driverClass}&quot;)
+    private String driver;
+    
+    @Value(&quot;#{anotherObj.name}&quot;)
+    private String name;
+    
+    @PostConstruct
+    public void run(){
+        System.out.println(driver);
+        System.out.println(name);
+    }
+    
+}
+</code></pre>
+<p>7、再次执行Spring Boot项目，结果如下：</p>
+<figure data-type="image" tabindex="2"><img src="https://blockmao.github.io/post-images/1586589066868.png" alt="" loading="lazy"></figure>
+<p>这里展示的是 <code>#{ SpEL }</code>的效果。</p>
+<p>8、有意思的是，二者可以结合使用，如：<code>#{ '${}' }</code> ，注意单引号，注意不能反过来，测试如下。</p>
+<p>application.properties文件中添加一行：<code>media=jdbc.url</code></p>
+<p>ValueDemo类修改如下：</p>
+<pre><code class="language-java">package cn.larry.spring;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ValueDemo {
+    @Value(&quot;${jdbc.driverClass}&quot;)
+    private String driver;
+    
+    @Value(&quot;#{anotherObj.name}&quot;)
+    private String name;
+    
+//    @Value(&quot;${ '#{anotherObj.media}' }&quot;) //这个不支持。
+    @Value(&quot;#{ '${media}' }&quot;)
+    private String media;
+    
+    @PostConstruct
+    public void run(){
+        System.out.println(driver);
+        System.out.println(name);
+        System.out.println(media);
+    }
+    
+}
+</code></pre>
+<p><br />9、执行Spring Boot项目，结果如下：<br /></p>
+<figure data-type="image" tabindex="3"><img src="https://blockmao.github.io/post-images/1586589095169.png" alt="" loading="lazy"></figure>
+<p><br />另外，默认值很浅显，也不再测试了。</p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[动态修改Java日志级别]]></title>
-        <id>https://blockmao.github.io/post/dong-tai-xiu-gai-java-ri-zhi-ji-bie/</id>
-        <link href="https://blockmao.github.io/post/dong-tai-xiu-gai-java-ri-zhi-ji-bie/">
+        <id>https://blockmao.github.io/dong-tai-xiu-gai-java-ri-zhi-ji-bie/</id>
+        <link href="https://blockmao.github.io/dong-tai-xiu-gai-java-ri-zhi-ji-bie/">
         </link>
         <updated>2019-11-09T05:18:27.000Z</updated>
         <summary type="html"><![CDATA[<p>作为开发人员，定位问题是我们的日常工作，而日志是我们定位问题非常重要的依据。传统方式定位问题时，往往是如下步骤：</p>
@@ -22,12 +169,7 @@
 <li>重启应用；</li>
 <li>复现问题，观察日志；</li>
 </ol>
-<p>实际上是可以动态修改日志级别，无需重启应用，立即生效。本文收集了3种动态修改日志级别的文章，分别是</p>
-<ol>
-<li><a href="http://www.itmuch.com/spring-boot/change-logger-level/">Spring Boot 2动态修改日志级别</a></li>
-<li><a href="https://blog.csdn.net/yusimiao/article/details/95032376">阿里在线诊断工具Arthas调整日志等级记录</a></li>
-<li><a href="https://tech.meituan.com/2017/02/17/change-log-level.html">美团日志级别动态调整——小工具解决大问题</a></li>
-</ol>
+<p>实际上是可以动态修改日志级别，无需重启应用，立即生效。</p>
 ]]></summary>
         <content type="html"><![CDATA[<p>作为开发人员，定位问题是我们的日常工作，而日志是我们定位问题非常重要的依据。传统方式定位问题时，往往是如下步骤：</p>
 <ol>
@@ -35,13 +177,14 @@
 <li>重启应用；</li>
 <li>复现问题，观察日志；</li>
 </ol>
-<p>实际上是可以动态修改日志级别，无需重启应用，立即生效。本文收集了3种动态修改日志级别的文章，分别是</p>
+<p>实际上是可以动态修改日志级别，无需重启应用，立即生效。</p>
+<!-- more -->
+<p>本文收集了3种动态修改日志级别的文章，分别是</p>
 <ol>
 <li><a href="http://www.itmuch.com/spring-boot/change-logger-level/">Spring Boot 2动态修改日志级别</a></li>
 <li><a href="https://blog.csdn.net/yusimiao/article/details/95032376">阿里在线诊断工具Arthas调整日志等级记录</a></li>
 <li><a href="https://tech.meituan.com/2017/02/17/change-log-level.html">美团日志级别动态调整——小工具解决大问题</a></li>
 </ol>
-<!-- more -->
 <h2 id="spirng-boot动态修改日志级别">Spirng Boot动态修改日志级别</h2>
 <p>从 Spring Boot 1.5 开始，Spring Boot Actuator 组件就已提供动态修改日志级别的能力。</p>
 <h3 id="示例">示例</h3>
@@ -328,6 +471,252 @@ if (LogConstant.LOG4J_LOGGER_FACTORY.equals(type)) {
 </code></pre>
 </li>
 </ol>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[SLF4J详解]]></title>
+        <id>https://blockmao.github.io/UwO0NFpFm/</id>
+        <link href="https://blockmao.github.io/UwO0NFpFm/">
+        </link>
+        <updated>2019-11-01T06:03:55.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="slf4j概述">SLF4J概述</h2>
+<p>The Simple Logging Facade for Java (SLF4J) serves as a simple facade or abstraction for various logging frameworks, such as java.util.logging, logback and log4j. SLF4J allows the end-user to plug in the desired logging framework at deployment time.</p>
+<blockquote>
+<p><code>Simple Logging Facade for Java</code>（SLF4J）可用作各种日志框架的简单外观或抽象，例如<code>java.util.logging</code>，<code>logback</code>和<code>log4j</code>。<code>SLF4J</code>允许最终用户在部署时插入所需的日志记录框架。</p>
+</blockquote>
+<h3 id="binding-with-a-logging-framework-at-deployment-time">Binding with a logging framework at deployment time</h3>
+<p>The <code>SLF4J</code> distribution ships with several jar files referred to as <code>SLF4J bindings</code>, with each binding corresponding to a supported framework.</p>
+<ul>
+<li>
+<p><strong>slf4j-log4j12-1.7.27.jar</strong></p>
+<p>Binding for <code>log4j version 1.2</code>, a widely used logging framework. You also need to place <code>log4j.jar</code> on your class path.</p>
+</li>
+<li>
+<p><strong>slf4j-jdk14-1.7.27.jar</strong></p>
+<p>Binding for <code>java.util.logging</code>, also referred to as JDK 1.4 logging</p>
+</li>
+<li>
+<p><strong>slf4j-nop-1.7.27.jar</strong></p>
+<p>Binding for NOP, silently discarding all logging.</p>
+</li>
+<li>
+<p><strong>slf4j-simple-1.7.27.jar</strong></p>
+<p>Binding for Simple implementation, which outputs all events to System.err. Only messages of level INFO and higher are printed. This binding may be useful in the context of small applications.</p>
+</li>
+<li>
+<p><strong>slf4j-jcl-1.7.27.jar</strong></p>
+<p>Binding for <code>Jakarta Commons Logging</code>. This binding will delegate all SLF4J logging to JCL.</p>
+</li>
+<li>
+<p><strong>logback-classic-1.2.3.jar (requires logback-core-1.2.3.jar)</strong></p>
+<p>There are also SLF4J bindings external to the SLF4J project, <code>Logback's ch.qos.logback.classic.Logger</code>class is a direct implementation of SLF4J's <code>org.slf4j.Logger</code> interface.</p>
+</li>
+</ul>
+<p>To switch logging frameworks, just replace slf4j bindings on your class path. For example, to switch from java.util.logging to log4j, just replace slf4j-jdk14-1.7.27.jar with slf4j-log4j12-1.7.27.jar.</p>
+<blockquote>
+<p>要切换日志框架，只需替换类路径上的slf4j绑定。例如，要从java.util.logging切换到log4j，只需将slf4j-jdk14-1.7.27.jar替换为slf4j-log4j12-1.7.27.jar即可。</p>
+</blockquote>
+<p><strong>SLF4J does not rely on any special class loader machinery. In fact, each SLF4J binding is hardwired at compile time to use one and only one specific logging framework</strong>. For example, the slf4j-log4j12-1.7.27.jar binding is bound at compile time to use log4j. In your code, in addition to slf4j-api-1.7.27.jar, you simply drop one and only one binding of your choice onto the appropriate class path location. Do not place more than one binding on your class path.</p>
+<figure data-type="image" tabindex="1"><img src="https://user-gold-cdn.xitu.io/2019/9/21/16d5229391b1665b?w=1152&amp;h=636&amp;f=png&amp;s=82592" alt="" loading="lazy"></figure>
+<h3 id="consolidate-logging-via-slf4j通过slf4j整合日志记录">Consolidate logging via SLF4J（通过SLF4J整合日志记录）</h3>
+<p>SLF4J caters for this common use-case by providing bridging modules for JCL, java.util.logging and log4j.</p>
+<blockquote>
+<p>SLF4J通过为JCL，java.util.logging和log4j提供桥接模块来满足这种常见用例。</p>
+</blockquote>
+<figure data-type="image" tabindex="2"><img src="https://user-gold-cdn.xitu.io/2019/9/21/16d52293d0832281?w=1587&amp;h=1123&amp;f=png&amp;s=180307" alt="" loading="lazy"></figure>
+<h3 id="mapped-diagnostic-context-mdc-support">Mapped Diagnostic Context (MDC) support</h3>
+<p><code>Mapped Diagnostic Context</code> is essentially a map maintained by the logging framework where the application code provides key-value pairs which can then be inserted by the logging framework in log messages. <code>MDC</code> data can also be highly helpful in filtering messages or triggering certain actions.</p>
+<blockquote>
+<p>映射诊断上下文本质上是由日志框架维护的映射，其中应用程序代码提供键值对，然后日志消息中的日志记录框架可以插入键值对。 MDC数据在过滤消息或触发某些操作方面也非常有用。</p>
+</blockquote>
+<p><code>SLF4J</code> supports <code>MDC</code>, or mapped diagnostic context. If the underlying logging framework offers <code>MDC</code> functionality, then <code>SLF4J</code> will delegate to the underlying framework's MDC. Note that at this time, only <code>log4j</code> and <code>logback</code> offer <code>MDC</code> functionality. If the underlying framework does not offer <code>MDC</code>, for example <code>java.util.logging</code>, then <code>SLF4J</code> will still store <code>MDC</code> data but the information therein will need to be retrieved by custom user code.</p>
+<blockquote>
+<p>SLF4J支持MDC或映射诊断上下文。 如果底层日志记录框架提供了MDC功能，那么SLF4J将委托给底层框架的MDC。 请注意，目前只有log4j和logback提供MDC功能。 如果底层框架不提供MDC，例如java.util.logging，则SLF4J仍将存储MDC数据，但其中的信息需要由自定义用户代码检索。</p>
+</blockquote>
+<h2 id="原理分析">原理分析</h2>
+<figure data-type="image" tabindex="3"><img src="https://user-gold-cdn.xitu.io/2019/9/21/16d52292a208942d?w=1606&amp;h=798&amp;f=png&amp;s=71389" alt="" loading="lazy"></figure>
+<p>通过上图可知<code>SLF4J</code>能够抽象各种具体日志框架，是由<code>StaticLoggerBinder</code>类完成。接下来重点看看<code>bind()</code>方法是如何查找<code>StaticLoggerBinder</code>类，源码如下：</p>
+<pre><code class="language-java">private final static void bind() {
+    try {
+        // 查找类路径下所有的StaticLoggerBinder类
+        Set&lt;URL&gt; staticLoggerBinderPathSet = findPossibleStaticLoggerBinderPathSet();
+        // 如果存在多个StaticLoggerBinder类，则打印日志
+        reportMultipleBindingAmbiguity(staticLoggerBinderPathSet);
+        // 获取StaticLoggerBinder实例，如果不存在，则抛出NoClassDefFoundError异常
+        StaticLoggerBinder.getSingleton();
+        INITIALIZATION_STATE = SUCCESSFUL_INITIALIZATION;
+        // 打印实际使用StaticLoggerBinder类
+        reportActualBinding(staticLoggerBinderPathSet);
+        fixSubstitutedLoggers();
+    } catch (NoClassDefFoundError ncde) {
+        String msg = ncde.getMessage();
+        if (messageContainsOrgSlf4jImplStaticLoggerBinder(msg)) {
+            INITIALIZATION_STATE = NOP_FALLBACK_INITIALIZATION;
+            Util.report(&quot;Failed to load class \&quot;org.slf4j.impl.StaticLoggerBinder\&quot;.&quot;);
+            Util.report(&quot;Defaulting to no-operation (NOP) logger implementation&quot;);
+            Util.report(&quot;See &quot; + NO_STATICLOGGERBINDER_URL + &quot; for further details.&quot;);
+        } else {
+            failedBinding(ncde);
+            throw ncde;
+        }
+    } catch (java.lang.NoSuchMethodError nsme) {
+        String msg = nsme.getMessage();
+        if (msg != null &amp;&amp; msg.indexOf(&quot;org.slf4j.impl.StaticLoggerBinder.getSingleton()&quot;) != -1) {
+            INITIALIZATION_STATE = FAILED_INITIALIZATION;
+            Util.report(&quot;slf4j-api 1.6.x (or later) is incompatible with this binding.&quot;);
+            Util.report(&quot;Your binding is version 1.5.5 or earlier.&quot;);
+            Util.report(&quot;Upgrade your binding to version 1.6.x.&quot;);
+        }
+        throw nsme;
+    } catch (Exception e) {
+        failedBinding(e);
+        throw new IllegalStateException(&quot;Unexpected initialization failure&quot;, e);
+    }
+}
+
+private static String  STATIC_LOGGER_BINDER_PATH = &quot;org/slf4j/impl/StaticLoggerBinder.class&quot;;
+
+private static Set&lt;URL&gt; findPossibleStaticLoggerBinderPathSet() {
+    Set&lt;URL&gt; staticLoggerBinderPathSet = new LinkedHashSet&lt;URL&gt;();
+    try {
+        ClassLoader loggerFactoryClassLoader = LoggerFactory.class.getClassLoader();
+        Enumeration&lt;URL&gt; paths;
+        if (loggerFactoryClassLoader == null) {
+            paths = ClassLoader.getSystemResources(STATIC_LOGGER_BINDER_PATH);
+        } else {
+            paths = loggerFactoryClassLoader.getResources(STATIC_LOGGER_BINDER_PATH);
+        }
+        while (paths.hasMoreElements()) {
+            URL path = (URL) paths.nextElement();
+            staticLoggerBinderPathSet.add(path);
+        }
+    } catch (IOException ioe) {
+        Util.report(&quot;Error getting resources from path&quot;, ioe);
+    }
+    return staticLoggerBinderPathSet;
+}
+</code></pre>
+<h2 id="slf4j与logback集成">SLF4J与logback集成</h2>
+<ol>
+<li>
+<p>maven依赖包如下：</p>
+<pre><code class="language-xml">&lt;!-- slf4j-api --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+    &lt;artifactId&gt;slf4j-api&lt;/artifactId&gt;
+    &lt;version&gt;1.7.12&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;!-- logback --&gt;
+&lt;dependency&gt; 
+    &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt; 
+    &lt;artifactId&gt;logback-core&lt;/artifactId&gt; 
+    &lt;version&gt;1.1.3&lt;/version&gt; 
+&lt;/dependency&gt;
+&lt;!-- logback-classic（已含有对slf4j的集成包） --&gt; 
+&lt;dependency&gt; 
+    &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt; 
+    &lt;artifactId&gt;logback-classic&lt;/artifactId&gt; 
+    &lt;version&gt;1.1.3&lt;/version&gt; 
+&lt;/dependency&gt;
+</code></pre>
+</li>
+<li>
+<p>编写logback的配置文件logback.xml，内容如下:</p>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;configuration&gt;
+  &lt;appender name=&quot;STDOUT&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
+    &lt;encoder&gt;
+      &lt;pattern&gt;%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n&lt;/pattern&gt;
+    &lt;/encoder&gt;
+  &lt;/appender&gt;
+  &lt;root level=&quot;DEBUG&quot;&gt;          
+    &lt;appender-ref ref=&quot;STDOUT&quot; /&gt;
+  &lt;/root&gt;  
+&lt;/configuration&gt;
+</code></pre>
+</li>
+<li>
+<p>使用方式</p>
+<pre><code class="language-java">private static final Logger logger=LoggerFactory.getLogger(LogbackTest.class);
+public static void main(String[] args){
+    if(logger.isDebugEnabled()){
+        logger.debug(&quot;slf4j-logback debug message&quot;);
+    }
+    if(logger.isInfoEnabled()){
+        logger.info(&quot;slf4j-logback info message&quot;);
+    }
+    if(logger.isTraceEnabled()){
+        logger.trace(&quot;slf4j-logback trace message&quot;);
+    }
+}
+</code></pre>
+</li>
+<li>
+<p><code>org.slf4j.impl.StaticLoggerBinder</code>类实现</p>
+<figure data-type="image" tabindex="4"><img src="https://user-gold-cdn.xitu.io/2019/9/21/16d5229f496aaaf8?w=850&amp;h=394&amp;f=png&amp;s=68466" alt="" loading="lazy"></figure>
+<hr>
+<figure data-type="image" tabindex="5"><img src="https://user-gold-cdn.xitu.io/2019/9/21/16d5229f49549aa2?w=1332&amp;h=350&amp;f=png&amp;s=42439" alt="" loading="lazy"></figure>
+</li>
+</ol>
+<h2 id="slf4j与log4集成">SLF4J与log4集成</h2>
+<ol>
+<li>
+<p>maven依赖包如下：</p>
+<pre><code class="language-xml">&lt;!-- slf4j --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+    &lt;artifactId&gt;slf4j-api&lt;/artifactId&gt;
+    &lt;version&gt;1.7.12&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;!-- slf4j-log4j --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+    &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;
+    &lt;version&gt;1.7.12&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;!-- log4j --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;log4j&lt;/groupId&gt;
+    &lt;artifactId&gt;log4j&lt;/artifactId&gt;
+    &lt;version&gt;1.2.17&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+</li>
+<li>
+<p>编写log4j.properties配置文件,放到类路径下</p>
+<pre><code class="language-properties">log4j.rootLogger = debug, console
+log4j.appender.console = org.apache.log4j.ConsoleAppender
+log4j.appender.console.layout = org.apache.log4j.PatternLayout
+log4j.appender.console.layout.ConversionPattern = %-d{yyyy-MM-dd HH:mm:ss} %m%n
+</code></pre>
+</li>
+<li>
+<p>使用方式</p>
+<pre><code class="language-java">private static Logger logger=LoggerFactory.getLogger(Log4j2Slf4jTest.class);
+public static void main(String[] args){
+    if(logger.isTraceEnabled()){
+        logger.trace(&quot;slf4j-log4j2 trace message&quot;);
+    }
+    if(logger.isDebugEnabled()){
+        logger.debug(&quot;slf4j-log4j2 debug message&quot;);
+    }
+    if(logger.isInfoEnabled()){
+        logger.info(&quot;slf4j-log4j2 info message&quot;);
+    }
+}
+</code></pre>
+</li>
+<li>
+<p><code>org.slf4j.impl.StaticLoggerBinder</code>类实现</p>
+<figure data-type="image" tabindex="6"><img src="https://user-gold-cdn.xitu.io/2019/9/21/16d522ab91f86aa7?w=1204&amp;h=510&amp;f=png&amp;s=124354" alt="" loading="lazy"></figure>
+<hr>
+<figure data-type="image" tabindex="7"><img src="https://user-gold-cdn.xitu.io/2019/9/21/16d5229f49bae156?w=1374&amp;h=470&amp;f=png&amp;s=60777" alt="" loading="lazy"></figure>
+</li>
+</ol>
+<h2 id="参考资料">参考资料</h2>
+<p><a href="https://my.oschina.net/xianggao/blog/515996">jcl与jul、log4j1、log4j2、logback的集成原理</a></p>
 ]]></content>
     </entry>
 </feed>

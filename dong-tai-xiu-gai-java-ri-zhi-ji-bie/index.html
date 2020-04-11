@@ -1,0 +1,453 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+<meta name="description" content=""/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>动态修改Java日志级别 | 黑猫科技博客</title>
+<link rel="shortcut icon" href="https://blockmao.github.io/favicon.ico?v=1586589172862">
+<link href="https://cdn.bootcss.com/font-awesome/5.11.2/css/all.css" rel="stylesheet">
+<link rel="stylesheet" href="https://blockmao.github.io/styles/main.css">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dockerfile.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dart.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/go.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+
+<!-- DEMO JS -->
+<!--<script src="media/scripts/index.js"></script>-->
+
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+</head>
+<body>
+<div class="main gt-bg-theme-color-first">
+    <nav class="navbar navbar-expand-lg">
+    <div class="navbar-brand">
+        <img class="user-avatar" src="/images/avatar.png" alt="头像">
+        <div class="site-name gt-c-content-color-first">
+            黑猫科技博客
+        </div>
+    </div>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <i class="fas fa-bars gt-c-content-color-first" style="font-size: 18px"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="navbar-nav mr-auto" style="text-align: center">
+            
+                <div class="nav-item">
+                    
+                        <a href="/" class="menu gt-a-link">
+                            首页
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/archives" class="menu gt-a-link">
+                            归档
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/tags" class="menu gt-a-link">
+                            标签
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/post/about" class="menu gt-a-link">
+                            关于
+                        </a>
+                    
+                </div>
+            
+        </div>
+    </div>
+</nav>
+    <div class="post-container">
+        <div class="post-detail gt-bg-theme-color-second">
+            <article class="gt-post-content">
+                <h2 class="post-title">
+                    动态修改Java日志级别
+                </h2>
+                <div class="post-info">
+                    <time class="post-time gt-c-content-color-first">
+                        · 2019-11-09 ·
+                    </time>
+                    
+                        <a href="https://blockmao.github.io/zcWXRfboy/" class="post-tags">
+                            # Java日志
+                        </a>
+                    
+                </div>
+                <div class="post-content">
+                    <p>作为开发人员，定位问题是我们的日常工作，而日志是我们定位问题非常重要的依据。传统方式定位问题时，往往是如下步骤：</p>
+<ol>
+<li>将日志级别设低，例如 DEBUG ；</li>
+<li>重启应用；</li>
+<li>复现问题，观察日志；</li>
+</ol>
+<p>实际上是可以动态修改日志级别，无需重启应用，立即生效。</p>
+<!-- more -->
+<p>本文收集了3种动态修改日志级别的文章，分别是</p>
+<ol>
+<li><a href="http://www.itmuch.com/spring-boot/change-logger-level/">Spring Boot 2动态修改日志级别</a></li>
+<li><a href="https://blog.csdn.net/yusimiao/article/details/95032376">阿里在线诊断工具Arthas调整日志等级记录</a></li>
+<li><a href="https://tech.meituan.com/2017/02/17/change-log-level.html">美团日志级别动态调整——小工具解决大问题</a></li>
+</ol>
+<h2 id="spirng-boot动态修改日志级别">Spirng Boot动态修改日志级别</h2>
+<p>从 Spring Boot 1.5 开始，Spring Boot Actuator 组件就已提供动态修改日志级别的能力。</p>
+<h3 id="示例">示例</h3>
+<p>1.引入<code>spring-boot-starter-actuator</code>依赖，内容如下：</p>
+<pre><code class="language-xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-actuator&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>2.编写测试代码，如下：</p>
+<pre><code class="language-java">@SpringBootApplication
+public class DemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+}
+
+@RestController
+public class DemoController {
+
+    private static Logger logger = LoggerFactory.getLogger(DemoController.class);
+
+    @GetMapping(&quot;/helloworld&quot;)
+    public String helloworld(){
+        logger.debug(&quot;welcome to learn spring boot&quot;);
+        return &quot;welcome to learn spring boot&quot;;
+    }
+
+}
+</code></pre>
+<p>3.配置文件</p>
+<pre><code class="language-yaml">management:
+  endpoints:
+    web:
+      exposure:
+        include: 'loggers'
+</code></pre>
+<blockquote>
+<p>Spring Boot 2.x默认只暴露 /health 以及 /info 端点，而日志控制需要用到 /loggers 端点，故而需要设置将其暴露。</p>
+</blockquote>
+<h3 id="测试">测试</h3>
+<p><code>/loggers</code>端点提供了查看以及修改日志级别的能力。</p>
+<ol>
+<li>
+<p>查看当前应用各包/类的日志级别<br>
+访问 http://localhost:8080/actuator/loggers ，可看到类似如下的结果：</p>
+<figure data-type="image" tabindex="1"><img src="https://user-gold-cdn.xitu.io/2019/10/9/16dac1a715b57a71?w=1080&amp;h=1454&amp;f=png&amp;s=204826" alt="" loading="lazy"></figure>
+</li>
+<li>
+<p>查看指定包/类日志详情<br>
+访问 http://localhost:8080/actuator/loggers/com.blockmao.springboot.demo.DemoController ，可看到类似如下的结果：</p>
+<figure data-type="image" tabindex="2"><img src="https://user-gold-cdn.xitu.io/2019/10/9/16dac1a715a0369e?w=1558&amp;h=274&amp;f=png&amp;s=49012" alt="" loading="lazy"></figure>
+</li>
+<li>
+<p>修改日志级别<br>
+默认的日志级别是INFO，所以<code>DemoController</code>的debug日志不会打印。下面来尝试将该类的日志级别设为<code>DEBUG</code>，如下</p>
+<figure data-type="image" tabindex="3"><img src="https://user-gold-cdn.xitu.io/2019/10/9/16dac1a71a69dcbf?w=1680&amp;h=408&amp;f=png&amp;s=71269" alt="" loading="lazy"></figure>
+<p>此时，访问 http://localhost:8080/helloworld 会看到类似如下的日志：</p>
+<figure data-type="image" tabindex="4"><img src="https://user-gold-cdn.xitu.io/2019/10/9/16dac1a71c7e3011?w=1860&amp;h=172&amp;f=png&amp;s=40951" alt="" loading="lazy"></figure>
+<p>并且，此时再访问 http://localhost:8080/actuator/loggers/com.itmuch.logging.TestController ，可看到类似如下的结果：</p>
+<figure data-type="image" tabindex="5"><img src="https://user-gold-cdn.xitu.io/2019/10/9/16dac1a71c897bfb?w=1430&amp;h=280&amp;f=png&amp;s=49437" alt="" loading="lazy"></figure>
+</li>
+</ol>
+<h3 id="原理">原理</h3>
+<p><strong>Actuator</strong>有约定，<code>/actuator/xxx</code>端点的定义代码在 <code>xxxEndpoint</code>中。找到类<code>org.springframework.boot.actuate.logging.LoggersEndpoint</code>，代码如下：</p>
+<pre><code class="language-java">@Endpoint(id = &quot;loggers&quot;)
+public class LoggersEndpoint {
+	private final LoggingSystem loggingSystem;
+
+	@WriteOperation
+	public void configureLogLevel(@Selector String name,
+			@Nullable LogLevel configuredLevel) {
+		Assert.notNull(name, &quot;Name must not be empty&quot;);
+		this.loggingSystem.setLogLevel(name, configuredLevel);
+	}
+	// ...其他省略
+}
+</code></pre>
+<blockquote>
+<p>其中， <code>Endpoint</code> 、<code>WriteOperation</code> 、<code>@Selector</code>都是Spring Boot 2.0开始提供的新注解。</p>
+</blockquote>
+<p><code>@Endpoint(id = &quot;loggers&quot;)</code>用来描述Spring Boot Actuator 的端点，这样就会产生一个<code>/actuator/loggers</code>的路径，它类似于Spring MVC的<code>@RequestMapping(&quot;loggers&quot;)</code>。</p>
+<p>@WriteOperation 表示这是一个写操作，它类似于Spring MVC的 @PostMapping 。Spring Boot Actuator还提供了其他操作，如下表：</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>HTTP method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>@ReadOperation</td>
+<td>GET</td>
+</tr>
+<tr>
+<td>@WriteOperation</td>
+<td>POST</td>
+</tr>
+<tr>
+<td>@DeleteOperation</td>
+<td>DELETE</td>
+</tr>
+</tbody>
+</table>
+<p>@Selector用于筛选@Endpoint注解返回值的子集，它类似于Spring MVC的@PathVariable 。</p>
+<p>这样，上面的代码就很好理解了— <code>configureLogLevel</code> 方法：送POST请求后，name就是我们传的包名或者类名，configuredLevel就是我们传的消息体。</p>
+<p><code>org.springframework.boot.logging.LoggingSystem#setLogLevel</code>是抽象方法，具体实现由子类完成。<code>LoggingSystem</code>类结构如下图所示：</p>
+<figure data-type="image" tabindex="6"><img src="https://user-gold-cdn.xitu.io/2019/10/9/16dac1a71b661bba?w=1242&amp;h=658&amp;f=png&amp;s=55177" alt="" loading="lazy"></figure>
+<p>LoggingSystem有这么多实现类，Spring Boot怎么知道什么情况下用什么LoggingSystem呢？可在 <code>org.springframework.boot.logging.LoggingSystem</code> 找到类似如下代码：</p>
+<pre><code class="language-java">public abstract class LoggingSystem {
+	private static final Map&lt;String, String&gt; SYSTEMS;
+
+	static {
+		Map&lt;String, String&gt; systems = new LinkedHashMap&lt;&gt;();
+		systems.put(&quot;ch.qos.logback.core.Appender&quot;,
+				&quot;org.springframework.boot.logging.logback.LogbackLoggingSystem&quot;);
+		systems.put(&quot;org.apache.logging.log4j.core.impl.Log4jContextFactory&quot;,
+				&quot;org.springframework.boot.logging.log4j2.Log4J2LoggingSystem&quot;);
+		systems.put(&quot;java.util.logging.LogManager&quot;,
+				&quot;org.springframework.boot.logging.java.JavaLoggingSystem&quot;);
+		SYSTEMS = Collections.unmodifiableMap(systems);
+	}
+
+	/**
+	 * Detect and return the logging system in use. Supports Logback and Java Logging.
+	 * @param classLoader the classloader
+	 * @return the logging system
+	 */
+	public static LoggingSystem get(ClassLoader classLoader) {
+		String loggingSystem = System.getProperty(SYSTEM_PROPERTY);
+		if (StringUtils.hasLength(loggingSystem)) {
+			if (NONE.equals(loggingSystem)) {
+				return new NoOpLoggingSystem();
+			}
+			return get(classLoader, loggingSystem);
+		}
+		return SYSTEMS.entrySet().stream()
+				.filter((entry) -&gt; ClassUtils.isPresent(entry.getKey(), classLoader))
+				.map((entry) -&gt; get(classLoader, entry.getValue())).findFirst()
+				.orElseThrow(() -&gt; new IllegalStateException(
+						&quot;No suitable logging system located&quot;));
+	}
+  // 省略不相关内容...
+}
+</code></pre>
+<p>由代码不难发现，其实就是构建了一个名为 SYSTEMS 的map，作为各种日志系统的字典；然后在 get 方法中，看应用是否加载了map中的类；如果加载了，就通过反射，初始化<code>LoggingSystem</code> 。例如：Spring Boot发现当前应用加载了<code>ch.qos.logback.core.Appender</code> ，就去实例化 <code>org.springframework.boot.logging.logback.LogbackLoggingSystem</code>。</p>
+<h2 id="arthas-ognl命令动态修改日志级别">Arthas ognl命令动态修改日志级别</h2>
+<p>使用<code>ognl</code>命令可以动态修改日志级别，步骤如下：</p>
+<ol>
+<li>
+<p>查找当前类的classLoaderHash</p>
+<figure data-type="image" tabindex="7"><img src="https://user-gold-cdn.xitu.io/2019/10/9/16dac1b4c0dda963?w=1510&amp;h=78&amp;f=png&amp;s=54236" alt="" loading="lazy"></figure>
+</li>
+<li>
+<p>用OGNL获取logger</p>
+<figure data-type="image" tabindex="8"><img src="https://user-gold-cdn.xitu.io/2019/10/9/16dac1a91c9c634d?w=1446&amp;h=476&amp;f=png&amp;s=252162" alt="" loading="lazy"></figure>
+<blockquote>
+<p>可以发现日志使用的是Logback框架。</p>
+</blockquote>
+</li>
+<li>
+<p>单独设置DemoController的logger level</p>
+<figure data-type="image" tabindex="9"><img src="https://user-gold-cdn.xitu.io/2019/10/9/16dac1a9b6aa8a2a?w=2082&amp;h=1042&amp;f=png&amp;s=597082" alt="" loading="lazy"></figure>
+</li>
+<li>
+<p>全局设置logger level</p>
+<figure data-type="image" tabindex="10"><img src="https://user-gold-cdn.xitu.io/2019/10/9/16dac1aa098223fa?w=2030&amp;h=1052&amp;f=png&amp;s=592302" alt="" loading="lazy"></figure>
+</li>
+</ol>
+<blockquote>
+<p>如果使用的日志框架是<code>log4j</code>，则使用上述<code>ognl</code>命令则会报错。至于为什么？请阅读<a href="https://blog.blockmao.cn/2019/09/21/Java%E6%97%A5%E5%BF%97%E6%A1%86%E6%9E%B6%EF%BC%9ASLF4J%E8%AF%A6%E8%A7%A3/#more">Java日志：SLF4J详解</a></p>
+</blockquote>
+<h2 id="美团日志级别动态调整小工具">美团日志级别动态调整小工具</h2>
+<ol>
+<li>
+<p>初始化：确定所使用的日志框架，获取配置文件中所有的Logger内存实例，并将它们的引用缓存到Map容器中。</p>
+<pre><code class="language-java">String type = StaticLoggerBinder.getSingleton().getLoggerFactoryClassStr();
+if (LogConstant.LOG4J_LOGGER_FACTORY.equals(type)) {
+    logFrameworkType = LogFrameworkType.LOG4J;
+    Enumeration enumeration = org.apache.log4j.LogManager.getCurrentLoggers();
+    while (enumeration.hasMoreElements()) {
+        org.apache.log4j.Logger logger = (org.apache.log4j.Logger) enumeration.nextElement();
+        if (logger.getLevel() != null) {
+            loggerMap.put(logger.getName(), logger);
+        }
+    }
+    org.apache.log4j.Logger rootLogger = org.apache.log4j.LogManager.getRootLogger();
+    loggerMap.put(rootLogger.getName(), rootLogger);
+} else if (LogConstant.LOGBACK_LOGGER_FACTORY.equals(type)) {
+    logFrameworkType = LogFrameworkType.LOGBACK;
+    ch.qos.logback.classic.LoggerContext loggerContext = (ch.qos.logback.classic.LoggerContext) LoggerFactory.getILoggerFactory();
+    for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
+        if (logger.getLevel() != null) {
+            loggerMap.put(logger.getName(), logger);
+        }
+    }
+    ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+    loggerMap.put(rootLogger.getName(), rootLogger);
+} else if (LogConstant.LOG4J2_LOGGER_FACTORY.equals(type)) {
+    logFrameworkType = LogFrameworkType.LOG4J2;
+    org.apache.logging.log4j.core.LoggerContext loggerContext = (org.apache.logging.log4j.core.LoggerContext) org.apache.logging.log4j.LogManager.getContext(false);
+    Map&lt;String, org.apache.logging.log4j.core.config.LoggerConfig&gt; map = loggerContext.getConfiguration().getLoggers();
+    for (org.apache.logging.log4j.core.config.LoggerConfig loggerConfig : map.values()) {
+        String key = loggerConfig.getName();
+        if (StringUtils.isBlank(key)) {
+            key = &quot;root&quot;;
+        }
+        loggerMap.put(key, loggerConfig);
+    }
+} else {
+    logFrameworkType = LogFrameworkType.UNKNOWN;
+    LOG.error(&quot;Log框架无法识别: type={}&quot;, type);
+}
+</code></pre>
+</li>
+<li>
+<p>获取Logger列表：从本地Map容器取出。</p>
+<pre><code class="language-java">private String getLoggerList() {
+    JSONObject result = new JSONObject();
+    result.put(&quot;logFramework&quot;, logFrameworkType);
+    JSONArray loggerList = new JSONArray();
+    for (ConcurrentMap.Entry&lt;String, Object&gt; entry : loggerMap.entrySet()) {
+        JSONObject loggerJSON = new JSONObject();
+        loggerJSON.put(&quot;loggerName&quot;, entry.getKey());
+        if (logFrameworkType == LogFrameworkType.LOG4J) {
+            org.apache.log4j.Logger targetLogger = (org.apache.log4j.Logger) entry.getValue();
+            loggerJSON.put(&quot;logLevel&quot;, targetLogger.getLevel().toString());
+        } else if (logFrameworkType == LogFrameworkType.LOGBACK) {
+            ch.qos.logback.classic.Logger targetLogger = (ch.qos.logback.classic.Logger) entry.getValue();
+            loggerJSON.put(&quot;logLevel&quot;, targetLogger.getLevel().toString());
+        } else if (logFrameworkType == LogFrameworkType.LOG4J2) {
+            org.apache.logging.log4j.core.config.LoggerConfig targetLogger = (org.apache.logging.log4j.core.config.LoggerConfig) entry.getValue();
+            loggerJSON.put(&quot;logLevel&quot;, targetLogger.getLevel().toString());
+        } else {
+            loggerJSON.put(&quot;logLevel&quot;, &quot;Logger的类型未知,无法处理!&quot;);
+        }
+        loggerList.add(loggerJSON);
+    }
+    result.put(&quot;loggerList&quot;, loggerList);
+    LOG.info(&quot;getLoggerList: result={}&quot;, result.toString());
+    return result.toString();
+}
+</code></pre>
+</li>
+<li>
+<p>修改Logger的级别</p>
+<pre><code class="language-java">private String setLogLevel(JSONArray data) {
+    LOG.info(&quot;setLogLevel: data={}&quot;, data);
+    List&lt;LoggerBean&gt; loggerList = parseJsonData(data);
+    if (CollectionUtils.isEmpty(loggerList)) {
+        return &quot;&quot;;
+    }
+    for (LoggerBean loggerbean : loggerList) {
+        Object logger = loggerMap.get(loggerbean.getName());
+        if (logger == null) {
+            throw new RuntimeException(&quot;需要修改日志级别的Logger不存在&quot;);
+        }
+        if (logFrameworkType == LogFrameworkType.LOG4J) {
+            org.apache.log4j.Logger targetLogger = (org.apache.log4j.Logger) logger;
+            org.apache.log4j.Level targetLevel = org.apache.log4j.Level.toLevel(loggerbean.getLevel());
+            targetLogger.setLevel(targetLevel);
+        } else if (logFrameworkType == LogFrameworkType.LOGBACK) {
+            ch.qos.logback.classic.Logger targetLogger = (ch.qos.logback.classic.Logger) logger;
+            ch.qos.logback.classic.Level targetLevel = ch.qos.logback.classic.Level.toLevel(loggerbean.getLevel());
+            targetLogger.setLevel(targetLevel);
+        } else if (logFrameworkType == LogFrameworkType.LOG4J2) {
+            org.apache.logging.log4j.core.config.LoggerConfig loggerConfig = (org.apache.logging.log4j.core.config.LoggerConfig) logger;
+            org.apache.logging.log4j.Level targetLevel = org.apache.logging.log4j.Level.toLevel(loggerbean.getLevel());
+            loggerConfig.setLevel(targetLevel);
+            org.apache.logging.log4j.core.LoggerContext ctx = (org.apache.logging.log4j.core.LoggerContext) org.apache.logging.log4j.LogManager.getContext(false);
+            ctx.updateLoggers(); // This causes all Loggers to refetch information from their LoggerConfig.
+        } else {
+            throw new RuntimeException(&quot;Logger的类型未知,无法处理!&quot;);
+        }
+    }
+    return &quot;success&quot;;
+}
+</code></pre>
+</li>
+</ol>
+
+                </div>
+            </article>
+        </div>
+
+        
+            <div class="next-post">
+                <div class="next gt-c-content-color-first">下一篇</div>
+                <a href="https://blockmao.github.io/UwO0NFpFm/" class="post-title gt-a-link">
+                    SLF4J详解
+                </a>
+            </div>
+        
+
+        
+
+        <div class="site-footer gt-c-content-color-first">
+    <div class="slogan gt-c-content-color-first">温故而知新</div>
+    <div class="social-container">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    </div>
+    <div class="footer-info">
+        Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+    </div>
+    <div>
+        Theme by <a href="https://imhanjie.com/" target="_blank">imhanjie</a>, Powered by <a
+                href="https://github.com/getgridea/gridea" target="_blank">Gridea | <a href="https://blockmao.github.io/atom.xml" target="_blank">RSS</a></a>
+    </div>
+</div>
+
+<script>
+    hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+</div>
+</body>
+</html>
