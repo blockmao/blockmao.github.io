@@ -2,13 +2,160 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blockmao.github.io</id>
     <title>黑猫科技博客</title>
-    <updated>2020-05-24T14:30:02.347Z</updated>
+    <updated>2020-06-25T06:07:56.430Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blockmao.github.io"/>
     <link rel="self" href="https://blockmao.github.io/atom.xml"/>
     <logo>https://blockmao.github.io/images/avatar.png</logo>
     <icon>https://blockmao.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, 黑猫科技博客</rights>
+    <entry>
+        <title type="html"><![CDATA[JDK SPI源码详解]]></title>
+        <id>https://blockmao.github.io/uti_4wymf/</id>
+        <link href="https://blockmao.github.io/uti_4wymf/">
+        </link>
+        <updated>2020-06-25T05:59:21.000Z</updated>
+        <summary type="html"><![CDATA[<h2 id="认识jdk-spi">认识JDK SPI</h2>
+<p>SPI是Service Provider Interface的缩写，可以使用它扩展框架和更换的组件。</p>
+<p><strong>JDK提供了java.util.ServiceLoader工具类，在使用某个服务接口时，它可以帮助我们查找该服务接口的实现类，加载和初始化，前提条件是基于它的约定</strong>。</p>
+<p>大多数开发人员可能不熟悉，却经常使用它。</p>
+]]></summary>
+        <content type="html"><![CDATA[<h2 id="认识jdk-spi">认识JDK SPI</h2>
+<p>SPI是Service Provider Interface的缩写，可以使用它扩展框架和更换的组件。</p>
+<p><strong>JDK提供了java.util.ServiceLoader工具类，在使用某个服务接口时，它可以帮助我们查找该服务接口的实现类，加载和初始化，前提条件是基于它的约定</strong>。</p>
+<p>大多数开发人员可能不熟悉，却经常使用它。</p>
+<!-- more -->
+<p>举个例子，获取MySQL数据库连接，代码如下：</p>
+<pre><code class="language-java">public class MySQLConnect {
+
+    private final static String url =&quot;jdbc:mysql://localhost:3306/test&quot;;
+
+    private final static String username = &quot;root&quot;;
+
+    private final static String password = &quot;root&quot;;
+
+    public static Connection getConnection() throws SQLException {
+       // Class.forName(&quot;com.mysql.jdbc.Driver&quot;);
+       return DriverManager.getConnection(url,username,password);
+    }
+
+    public static void main(String[] args) throws SQLException {
+        System.out.println(getConnection());
+    }
+}
+</code></pre>
+<p>上述代码是可以运行成功的。接下来我们就分析下<code>DriverManager.getConnection(url,username,password)</code></p>
+<!-- more -->
+<!-- more -->
+<p>的过程，探究其如何获取到数据库连接Connection？</p>
+<p>1、首先分析loadInitialDrivers方法，其源码如下：</p>
+<pre><code class="language-java">private static void loadInitialDrivers() {
+        
+    /**
+     * 获取ServiceLoader实例，loadedDrivers = 
+     * new ServiceLoader(Driver.class,Thread.currentThread().getContextClassLoader())
+     */
+    ServiceLoader&lt;Driver&gt; loadedDrivers = ServiceLoader.load(Driver.class);
+    /**
+      * 获取serviceLoader实例的迭代器,driversIterator = new LazyIterator(service, loader)
+      */
+    Iterator&lt;Driver&gt; driversIterator = loadedDrivers.iterator();
+
+    /**
+      * 应用程序加载器（Thread.currentThread().getContextClassLoader()）
+      * 加载classpath下META-INF/services/java.sql.Driver文件，
+      * 解析java.sql.Driver文件的内容将其存储在LazyIterator.pending实例变量中。
+      */
+    while(driversIterator.hasNext()) {
+        /**
+        * 通过反射实例化java.sql.Driver文件中的类（com.mysql.jdbc.Driver，
+            com.mysql.fabric.jdbc.FabricMySQLDriver）
+        */
+        driversIterator.next();
+    }
+}
+</code></pre>
+<blockquote>
+<p><strong>约定</strong>：当服务的提供者，提供了服务接口（java.sql.Driver）的一种实现之后，在jar包的META-INF/services/目录里同时创建一个以服务接口命名的文件。该文件里就是实现该服务接口的具体实现类。而当外部程序装配这个模块的时候，就能通过该jar包META-INF/services/里的配置文件找到具体的实现类名，并装载实例化，完成模块的注入。</p>
+</blockquote>
+<p>2、com.mysql.jdbc.Driver类的初始化<br>
+</p>
+<pre><code class="language-java"> static {
+    try {
+        // registeredDrivers存储Dirver实例
+        java.sql.DriverManager.registerDriver(new Driver());
+    } catch (SQLException E) {
+        throw new RuntimeException(&quot;Can't register driver!&quot;);
+    }
+}
+</code></pre>
+<p>3、获取数据库连接</p>
+<pre><code class="language-java">for(DriverInfo aDriver : registeredDrivers) {
+
+    if(isDriverAllowed(aDriver.driver, callerCL)) {
+        try {
+            // 获取Connection
+            Connection con = aDriver.driver.connect(url, info);
+            if (con != null) {
+                return (con);
+            }
+        } catch (SQLException ex) {
+            if (reason == null) {
+                reason = ex;
+            }
+        }
+
+    } else {
+        println(&quot;skipping: &quot; + aDriver.getClass().getName());
+    }
+
+}
+</code></pre>
+<h2 id="jdk-spi简单使用">JDK SPI简单使用</h2>
+<p>1、目录结构</p>
+<figure data-type="image" tabindex="1"><img src="https://user-gold-cdn.xitu.io/2018/1/18/16107d7894f8aa77?w=524&amp;h=289&amp;f=png&amp;s=21497" alt="目录结构" loading="lazy"></figure>
+<p>2、示例代码</p>
+<pre><code class="language-java">public interface HelloService {
+
+    String sayHello();
+
+}
+
+public class CHelloService implements HelloService {
+
+    @Override
+    public String sayHello() {
+        return &quot;Welcome to C world&quot;;
+    }
+
+}
+
+public class JavaHelloService implements HelloService {
+
+    @Override
+    public String sayHello() {
+        return &quot;Welcome to Java world&quot;;
+    }
+
+}
+</code></pre>
+<p>3、com.codersm.study.jdk.spi.HelloService文件内容</p>
+<pre><code class="language-text">com.codersm.study.jdk.spi.impl.CHelloService
+com.codersm.study.jdk.spi.impl.JavaHelloService
+</code></pre>
+<p>4、测试</p>
+<pre><code class="language-java">@Test
+public void testSpi() {
+
+    ServiceLoader&lt;HelloService&gt; loaders = ServiceLoader.load(HelloService.class);
+    for (HelloService loader : loaders) {
+        System.out.println(loader.sayHello());
+    }
+}
+
+</code></pre>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Java NIO 通信基础]]></title>
         <id>https://blockmao.github.io/3ctgVXS7D/</id>
@@ -309,7 +456,7 @@ while (selector.select() &gt; 0) {
 ]]></content>
     </entry>
     <entry>
-        <title type="html"><![CDATA[MySQL：索引详解]]></title>
+        <title type="html"><![CDATA[MySQL系列：索引详解]]></title>
         <id>https://blockmao.github.io/zFL4EV3Km/</id>
         <link href="https://blockmao.github.io/zFL4EV3Km/">
         </link>

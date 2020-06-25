@@ -7,7 +7,7 @@
 <meta name="keywords" content="黑猫技术博客">
 <meta name="description" content="">
 <meta name="theme-color" content="#000">
-<title>CentOS 7 下 yum 安装 Docker CE | 黑猫科技博客</title>
+<title>JDK SPI源码详解 | 黑猫科技博客</title>
 <link rel="shortcut icon" href="/favicon.ico?v=1593065262772">
 <link rel="stylesheet" href="/styles/main.css">
 <link rel="stylesheet" href="/media/css/mist.css">
@@ -27,8 +27,8 @@
 
 
 
-    <meta name="description" content="CentOS 7 下 yum 安装 Docker CE" />
-    <meta name="keywords" content="docker" />
+    <meta name="description" content="JDK SPI源码详解" />
+    <meta name="keywords" content="Java基础" />
   </head>
   <body>
     <div class="head-top-line"></div>
@@ -215,37 +215,8 @@
     <ul class="markdownIt-TOC">
 <li>
 <ul>
-<li><a href="#%E5%89%8D%E8%A8%80">前言</a>
-<ul>
-<li><a href="#%E7%8E%AF%E5%A2%83%E8%AF%B4%E6%98%8E">环境说明</a></li>
-</ul>
-</li>
-<li><a href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C">准备工作</a>
-<ul>
-<li><a href="#%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%A6%81%E6%B1%82">操作系统要求</a></li>
-<li><a href="#%E5%8D%B8%E8%BD%BD%E6%97%A7%E7%89%88%E6%9C%AC">卸载旧版本</a></li>
-</ul>
-</li>
-<li><a href="#%E5%AE%89%E8%A3%85">安装</a>
-<ul>
-<li><a href="#%E5%AE%89%E8%A3%85%E5%87%86%E5%A4%87">安装准备</a></li>
-<li><a href="#%E6%B7%BB%E5%8A%A0-yum-%E8%BD%AF%E4%BB%B6%E6%BA%90">添加 yum 软件源</a></li>
-<li><a href="#%E5%AE%89%E8%A3%85-docker">安装 Docker</a></li>
-<li><a href="#%E5%AE%89%E8%A3%85%E6%8C%87%E5%AE%9A%E7%89%88%E6%9C%AC">安装指定版本</a></li>
-<li><a href="#%E5%90%AF%E5%8A%A8-docker">启动 Docker</a></li>
-<li><a href="#%E9%AA%8C%E8%AF%81%E5%AE%89%E8%A3%85">验证安装</a></li>
-</ul>
-</li>
-<li><a href="#docker-compose%E5%AE%89%E8%A3%85">Docker Compose安装</a></li>
-<li><a href="#%E6%9B%B4%E6%96%B0%E5%92%8C%E5%8D%B8%E8%BD%BD-docker">更新和卸载 Docker</a>
-<ul>
-<li><a href="#%E6%9B%B4%E6%96%B0-docker-ce">更新 Docker CE</a></li>
-<li><a href="#%E5%8D%B8%E8%BD%BD-docker-ce">卸载 Docker CE</a></li>
-<li><a href="#%E5%88%A0%E9%99%A4%E6%9C%AC%E5%9C%B0%E6%96%87%E4%BB%B6">删除本地文件</a></li>
-</ul>
-</li>
-<li><a href="#%E7%BB%93%E8%AE%BA">结论</a></li>
-<li><a href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99">参考资料</a></li>
+<li><a href="#%E8%AE%A4%E8%AF%86jdk-spi">认识JDK SPI</a></li>
+<li><a href="#jdk-spi%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8">JDK SPI简单使用</a></li>
 </ul>
 </li>
 </ul>
@@ -512,8 +483,8 @@ window.addEventListener('load', function() {
             <div class="section bg-color post post-page">
               <header class="post-header">
   <h1 class="post-title">
-    <a class="post-title-link" href="https://blockmao.github.io/A0vFvyiTq/">
-      CentOS 7 下 yum 安装 Docker CE
+    <a class="post-title-link" href="https://blockmao.github.io/uti_4wymf/">
+      JDK SPI源码详解
     </a>
   </h1>
   <div class="post-meta">
@@ -521,7 +492,7 @@ window.addEventListener('load', function() {
     <span class="meta-item pc-show">
       <i class="fa fa-calendar-o"></i>
       <span>发布于</span>
-      <span>2020-04-11</span>
+      <span>2020-06-25</span>
       <span class="post-meta-divider pc-show">|</span>
     </span>
     
@@ -530,8 +501,8 @@ window.addEventListener('load', function() {
         <span class="pc-show">分类于</span>
         
           
-            <a href="https://blockmao.github.io/0hQkaRzl1/">
-              <span>docker</span>
+            <a href="https://blockmao.github.io/PcuQ_BSca/">
+              <span>Java基础</span>
             </a>
           
         
@@ -540,148 +511,151 @@ window.addEventListener('load', function() {
     
     <span class="meta-item">
       <i class="fa fa-clock-o"></i>
-      <span>5分钟</span>
+      <span>4分钟</span>
     </span>
     <span class="meta-item">
       <span class="post-meta-divider">|</span>
       <i class="fa fa-file-word-o"></i>
-      <span>981<span class="pc-show">字数</span></span>
+      <span>661<span class="pc-show">字数</span></span>
     </span>
     
   </div>
 </header>
               <div class="post-body next-md-body" id="post_body">
-                <blockquote>
-<p><strong>原文地址</strong>：<a href="https://qizhanming.com/blog/2019/01/25/how-to-install-docker-ce-on-centos-7">CentOS 7 下 yum 安装 Docker CE</a></p>
-</blockquote>
-<p><a name="d5i3v"></a></p>
-<h2 id="前言">前言</h2>
-<p><br />Docker 使用越来越多，安装也很简单，本次记录一下基本的步骤。<br /><br>
-<br />Docker 目前支持 CentOS 7 及以后的版本，内核要求至少为 3.10。<br /><br>
-<br />Docker 官网有安装步骤，本文只是记录一下，您也可以参考 <a href="https://docs.docker.com/install/linux/docker-ce/centos/">Get Docker CE for CentOS</a><br /></p>
-<p><a name="6JkKE"></a></p>
-<h3 id="环境说明">环境说明</h3>
-<p><br />CentOS 7（Minimal Install）<br /></p>
-<pre><code class="language-bash">$ cat /etc/redhat-release 
-CentOS Linux release 7.6.1810 (Core)
+                <h2 id="认识jdk-spi">认识JDK SPI</h2>
+<p>SPI是Service Provider Interface的缩写，可以使用它扩展框架和更换的组件。</p>
+<p><strong>JDK提供了java.util.ServiceLoader工具类，在使用某个服务接口时，它可以帮助我们查找该服务接口的实现类，加载和初始化，前提条件是基于它的约定</strong>。</p>
+<p>大多数开发人员可能不熟悉，却经常使用它。</p>
+<!-- more -->
+<p>举个例子，获取MySQL数据库连接，代码如下：</p>
+<pre><code class="language-java">public class MySQLConnect {
+
+    private final static String url =&quot;jdbc:mysql://localhost:3306/test&quot;;
+
+    private final static String username = &quot;root&quot;;
+
+    private final static String password = &quot;root&quot;;
+
+    public static Connection getConnection() throws SQLException {
+       // Class.forName(&quot;com.mysql.jdbc.Driver&quot;);
+       return DriverManager.getConnection(url,username,password);
+    }
+
+    public static void main(String[] args) throws SQLException {
+        System.out.println(getConnection());
+    }
+}
 </code></pre>
-<p><a name="y8QOP"></a></p>
-<h2 id="准备工作">准备工作</h2>
-<p><a name="ZK0VP"></a></p>
-<h3 id="操作系统要求">操作系统要求</h3>
-<p>CentOS 7 以后都可以安装 Docker 了，也可以确认一下。<br /></p>
-<pre><code class="language-bash">$ uname -a
-Linux localhost.localdomain 3.10.0-957.1.3.el7.x86_64 #1 SMP Thu Nov 29 14:49:43 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
+<p>上述代码是可以运行成功的。接下来我们就分析下<code>DriverManager.getConnection(url,username,password)</code></p>
+<!-- more -->
+<!-- more -->
+<p>的过程，探究其如何获取到数据库连接Connection？</p>
+<p>1、首先分析loadInitialDrivers方法，其源码如下：</p>
+<pre><code class="language-java">private static void loadInitialDrivers() {
+        
+    /**
+     * 获取ServiceLoader实例，loadedDrivers = 
+     * new ServiceLoader(Driver.class,Thread.currentThread().getContextClassLoader())
+     */
+    ServiceLoader&lt;Driver&gt; loadedDrivers = ServiceLoader.load(Driver.class);
+    /**
+      * 获取serviceLoader实例的迭代器,driversIterator = new LazyIterator(service, loader)
+      */
+    Iterator&lt;Driver&gt; driversIterator = loadedDrivers.iterator();
+
+    /**
+      * 应用程序加载器（Thread.currentThread().getContextClassLoader()）
+      * 加载classpath下META-INF/services/java.sql.Driver文件，
+      * 解析java.sql.Driver文件的内容将其存储在LazyIterator.pending实例变量中。
+      */
+    while(driversIterator.hasNext()) {
+        /**
+        * 通过反射实例化java.sql.Driver文件中的类（com.mysql.jdbc.Driver，
+            com.mysql.fabric.jdbc.FabricMySQLDriver）
+        */
+        driversIterator.next();
+    }
+}
 </code></pre>
-<p><br />Docker 需要用到 <code>centos-extra</code> 这个源，如果您关闭了，需要重启启用，可以参考 <a href="https://wiki.centos.org/AdditionalResources/Repositories">Available Repositories for CentOS</a>。<br /></p>
-<p><a name="ylc8Y"></a></p>
-<h3 id="卸载旧版本">卸载旧版本</h3>
-<p><br />旧版本的 Docker 被叫做 <code>docker</code> 或 <code>docker-engine</code>，如果您安装了旧版本的 Docker ，您需要卸载掉它。<br /></p>
-<pre><code class="language-bash">$ sudo yum remove docker \
-                  docker-client \
-                  docker-client-latest \
-                  docker-common \
-                  docker-latest \
-                  docker-latest-logrotate \
-                  docker-logrotate \
-                  docker-engine
-</code></pre>
-<p><br />旧版本的内容在 <code>/var/lib/docker</code> 下，目录中的镜像(images), 容器(containers), 存储卷(volumes), 和 网络配置（networks）都可以保留。<br />Docker CE 包，目前的包名为 <code>docker-ce</code>。<br>
-<a name="3vgIu"></a></p>
-<h2 id="安装">安装</h2>
-<p><a name="dWg0t"></a></p>
-<h3 id="安装准备">安装准备</h3>
-<p>为了方便添加软件源，支持 devicemapper 存储类型，安装如下软件包<br /></p>
-<pre><code class="language-bash">$ sudo yum update
-$ sudo yum install -y yum-utils \
-  device-mapper-persistent-data \
-  lvm2
-</code></pre>
-<p><a name="VD3WR"></a></p>
-<h3 id="添加-yum-软件源">添加 yum 软件源</h3>
-<p><br />添加 Docker 稳定版本的 yum 软件源<br /></p>
-<pre><code class="language-bash">$ sudo yum-config-manager \
-    --add-repo \
-    https://download.docker.com/linux/centos/docker-ce.repo
-</code></pre>
-<p><a name="rPtX0"></a></p>
-<h3 id="安装-docker">安装 Docker</h3>
-<p><br />更新一下 yum 软件源的缓存，并安装 Docker。<br /></p>
-<pre><code class="language-bash">$ sudo yum update
-$ sudo yum install docker-ce
-</code></pre>
-<p><br />如果弹出 GPG key 的接收提示，请确认是否为 <code>060a 61c5 1b55 8a7f 742b 77aa c52f eb6b 621e 9f35</code>，如果是，可以接受并继续安装。<br /><br>
-<br />至此，Docker 已经安装完成了，Docker 服务是没有启动的，操作系统里的 docker 组被创建，但是没有用户在这个组里。<br /></p>
 <blockquote>
-<p><strong><code>注意</code></strong><br>
-默认的 docker 组是没有用户的（也就是说需要使用 sudo 才能使用 docker 命令）。<br>
-您可以将用户添加到 docker 组中（此用户就可以直接使用 docker 命令了）。</p>
+<p><strong>约定</strong>：当服务的提供者，提供了服务接口（java.sql.Driver）的一种实现之后，在jar包的META-INF/services/目录里同时创建一个以服务接口命名的文件。该文件里就是实现该服务接口的具体实现类。而当外部程序装配这个模块的时候，就能通过该jar包META-INF/services/里的配置文件找到具体的实现类名，并装载实例化，完成模块的注入。</p>
 </blockquote>
-<p><br />加入 docker 用户组命令<br /></p>
-<pre><code class="language-bash">$ sudo usermod -aG docker USER_NAME
+<p>2、com.mysql.jdbc.Driver类的初始化<br>
+</p>
+<pre><code class="language-java"> static {
+    try {
+        // registeredDrivers存储Dirver实例
+        java.sql.DriverManager.registerDriver(new Driver());
+    } catch (SQLException E) {
+        throw new RuntimeException(&quot;Can't register driver!&quot;);
+    }
+}
 </code></pre>
-<p><br />用户更新组信息后，重新登录系统即可生效。<br>
-<a name="AIOUx"></a></p>
-<h3 id="安装指定版本">安装指定版本</h3>
-<p>如果想安装指定版本的 Docker，可以查看一下版本并安装。<br /></p>
-<pre><code class="language-bash">$ yum list docker-ce --showduplicates | sort -r
-docker-ce.x86_64  3:18.09.1-3.el7                     docker-ce-stable
-docker-ce.x86_64  3:18.09.0-3.el7                     docker-ce-stable
-docker-ce.x86_64  18.06.1.ce-3.el7                    docker-ce-stable
-docker-ce.x86_64  18.06.0.ce-3.el7                    docker-ce-stable
+<p>3、获取数据库连接</p>
+<pre><code class="language-java">for(DriverInfo aDriver : registeredDrivers) {
+
+    if(isDriverAllowed(aDriver.driver, callerCL)) {
+        try {
+            // 获取Connection
+            Connection con = aDriver.driver.connect(url, info);
+            if (con != null) {
+                return (con);
+            }
+        } catch (SQLException ex) {
+            if (reason == null) {
+                reason = ex;
+            }
+        }
+
+    } else {
+        println(&quot;skipping: &quot; + aDriver.getClass().getName());
+    }
+
+}
 </code></pre>
-<p><br />可以指定版本安装,版本号可以忽略 <code>:</code> 和 <code>el7</code>，如 <code>docker-ce-18.09.1</code><br /></p>
-<pre><code>$ sudo yum install docker-ce-&lt;VERSION STRING&gt;
+<h2 id="jdk-spi简单使用">JDK SPI简单使用</h2>
+<p>1、目录结构</p>
+<figure data-type="image" tabindex="1"><img src="https://user-gold-cdn.xitu.io/2018/1/18/16107d7894f8aa77?w=524&amp;h=289&amp;f=png&amp;s=21497" alt="目录结构" loading="lazy"></figure>
+<p>2、示例代码</p>
+<pre><code class="language-java">public interface HelloService {
+
+    String sayHello();
+
+}
+
+public class CHelloService implements HelloService {
+
+    @Override
+    public String sayHello() {
+        return &quot;Welcome to C world&quot;;
+    }
+
+}
+
+public class JavaHelloService implements HelloService {
+
+    @Override
+    public String sayHello() {
+        return &quot;Welcome to Java world&quot;;
+    }
+
+}
 </code></pre>
-<p><br />至此，指定版本的 Docker 也安装完成，同样，操作系统内 docker 服务没有启动，只创建了 docker 组，而且组里没有用户。<br>
-<a name="eSjoh"></a></p>
-<h3 id="启动-docker">启动 Docker</h3>
-<p><br />如果想添加到开机启动<br /></p>
-<pre><code class="language-bash">$ sudo systemctl enable docker
+<p>3、com.codersm.study.jdk.spi.HelloService文件内容</p>
+<pre><code class="language-text">com.codersm.study.jdk.spi.impl.CHelloService
+com.codersm.study.jdk.spi.impl.JavaHelloService
 </code></pre>
-<p><br />启动 docker 服务<br /></p>
-<pre><code class="language-bash">$ sudo systemctl start docker
+<p>4、测试</p>
+<pre><code class="language-java">@Test
+public void testSpi() {
+
+    ServiceLoader&lt;HelloService&gt; loaders = ServiceLoader.load(HelloService.class);
+    for (HelloService loader : loaders) {
+        System.out.println(loader.sayHello());
+    }
+}
+
 </code></pre>
-<p><a name="a6v4n"></a></p>
-<h3 id="验证安装">验证安装</h3>
-<p>验证 Docker CE 安装是否正确，可以运行 <code>hello-world</code> 镜像<br /></p>
-<pre><code class="language-bash">$ sudo docker run hello-world
-</code></pre>
-<p><a name="VTVH7"></a></p>
-<h2 id="docker-compose安装">Docker Compose安装</h2>
-<p><br />官网安装步骤地址：<a href="https://docs.docker.com/compose/install/#install-compose">https://docs.docker.com/compose/install/#install-compose</a></p>
-<p>1、Run this command to download the latest version of Docker Compose<br /></p>
-<pre><code class="language-bash">sudo curl -L &quot;https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)&quot; -o /usr/local/bin/docker-compose
-</code></pre>
-<p><br />2、Apply executable permissions to the binary:<br /></p>
-<pre><code class="language-bash">sudo chmod +x /usr/local/bin/docker-compose
-</code></pre>
-<p><br />3、Optionally, install command completion for the bash and zsh shell.<br /><br>
-<br />4、Test the installation<br /></p>
-<pre><code class="language-bash">docker-compose --version
-</code></pre>
-<p><a name="zt1v8"></a></p>
-<h2 id="更新和卸载-docker">更新和卸载 Docker</h2>
-<p><br />使用 yum 管理，更新和卸载都很方便。<br /></p>
-<p><a name="yNB8N"></a></p>
-<h3 id="更新-docker-ce">更新 Docker CE</h3>
-<pre><code class="language-bash">$ sudo yum update docker-ce
-</code></pre>
-<p><a name="SBKxu"></a></p>
-<h3 id="卸载-docker-ce">卸载 Docker CE</h3>
-<pre><code class="language-bash">$ sudo yum remove docker-ce
-</code></pre>
-<p><a name="q1ht7"></a></p>
-<h3 id="删除本地文件">删除本地文件</h3>
-<p><br />注意，docker 的本地文件，包括镜像(images), 容器(containers), 存储卷(volumes)等，都需要手工删除。默认目录存储在 <code>/var/lib/docker</code>。<br /></p>
-<pre><code class="language-bash">$ sudo rm -rf /var/lib/docker
-</code></pre>
-<p><a name="RDRS3"></a></p>
-<h2 id="结论">结论</h2>
-<p><br />本文演示了 CentOS 7 下 yum 安装 Docker CE 的步骤。<br>
-<a name="JIh33"></a></p>
-<h2 id="参考资料">参考资料</h2>
-<p><br /><a href="https://docs.docker.com/install/linux/docker-ce/centos/">Get Docker CE for CentOS</a><br /><a href="https://wiki.centos.org/AdditionalResources/Repositories">Available Repositories for CentOS</a></p>
 
               </div>
               <div class="post-footer">
@@ -692,7 +666,7 @@ docker-ce.x86_64  18.06.0.ce-3.el7                    docker-ce-stable
     </li>
     <li class="post-copyright-link">
       <strong>本文链接：</strong>
-      <a href="https://blockmao.github.io/A0vFvyiTq/" title="CentOS 7 下 yum 安装 Docker CE">CentOS 7 下 yum 安装 Docker CE</a>
+      <a href="https://blockmao.github.io/uti_4wymf/" title="JDK SPI源码详解">JDK SPI源码详解</a>
     </li>
     <li class="post-copyright-license">
       <strong>版权声明： </strong>
@@ -701,21 +675,17 @@ docker-ce.x86_64  18.06.0.ce-3.el7                    docker-ce-stable
   </ul>
   <div class="tags">
     
-      <a href="https://blockmao.github.io/0hQkaRzl1/"># docker</a>
+      <a href="https://blockmao.github.io/PcuQ_BSca/"># Java基础</a>
     
   </div>
   <div class="nav">
     <div class="nav-prev">
       
-        <i class="fa fa-chevron-left"></i>
-        <a class="nav-pc-next" title="Java基础：SPI详解" href="https://blockmao.github.io/0wSmAUG7K/">Java基础：SPI详解</a class="nav-pc-next">
-        <a class="nav-mobile-prev" title="Java基础：SPI详解" href="https://blockmao.github.io/0wSmAUG7K/">上一篇</a>
-      
     </div>
     <div class="nav-next">
       
-        <a class="nav-pc-next" title="Spring @Value用法小结，#与$的区别" href="https://blockmao.github.io/OQBr_T227/">Spring @Value用法小结，#与$的区别</a>
-        <a class="nav-mobile-next" title="Spring @Value用法小结，#与$的区别" href="https://blockmao.github.io/OQBr_T227/">下一篇</a>
+        <a class="nav-pc-next" title="Java NIO 通信基础" href="https://blockmao.github.io/3ctgVXS7D/">Java NIO 通信基础</a>
+        <a class="nav-mobile-next" title="Java NIO 通信基础" href="https://blockmao.github.io/3ctgVXS7D/">下一篇</a>
         <i class="fa fa-chevron-right"></i>
       
     </div>
