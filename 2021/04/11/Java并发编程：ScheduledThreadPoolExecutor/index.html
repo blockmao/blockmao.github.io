@@ -20,21 +20,20 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="ScheduledThreadPoolExecutor概述A ThreadPoolExecutor that can additionally schedule commands to run after a given delay, or to execute periodically（***周期性地*）. This class is preferable to（优先于……） Timer whe">
-<meta property="og:type" content="article">
+  <meta property="og:type" content="article">
 <meta property="og:title" content="Java并发编程：ScheduledThreadPoolExecutor">
 <meta property="og:url" content="http://example.com/2021/04/11/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%EF%BC%9AScheduledThreadPoolExecutor/index.html">
 <meta property="og:site_name" content="牛觅博客">
-<meta property="og:description" content="ScheduledThreadPoolExecutor概述A ThreadPoolExecutor that can additionally schedule commands to run after a given delay, or to execute periodically（***周期性地*）. This class is preferable to（优先于……） Timer whe">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411234422kuala-lumpur-1820944_960_720.jpg">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104112016301240-20210411201630056.png">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104112016301240-20210411201630381.png">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104112016301240-20210411201630588.png">
 <meta property="article:published_time" content="2021-04-11T12:14:33.000Z">
-<meta property="article:modified_time" content="2021-04-11T12:38:04.034Z">
+<meta property="article:modified_time" content="2021-04-11T15:44:28.598Z">
 <meta property="article:author" content="牛觅">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/202104112016301240-20210411201630056.png">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210411234422kuala-lumpur-1820944_960_720.jpg">
 
 <link rel="canonical" href="http://example.com/2021/04/11/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%EF%BC%9AScheduledThreadPoolExecutor/">
 
@@ -197,7 +196,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2021-04-11 20:14:33 / 修改时间：20:38:04" itemprop="dateCreated datePublished" datetime="2021-04-11T20:14:33+08:00">2021-04-11</time>
+              <time title="创建时间：2021-04-11 20:14:33 / 修改时间：23:44:28" itemprop="dateCreated datePublished" datetime="2021-04-11T20:14:33+08:00">2021-04-11</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -234,7 +233,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="ScheduledThreadPoolExecutor概述"><a href="#ScheduledThreadPoolExecutor概述" class="headerlink" title="ScheduledThreadPoolExecutor概述"></a>ScheduledThreadPoolExecutor概述</h2><p><strong>A</strong> <strong><code>ThreadPoolExecutor</code></strong> <strong>that can additionally schedule commands to run after a given delay, or to execute periodically（***</strong>周期性地*<em><em><strong>）</strong>. This class is preferable to（</em>优先于……</em>） <code>Timer</code> when multiple worker threads are needed, or when the additional flexibility（<em>灵活性</em>） or capabilities of <code>ThreadPoolExecutor</code> (which this class extends) are required.</p>
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210411234422kuala-lumpur-1820944_960_720.jpg" alt="吉隆坡"></p>
+<span id="more"></span>
+
+<h2 id="ScheduledThreadPoolExecutor概述"><a href="#ScheduledThreadPoolExecutor概述" class="headerlink" title="ScheduledThreadPoolExecutor概述"></a>ScheduledThreadPoolExecutor概述</h2><p><strong>A</strong> <strong><code>ThreadPoolExecutor</code></strong> <strong>that can additionally schedule commands to run after a given delay, or to execute periodically（***</strong>周期性地*<em><em><strong>）</strong>. This class is preferable to（</em>优先于……</em>） <code>Timer</code> when multiple worker threads are needed, or when the additional flexibility（<em>灵活性</em>） or capabilities of <code>ThreadPoolExecutor</code> (which this class extends) are required.</p>
 <p>Delayed tasks execute no sooner than they are enabled, but without any real-time guarantees about when, after they are enabled, they will commence. Tasks scheduled for exactly the same execution time are enabled in first-in-first-out (FIFO) order of submission.</p>
 <p><strong>When a submitted task is cancelled before it is run, execution is suppressed</strong>. By default, such a cancelled task is not automatically removed from the work queue until its delay elapses. While this enables further inspection and monitoring, it may also cause unbounded retention of cancelled tasks. <strong>To avoid this, set</strong> <strong><code>setRemoveOnCancelPolicy</code></strong> <strong>to true, which causes tasks to be immediately removed from the work queue at time of cancellation</strong>.</p>
 <h3 id="类层次结构"><a href="#类层次结构" class="headerlink" title="类层次结构"></a>类层次结构</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/202104112016301240-20210411201630056.png" alt="image"></p>
