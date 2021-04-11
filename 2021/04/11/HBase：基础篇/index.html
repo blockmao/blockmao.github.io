@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="HBase：基础篇">
+<meta property="og:url" content="http://example.com/2021/04/11/HBase%EF%BC%9A%E5%9F%BA%E7%A1%80%E7%AF%87/index.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041112574420210411125741qJMsaL.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041112571779aa1b93b1de4ba9935dd57bbe45383a~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257173a745337dfa24cfc8e79ab735f5a3577~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257178e158db0c6d04580b0d80f4bea373f11~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717f5ac97be11da47d29d2cf5cf166f51bc~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717287e460fb7224d9783acf6f2402b27ba~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717cb975e7f94ae4a58bf86b9b111719d18~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717f2e823dbc70f4027b7a191dc69884a9e~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257170e3a0f7dd97f4a91a9fe6fe69e358860~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125718862d92702896437c84fe3e0161e477ad~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125718cf6f75a09e0f4272ae3ee08adaf4b1c8~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125718eb3c6a6a76894625bd7c7f8e6a49d696~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125719b3a3f2402c2a4e58a6d7d622d425e2f7~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257196350c5805f8b483bbd5cbf4e48ba24ce~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="article:published_time" content="2021-04-11T04:15:39.000Z">
+<meta property="article:modified_time" content="2021-04-11T04:57:51.869Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/2021041112574420210411125741qJMsaL.jpg">
+
+<link rel="canonical" href="http://example.com/2021/04/11/HBase%EF%BC%9A%E5%9F%BA%E7%A1%80%E7%AF%87/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>HBase：基础篇 | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/11/HBase%EF%BC%9A%E5%9F%BA%E7%A1%80%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HBase：基础篇
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-04-11 12:15:39 / 修改时间：12:57:51" itemprop="dateCreated datePublished" datetime="2021-04-11T12:15:39+08:00">2021-04-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Hbase/" itemprop="url" rel="index"><span itemprop="name">Hbase</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2021/04/11/HBase%EF%BC%9A%E5%9F%BA%E7%A1%80%E7%AF%87/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2021/04/11/HBase：基础篇/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/2021041112574420210411125741qJMsaL.jpg" alt="20210411125741qJMsaL"></p>
+<span id="more"></span>
+
+
+
+<h2 id="HBase-概述"><a href="#HBase-概述" class="headerlink" title="HBase 概述"></a>HBase 概述</h2><p><strong>HBase（Hadoop Database）是一个高可靠、高性能、面向列、可伸缩的KV分布式数据库</strong>，利用HBase技术可在廉价PC上搭建起大规模结构化存储集群。</p>
+<p>HBase参考Google的BigTable建模，使用类似GFS的HDFS作为底层文件存储系统，在其上可以运行MapReduce批量处理数据，使用ZooKeeper作为协同服务组件。</p>
+<h3 id="发展历史"><a href="#发展历史" class="headerlink" title="发展历史"></a>发展历史</h3><p>google“三篇论文”——GFS、MapReduce、BigTable。</p>
+<ul>
+<li><p>GFS: （The Google File System）：揭示了如何在大量廉价机器基础上存储海量数据。</p>
+</li>
+<li><p>MapReduce（Simplef iedData Processing on Large Clusters）：论文论述了如何在大量廉价机器的基础上稳定地实现超大规模的并行数据处理。</p>
+</li>
+<li><p>BigTable: A Distributed StorageSystem for Structured Data 》，用于解决Google内部海量结构化数据的存储以及高效读写问题。</p>
+</li>
+</ul>
+<p>Apache HBase最初是Powerset公司为了处理自然语言搜索产生的海量数据而开展的项目，由Chad Walters和Jim Kellerman两人发起，经过两年的发展之后被Apache基金会收录为顶级项目，同时成为非常活跃、影响重大的项目。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/2021041112571779aa1b93b1de4ba9935dd57bbe45383a~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<p>2015年2月社区发布了1.0.0版本，规范了Hbase的版本号，此后的版本号都统一遵循semanticversioning语义，如下图：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104111257173a745337dfa24cfc8e79ab735f5a3577~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<p>可以理解为MAJOR、MINOR相同的情况下，PATCH版本越大，系统越可靠。</p>
+<h3 id="Hbase优缺点"><a href="#Hbase优缺点" class="headerlink" title="Hbase优缺点"></a>Hbase优缺点</h3><h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h4><ul>
+<li><p><strong>容量巨大</strong>：HBase的单表可以支持千亿行、百万列的数据规模，数据容量可以达到TB甚至PB级别。传统的关系型数据库，如Oracle和MySQL等，如果单表记录条数超过亿行，读写性能都会急剧下降，在HBase中并不会出现这样的问题。</p>
+</li>
+<li><p><strong>良好的可扩展性</strong>：HBase集群可以非常方便地实现集群容量扩展，主要包括数据存储节点扩展以及读写服务节点扩展。HBase底层数据存储依赖于HDFS系统，HDFS可以通过简单地增加DataNode实现扩展，HBase读写服务节点也一样，可以通过简单的增加RegionServer节点实现计算层的扩展。</p>
+</li>
+<li><p><strong>稀疏性</strong>：HBase支持大量稀疏存储，即允许大量列值为空，并不占用任何存储空间。这与传统数据库不同，传统数据库对于空值的处理要占用一定的存储空间，这会造成一定程度的存储空间浪费。因此可以使用HBase存储多至上百万列的数据，即使表中存在大量的空值，也不需要任何额外空间。</p>
+</li>
+<li><p><strong>高性能</strong>：HBase目前主要擅长于OLTP场景，数据写操作性能强劲，对于随机单点读以及小范围的扫描读，其性能也能够得到保证。对于大范围的扫描读可以使用MapReduce提供的API，以便实现更高效的并行扫描。</p>
+</li>
+<li><p><strong>多版本</strong>：HBase支持多版本特性，即一个KV可以同时保留多个版本，用户可以根据需要选择最新版本或者某个历史版本。</p>
+</li>
+<li><p><strong>Hadoop原生支持</strong>：HBase是Hadoop生态中的核心成员之一，很多生态组件都可以与其直接对接。</p>
+</li>
+</ul>
+<h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li><p><strong>HBase本身不支持很复杂的聚合运算（如Join、GroupBy等）</strong>。如果业务中需要使用聚合运算，可以在HBase之上架设Phoenix组件或者Spark组件，前者主要应用于小规模聚合的OLTP场景，后者应用于大规模聚合的OLAP场景。</p>
+</li>
+<li><p><strong>HBase本身并没有实现二级索引功能，所以不支持二级索引查找</strong>。好在针对HBase实现的第三方二级索引方案非常丰富，比如目前比较普遍的使用Phoenix提供的二级索引功能。</p>
+</li>
+<li><p><strong>HBase原生不支持全局跨行事务，只支持单行事务模型</strong>。同样，可以使用Phoenix提供的全局事务模型组件来弥补HBase的这个缺陷。</p>
+</li>
+</ul>
+<h3 id="数据模型"><a href="#数据模型" class="headerlink" title="数据模型"></a>数据模型</h3><h4 id="逻辑视图"><a href="#逻辑视图" class="headerlink" title="逻辑视图"></a>逻辑视图</h4><p>在具体了解逻辑视图之前有必要先看看HBase中的基本概念。</p>
+<ul>
+<li><p><strong>table</strong>：一个表包含多行数据。</p>
+</li>
+<li><p><strong>RowKey</strong>：表中每条记录的主键；</p>
+</li>
+<li><p><strong>Column Family</strong>：列族，将表进行横向切割，后面简称CF；</p>
+</li>
+<li><p><strong>Column</strong>：属于某一个列族，可动态添加列；</p>
+</li>
+<li><p><strong>Version Number</strong>：类型为Long，默认值是系统时间戳，可由用户自定义；</p>
+</li>
+<li><p><strong>Value</strong>：真实的数据。</p>
+</li>
+<li><p><strong>Region</strong>：一段数据的集合；</p>
+</li>
+</ul>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104111257178e158db0c6d04580b0d80f4bea373f11~tplv-k3u1fbpfcp-zoom-1.image" alt="HBase逻辑视图"></p>
+<h4 id="物理视图"><a href="#物理视图" class="headerlink" title="物理视图"></a>物理视图</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125717f5ac97be11da47d29d2cf5cf166f51bc~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125717287e460fb7224d9783acf6f2402b27ba~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<h2 id="HBase-原理"><a href="#HBase-原理" class="headerlink" title="HBase 原理"></a>HBase 原理</h2><h3 id="LSM"><a href="#LSM" class="headerlink" title="LSM"></a>LSM</h3><p>TTDO</p>
+<h3 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125717cb975e7f94ae4a58bf86b9b111719d18~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<h4 id="HBase客户端"><a href="#HBase客户端" class="headerlink" title="HBase客户端"></a>HBase客户端</h4><ol>
+<li>HBase客户端（Client）提供了Shell命令行接口、原生Java API编程接口、Thrift/REST API编程接口以及MapReduce编程接口</li>
+<li>HBase客户端支持所有常见的DML操作以及DDL操作，即数据的增删改查和表的日常维护等。其中Thrift/REST API主要用于支持非Java的上层业务需求，MapReduce接口主要用于批量数据导入以及批量数据读取。</li>
+</ol>
+<blockquote>
+<p>HBase客户端访问数据行之前，首先需要通过元数据表定位目标数据所在RegionServer，之后才会发送请求到该RegionServer。同时这些元数据会被缓存在客户端本地，以方便之后的请求访问。如果集群RegionServer发生宕机或者执行了负载均衡等，从而导致数据分片发生迁移，客户端需要重新请求最新的元数据并缓存在本地。</p>
+</blockquote>
+<h4 id="ZooKeeper"><a href="#ZooKeeper" class="headerlink" title="ZooKeeper"></a>ZooKeeper</h4><ol>
+<li><p>实现Master高可用：通常情况下系统中只有一个Master工作，一旦ActiveMaster由于异常宕机，ZooKeeper会检测到该宕机事件，并通过一定机制选举出新的Master，保证系统正常运转。</p>
+</li>
+<li><p>管理系统核心元数据：比如，管理当前系统中正常工作的RegionServer集合，保存系统元数据表hbase:meta所在的RegionServer地址等。</p>
+</li>
+<li><p>参与RegionServer宕机恢复：ZooKeeper通过心跳可以感知到RegionServer是否宕机，并在宕机后通知Master进行宕机处理。</p>
+</li>
+<li><p>实现分布式表锁：HBase中对一张表进行各种管理操作（比如alter操作）需要先加表锁，防止其他用户对同一张表进行管理操作，造成表状态不一致。和其他RDBMS表不同，HBase中的表通常都是分布式存储，ZooKeeper可以通过特定机制实现分布式表锁。</p>
+</li>
+</ol>
+<h4 id="Master"><a href="#Master" class="headerlink" title="Master"></a>Master</h4><ol>
+<li>处理用户的各种管理请求，包括建表、修改表、权限操作、切分表、合并数据分片以及Compaction等。</li>
+<li>管理集群中所有RegionServer，包括RegionServer中Region的负载均衡、RegionServer的宕机恢复以及Region的迁移等。</li>
+<li>清理过期日志以及文件，Master会每隔一段时间检查HDFS中HLog是否过期、HFile是否已经被删除，并在过期之后将其删除。</li>
+</ol>
+<h4 id="RegionServer"><a href="#RegionServer" class="headerlink" title="RegionServer"></a>RegionServer</h4><p>  RegionServer主要用来响应用户的IO请求，是HBase中最核心的模块，由WAL(HLog)、BlockCache以及多个Region构成。</p>
+<ul>
+<li><p><strong>WAL(HLog</strong>)：HLog在HBase中有两个核心作用——其一，用于实现数据的高可靠性，HBase数据随机写入时，并非直接写入HFile数据文件，而是先写入缓存，再异步刷新落盘。为了防止缓存数据丢失，数据写入缓存之前需要首先顺序写入HLog，这样，即使缓存数据丢失，仍然可以通过HLog日志恢复；其二，用于实现HBase集群间主从复制，通过回放主集群推送过来的HLog日志实现主从复制。</p>
+</li>
+<li><p><strong>BlockCache</strong>：HBase系统中的读缓存。客户端从磁盘读取数据之后通常会将数据缓存到系统内存中，后续访问同一行数据可以直接从内存中获取而不需要访问磁盘。</p>
+</li>
+<li><p><strong>Region</strong>：数据表的一个分片，当数据表大小超过一定阈值就会“水平切分”，分裂为两个Region。Region是集群负载均衡的基本单位。通常一张表的Region会分布在整个集群的多台RegionServer上，一个RegionServer上会管理多个Region，当然，这些Region一般来自不同的数据表。</p>
+</li>
+<li><p><strong>Store</strong>：一个Region由一个或者多个Store构成，Store的个数取决于表中列簇（columnfamily）的个数，多少个列簇就有多少个Store。HBase中，每个列簇的数据都集中存放在一起形成一个存储单元Store，因此建议将具有相同IO特性的数据设置在同一个列簇中。</p>
+</li>
+<li><p><strong>MemStore &amp; HFile</strong>：MemStore称为写缓存，用户写入数据时首先会写到MemStore，当MemStore写满之后（缓存数据超过阈值，默认128M）系统会异步地将数据f lush成一个HFile文件。显然，随着数据不断写入，HFile文件会越来越多，当HFile文件数超过一定阈值之后系统将会执行Compact操作，将这些小文件通过一定策略合并成一个或多个大文件。</p>
+</li>
+</ul>
+<h4 id="HDFS"><a href="#HDFS" class="headerlink" title="HDFS"></a>HDFS</h4><p>HBase底层依赖HDFS组件存储实际数据，包括用户数据文件、HLog日志文件等最终都会写入HDFS落盘。HDFS是Hadoop生态圈内最成熟的组件之一，数据默认三副本存储策略可以有效保证数据的高可靠性。HBase内部封装了一个名为DFSClient的HDFS客户端组件，负责对HDFS的实际数据进行读写访问。</p>
+<h3 id="HBase-读写流程"><a href="#HBase-读写流程" class="headerlink" title="HBase 读写流程"></a>HBase 读写流程</h3><h4 id="HBase-Region查找"><a href="#HBase-Region查找" class="headerlink" title="HBase Region查找"></a>HBase Region查找</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125717f2e823dbc70f4027b7a191dc69884a9e~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<ul>
+<li><p>客户端根据写入的表以及rowkey在<strong>元数据缓存</strong>中查找，如果能够查找出该rowkey所在的RegionServer以及Region，就可以直接发送写入请求（携带Region信息）到目标RegionServer。</p>
+</li>
+<li><p>如果客户端缓存中没有查到对应的rowkey信息，需要首先到ZooKeeper上/hbase-root/meta-region-server节点查找Hbase元数据表所在的RegionServer。向<code>hbase:meta</code>所在的RegionServer发送查询请求，在元数据表中查找rowkey所在的RegionServer以及Region信息。客户端接收到返回结果之后会将结果缓存到本地，以备下次使用。</p>
+</li>
+<li><p>客户端根据rowkey相关元数据信息将写入请求发送给目标RegionServer，Region Server接收到请求之后会解析出具体的Region信息，查到对应的Region对象，并将数据写入目标Region的MemStore中。</p>
+</li>
+</ul>
+<h4 id="写流程"><a href="#写流程" class="headerlink" title="写流程"></a>写流程</h4><p>  <img src="https://gitee.com/niumi/drawing/raw/master/202104111257170e3a0f7dd97f4a91a9fe6fe69e358860~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<p>1）<strong>客户端处理阶段</strong>：客户端将用户的写入请求进行预处理，并根据集群元数据定位写入数据所在的RegionServer，将请求发送给对应的RegionServer。</p>
+<p>2）<strong>Region写入阶段</strong>：RegionServer接收到写入请求之后将数据解析出来，首先写入WAL，再写入对应Region列簇的MemStore。</p>
+<p>3）<strong>MemStore Flush阶段</strong>：当Region中MemStore容量超过一定阈值，系统会异步执行flush操作，将内存中的数据写入文件，形成HFile。</p>
+<h4 id="读流程"><a href="#读流程" class="headerlink" title="读流程"></a>读流程</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125718862d92702896437c84fe3e0161e477ad~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<p>和写流程相比，HBase读数据的流程更加复杂。主要基于两个方面的原因：</p>
+<ul>
+<li><p>HBase一次范围查询可能会涉及多个Region、多块缓存甚至多个数据存储文件；</p>
+</li>
+<li><p>HBase中更新操作以及删除操作的实现都很简单，更新操作并没有更新原有数据，而是使用时间戳属性实现了多版本；删除操作也并没有真正删除原有数据，只是插入了一条标记为”deleted”标签的数据，而真正的数据删除发生在系统异步执行Major Compact的时候。</p>
+</li>
+</ul>
+<p>很显然，这种实现思路大大简化了数据更新、删除流程，但是对于数据读取来说却意味着套上了层层枷锁：读取过程需要根据版本进行过滤，对已经标记删除的数据也要进行过滤。</p>
+<h3 id="HBase-Compaction"><a href="#HBase-Compaction" class="headerlink" title="HBase Compaction"></a>HBase Compaction</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125718cf6f75a09e0f4272ae3ee08adaf4b1c8~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<p>HBase根据合并规模将Compaction分为两类：Minor Compaction和MajorCompaction。</p>
+<ul>
+<li><p>Minor Compaction是指选取部分小的、相邻的HFile，将它们合并成一个更大的HFile。</p>
+</li>
+<li><p>Major Compaction是指将一个Store中所有的HFile合并成一个HFile，这个过程还会完全清理三类无意义数据：被删除的数据、TTL过期数据、版本号超过设定版本号的数据。</p>
+</li>
+</ul>
+<p>一般情况下，Major Compaction持续时间会比较长，整个过程会消耗大量系统资源，对上层业务有比较大的影响。<strong>因此线上部分数据量较大的业务通常推荐关闭自动触发Major Compaction功能，改为在业务低峰期手动触发（或设置策略自动在低峰期触发）</strong>。</p>
+<p>Compaction核心作用如下：</p>
+<ol>
+<li><p>合并小文件，减少文件数，稳定随机读延迟。</p>
+</li>
+<li><p>提高数据的本地化率。</p>
+</li>
+<li><p>清除无效数据，减少数据存储量。</p>
+</li>
+</ol>
+<p>HBase中触发Compaction的时机有很多，最常见的时机有如下三种：MemStoreFlush、后台线程周期性检查以及手动触发。</p>
+<h2 id="HBase热点问题"><a href="#HBase热点问题" class="headerlink" title="HBase热点问题"></a>HBase热点问题</h2><p>热点是指发生在大量的Client直接访问集群的一个或极少数个节点（访问可能是读，写或者其他操作）。 大量访问会使热点Region所在的单个机器超出自身承受能力，引起性能下降甚至Region不可用，也会影响同一个RegionServer上的其他Region。</p>
+<p><strong>产生原因</strong></p>
+<ol>
+<li>HBase创建表默认只有一个分区</li>
+<li>RowKey设计不合理</li>
+</ol>
+<p><strong>解决方案</strong></p>
+<ol>
+<li>HBase创建表时指定分区</li>
+<li>合理设计RowKey</li>
+</ol>
+<h3 id="预分区"><a href="#预分区" class="headerlink" title="预分区"></a>预分区</h3><p>默认情况下，在创建 HBase 表的时候会自动创建一个 region 分区，当导入数据的时候，所有的 HBase 客户端都向这一个 region 写数据，直到这个 region 足够大了才进行切分。还有一种是可以加快批量写入速度的方法，就是通过预先创建一些空的 regions，这样当数据写入 HBase 时，会按照 region 分区情况，在集群内做数据的负载均衡。</p>
+<h3 id="RowKey设计"><a href="#RowKey设计" class="headerlink" title="RowKey设计"></a>RowKey设计</h3><h4 id="设计原则"><a href="#设计原则" class="headerlink" title="设计原则"></a>设计原则</h4><ol>
+<li><h5 id="唯一性"><a href="#唯一性" class="headerlink" title="唯一性"></a>唯一性</h5><p> 必须在设计上保证其唯一性。RowKey是按照字典顺序排序存储的，因此，设计RowKey 的时候，要充分利用这个排序的特点，将经常读取的数据存储到一块，将最近可能会被访问 的数据放到一块。</p>
+</li>
+<li><h5 id="长度原则"><a href="#长度原则" class="headerlink" title="长度原则"></a>长度原则</h5><p> RowKey 是一个二进制码流，RowKey的长度被很多开发者建议说设计在10~100 个字节，不过建议是越短越好，不要超过16个字节。</p>
+<p> 原因如下:</p>
+<ul>
+<li><p>数据的持久化文件HFile中是按照KeyValue存储的，如果RowKey过长比如100 个字节，1000万列数据光RowKey就要占用100*1000 万=10亿个字节，将近1G数据，这会极大影响HFile的存储效率;</p>
+</li>
+<li><p>MemStore将缓存部分数据到内存，如果RowKey字段过长内存的有效利用率会降低， 系统将无法缓存更多的数据，这会降低检索效率。因此RowKey的字节长度越短越好。</p>
+</li>
+<li><p>目前操作系统是都是 64 位系统，内存 8 字节对齐。控制在 16 个字节，8 字节的整数倍利用操作系统的最佳特性。</p>
+</li>
+</ul>
+</li>
+<li><h5 id="散列原则"><a href="#散列原则" class="headerlink" title="散列原则"></a>散列原则</h5><p> 如果RowKey按照时间戳的方式递增，不要将时间放在二进制码的前面，建议将RowKey的高位作为散列字段，由程序随机生成，低位放时间字段，这样将提高数据均衡分布在每个RegionServer，以实现负载均衡的几率。如果没有散列字段，首字段直接是时间信息，所有的数据都会集中在一个RegionServer上，这样在数据检索的时候负载会集中在个别的RegionServer上，造成热点问题，会降低查询效率。</p>
+</li>
+</ol>
+<h4 id="散列常见设计方法"><a href="#散列常见设计方法" class="headerlink" title="散列常见设计方法"></a>散列常见设计方法</h4><h5 id="Salting（加盐）"><a href="#Salting（加盐）" class="headerlink" title="Salting（加盐）"></a>Salting（加盐）</h5><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125718eb3c6a6a76894625bd7c7f8e6a49d696~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<h5 id="Hashing（哈希）"><a href="#Hashing（哈希）" class="headerlink" title="Hashing（哈希）"></a>Hashing（哈希）</h5><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125719b3a3f2402c2a4e58a6d7d622d425e2f7~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<h5 id="Reversing（反转）"><a href="#Reversing（反转）" class="headerlink" title="Reversing（反转）"></a>Reversing（反转）</h5><p><img src="https://gitee.com/niumi/drawing/raw/master/202104111257196350c5805f8b483bbd5cbf4e48ba24ce~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<blockquote>
+<p>反转可以使得RowKey中经常改变的部分（最没有意义的部分）放在前面，这样可以有效的随机rowkey，但是牺牲RowKey的有序性。反转RowKey的例子以手机号为RowKey，可以将手机号反转后的字符串作为RowKey，这样的就避免了以手机号那样比较固定开头导致热点问题。</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/04/11/Netty%EF%BC%9A%E7%BC%96%E8%A7%A3%E7%A0%81/" rel="prev" title="Netty：编解码">
+      <i class="fa fa-chevron-left"></i> Netty：编解码
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/04/11/Hbase%EF%BC%9A%E5%88%86%E5%B8%83%E5%BC%8F%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" rel="next" title="Hbase：分布式集群环境搭建">
+      Hbase：分布式集群环境搭建 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#HBase-%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">HBase 概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E5%B1%95%E5%8E%86%E5%8F%B2"><span class="nav-number">1.1.</span> <span class="nav-text">发展历史</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hbase%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.2.</span> <span class="nav-text">Hbase优缺点</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E7%82%B9"><span class="nav-number">1.2.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9"><span class="nav-number">1.2.2.</span> <span class="nav-text">缺点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.3.</span> <span class="nav-text">数据模型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E8%A7%86%E5%9B%BE"><span class="nav-number">1.3.1.</span> <span class="nav-text">逻辑视图</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E8%A7%86%E5%9B%BE"><span class="nav-number">1.3.2.</span> <span class="nav-text">物理视图</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HBase-%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">HBase 原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#LSM"><span class="nav-number">2.1.</span> <span class="nav-text">LSM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">整体架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#HBase%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">2.2.1.</span> <span class="nav-text">HBase客户端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ZooKeeper"><span class="nav-number">2.2.2.</span> <span class="nav-text">ZooKeeper</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Master"><span class="nav-number">2.2.3.</span> <span class="nav-text">Master</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RegionServer"><span class="nav-number">2.2.4.</span> <span class="nav-text">RegionServer</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HDFS"><span class="nav-number">2.2.5.</span> <span class="nav-text">HDFS</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HBase-%E8%AF%BB%E5%86%99%E6%B5%81%E7%A8%8B"><span class="nav-number">2.3.</span> <span class="nav-text">HBase 读写流程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#HBase-Region%E6%9F%A5%E6%89%BE"><span class="nav-number">2.3.1.</span> <span class="nav-text">HBase Region查找</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%99%E6%B5%81%E7%A8%8B"><span class="nav-number">2.3.2.</span> <span class="nav-text">写流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%BB%E6%B5%81%E7%A8%8B"><span class="nav-number">2.3.3.</span> <span class="nav-text">读流程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HBase-Compaction"><span class="nav-number">2.4.</span> <span class="nav-text">HBase Compaction</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HBase%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">HBase热点问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%84%E5%88%86%E5%8C%BA"><span class="nav-number">3.1.</span> <span class="nav-text">预分区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RowKey%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.2.</span> <span class="nav-text">RowKey设计</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="nav-number">3.2.1.</span> <span class="nav-text">设计原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%94%AF%E4%B8%80%E6%80%A7"><span class="nav-number">3.2.1.1.</span> <span class="nav-text">唯一性</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%95%BF%E5%BA%A6%E5%8E%9F%E5%88%99"><span class="nav-number">3.2.1.2.</span> <span class="nav-text">长度原则</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%95%A3%E5%88%97%E5%8E%9F%E5%88%99"><span class="nav-number">3.2.1.3.</span> <span class="nav-text">散列原则</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%A3%E5%88%97%E5%B8%B8%E8%A7%81%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95"><span class="nav-number">3.2.2.</span> <span class="nav-text">散列常见设计方法</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Salting%EF%BC%88%E5%8A%A0%E7%9B%90%EF%BC%89"><span class="nav-number">3.2.2.1.</span> <span class="nav-text">Salting（加盐）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Hashing%EF%BC%88%E5%93%88%E5%B8%8C%EF%BC%89"><span class="nav-number">3.2.2.2.</span> <span class="nav-text">Hashing（哈希）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Reversing%EF%BC%88%E5%8F%8D%E8%BD%AC%EF%BC%89"><span class="nav-number">3.2.2.3.</span> <span class="nav-text">Reversing（反转）</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">24</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://niumi.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "http://example.com/2021/04/11/HBase%EF%BC%9A%E5%9F%BA%E7%A1%80%E7%AF%87/";
+    this.page.identifier = "2021/04/11/HBase：基础篇/";
+    this.page.title = "HBase：基础篇";
+    };
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://niumi.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>
