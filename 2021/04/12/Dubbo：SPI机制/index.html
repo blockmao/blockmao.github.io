@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="Dubbo：SPI机制">
+<meta property="og:url" content="http://example.com/2021/04/12/Dubbo%EF%BC%9ASPI%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210412170147man-1246233_960_720.jpg">
+<meta property="article:published_time" content="2021-04-12T08:58:21.000Z">
+<meta property="article:modified_time" content="2021-04-12T09:16:59.845Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210412170147man-1246233_960_720.jpg">
+
+<link rel="canonical" href="http://example.com/2021/04/12/Dubbo%EF%BC%9ASPI%E6%9C%BA%E5%88%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Dubbo：SPI机制 | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/12/Dubbo%EF%BC%9ASPI%E6%9C%BA%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Dubbo：SPI机制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-04-12 16:58:21 / 修改时间：17:16:59" itemprop="dateCreated datePublished" datetime="2021-04-12T16:58:21+08:00">2021-04-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Dubbo/" itemprop="url" rel="index"><span itemprop="name">Dubbo</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2021/04/12/Dubbo%EF%BC%9ASPI%E6%9C%BA%E5%88%B6/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2021/04/12/Dubbo：SPI机制/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210412170147man-1246233_960_720.jpg"></p>
+<span id="more"></span>
+
+<h1 id="Dubbo-SPI概述"><a href="#Dubbo-SPI概述" class="headerlink" title="Dubbo SPI概述"></a>Dubbo SPI概述</h1><p>Dubbo采用<strong>微内核+插件</strong>模式的设计原则，微内核负责组装插件，也就是Dubbo的所有功能点都可被用户自定义扩展所替换。</p>
+<p>微内核是由<code>Dubbo SPI</code>机制实现的，因此了解Dubbo SPI是非常重要的。Dubbo SPI从JDK标准的SPI (Service Provider Interface) 扩展点发现机制加强而来，改进了JDK标准的 SPI 的以下问题：</p>
+<ul>
+<li><p><strong>无法获取指定的扩展实现 。</strong>JDK 标准的 SPI 会一次性实例化扩展点所有实现，如果有扩展实现初始化很耗时，但如果没用上也加载，会很浪费资源。</p>
+</li>
+<li><p><strong>如果扩展点加载失败，连扩展点的名称都拿不到了</strong>。比如：JDK标准的ScriptEngine，通过getName() 获取脚本类型的名称，但如果RubyScriptEngine因为所依赖的 jruby.jar不存在导致 RubyScriptEngine 类加载失败，这个失败原因被吃掉了，和ruby对应不起来，当用户执行ruby脚本时，会报不支持ruby，而不是真正失败的原因。</p>
+</li>
+<li><p><strong>增加了对扩展点IoC和AOP的支持</strong>，一个扩展点可以直接setter注入其它扩展点。</p>
+</li>
+</ul>
+<blockquote>
+<p>如果不了解JDK SPI机制，可以看我写的<a target="_blank" rel="noopener" href="https://juejin.im/post/5a6036d5518825734107f96d">JDK SPI源码详解</a>。</p>
+</blockquote>
+<h1 id="Dubbo-SPI机制源码分析"><a href="#Dubbo-SPI机制源码分析" class="headerlink" title="Dubbo SPI机制源码分析"></a>Dubbo SPI机制源码分析</h1><p>JDK SPI机制是由<code>java.util.ServiceLoader</code>这个工具类实现的，同样Dubbo也提供了类似的类(<code>com.alibaba.dubbo.common.extension.ExtensionLoader</code>)来实现的Dubbo SPI机制。</p>
+<p>下面的内容主要讲解<code>ExtensionLoader</code>如何获取指定的扩展点和自适应扩展点</p>
+<h2 id="获取指定的扩展点"><a href="#获取指定的扩展点" class="headerlink" title="获取指定的扩展点"></a>获取指定的扩展点</h2><p>通过获取<code>DubboProtocol</code>为例，其代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Protocol protocol  = ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(<span class="string">&quot;dubbo&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>通过具体的源码分析，其运行过程如下：</p>
+<p>1、创建<code>ExtensionLoader</code>实例</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Dubbo SPI只支持接口并且被@SPI修饰</span></span><br><span class="line">ExtensionLoader loader = <span class="keyword">new</span> ExtensionLoader(Protocol.class,</span><br><span class="line">    ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension()</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>2、获取扩展点<strong>所有实现类</strong>的Class对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 加载META-INF/services/、META-INF/dubbo/internal/、META-INF/dubbo/目录下type.getName文件</span></span><br><span class="line"><span class="comment">  * 并解析内容，然后将type基本实现类（不包括包装类，没有Adaptive注解）存储在extensionClasse中。</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"><span class="keyword">private</span> Map&lt;String, Class&lt;?&gt;&gt; loadExtensionClasses() &#123;</span><br><span class="line">    Map&lt;String, Class&lt;?&gt;&gt; extensionClasses = <span class="keyword">new</span> HashMap&lt;String, Class&lt;?&gt;&gt;();</span><br><span class="line">    loadFile(extensionClasses, DUBBO_INTERNAL_DIRECTORY);</span><br><span class="line">    loadFile(extensionClasses, DUBBO_DIRECTORY);</span><br><span class="line">    loadFile(extensionClasses, SERVICES_DIRECTORY);</span><br><span class="line">    <span class="keyword">return</span> extensionClasses;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>3、创建DubboProtocol对象并装配其依赖的对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取名为dubbo对应的扩展点实现类</span></span><br><span class="line">Class&lt;?&gt; clazz = getExtensionClasses().get(name);</span><br><span class="line"><span class="comment">// 创建对象</span></span><br><span class="line">T instance = clazz.newInstance();</span><br><span class="line"><span class="comment">// 自动装配</span></span><br><span class="line">injectExtension(instance);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>4、返回ProtocolListenerWrapper对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Set&lt;Class&lt;?&gt;&gt; wrapperClasses = cachedWrapperClasses;</span><br><span class="line"><span class="comment">// 循环遍历初始化包装类</span></span><br><span class="line"><span class="keyword">if</span> (wrapperClasses != <span class="keyword">null</span> &amp;&amp; wrapperClasses.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (Class&lt;?&gt; wrapperClass : wrapperClasses) &#123;</span><br><span class="line">        instance = injectExtension((T) wrapperClass.getConstructor(type)</span><br><span class="line">            .newInstance(instance));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> instance;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>自动注入过程获取需要依赖的对象，是通过<code>ExtensionLoader.objectFactory</code>对象获取的。</p>
+<h2 id="获取自适应扩展点"><a href="#获取自适应扩展点" class="headerlink" title="获取自适应扩展点"></a>获取自适应扩展点</h2><p>通过获取Procotol自适应扩展点为例，其代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Protocol protocol  = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();</span><br></pre></td></tr></table></figure>
+
+
+
+<p>其过程如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建Protocol自适应扩展点实例</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> T <span class="title">createAdaptiveExtension</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> injectExtension((T) getAdaptiveExtensionClass().newInstance());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 之所以贴出这段代码，因为获取自适应扩展点会触发获取扩展点所有实现类的Class对象。目前</span></span><br><span class="line"><span class="comment">  * dubbo只有被<span class="doctag">@Adaptive</span>注解的类仅有AdaptiveCompiler和AdaptiveExtensionFactory，因此除了</span></span><br><span class="line"><span class="comment">  * Complie和ExtensionFactory外都需要动态创建其自适应扩展点的Class</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"><span class="keyword">private</span> Class&lt;?&gt; getAdaptiveExtensionClass() &#123;</span><br><span class="line">    getExtensionClasses();</span><br><span class="line">    <span class="keyword">if</span> (cachedAdaptiveClass != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> cachedAdaptiveClass;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> cachedAdaptiveClass = createAdaptiveExtensionClass();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 创建自适应扩展点类Class对象</span></span><br><span class="line"><span class="keyword">private</span> Class&lt;?&gt; createAdaptiveExtensionClass() &#123;</span><br><span class="line">    String code = createAdaptiveExtensionClassCode();</span><br><span class="line">    ClassLoader classLoader = findClassLoader();</span><br><span class="line">    com.alibaba.dubbo.common.compiler.Compiler compiler = </span><br><span class="line">    ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.common.compiler.Compiler.class)</span><br><span class="line">    .getAdaptiveExtension();</span><br><span class="line">    <span class="keyword">return</span> compiler.compile(code, classLoader);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>动态生成的自适应扩展点<code>Protocol$Adpative</code>类源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Protocol</span>$<span class="title">Adpative</span> <span class="keyword">implements</span> <span class="title">com</span>.<span class="title">alibaba</span>.<span class="title">dubbo</span>.<span class="title">rpc</span>.<span class="title">Protocol</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException(<span class="string">&quot;&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getDefaultPort</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException(<span class="string">&quot;&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> com.alibaba.dubbo.rpc.<span class="function">Invoker <span class="title">refer</span><span class="params">(java.lang.Class arg0,</span></span></span><br><span class="line"><span class="function"><span class="params">                        com.alibaba.dubbo.common.URL arg1)</span> <span class="keyword">throws</span> java.lang.Class </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (arg1 == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;url == null&quot;</span>);</span><br><span class="line">        com.alibaba.dubbo.common.URL url = arg1;</span><br><span class="line">        String extName = (url.getProtocol() == <span class="keyword">null</span> ? <span class="string">&quot;dubbo&quot;</span> : url.getProtocol());</span><br><span class="line">        <span class="keyword">if</span> (extName == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;&quot;</span>);</span><br><span class="line"></span><br><span class="line">        com.alibaba.dubbo.rpc.Protocol extension =</span><br><span class="line">                (com.alibaba.dubbo.rpc.Protocol) ExtensionLoader</span><br><span class="line">                    .getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class)</span><br><span class="line">                    .getExtension(extName);</span><br><span class="line">        <span class="keyword">return</span> extension.refer(arg0, arg1);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> com.alibaba.dubbo.rpc.<span class="function">Exporter <span class="title">export</span><span class="params">(com.alibaba.dubbo.rpc.Invoker arg0)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> com.alibaba.dubbo.rpc.Invoker </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (arg0 == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span> (arg0.getUrl() == <span class="keyword">null</span>)</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;&quot;</span>);</span><br><span class="line"></span><br><span class="line">            com.alibaba.dubbo.common.URL url = arg0.getUrl();</span><br><span class="line">            String extName = (url.getProtocol() == <span class="keyword">null</span> ? <span class="string">&quot;dubbo&quot;</span> : url.getProtocol());</span><br><span class="line">            <span class="keyword">if</span> (extName == <span class="keyword">null</span>)</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;&quot;</span>);</span><br><span class="line"></span><br><span class="line">            com.alibaba.dubbo.rpc.Protocol extension =</span><br><span class="line">                    (com.alibaba.dubbo.rpc.Protocol) ExtensionLoader</span><br><span class="line">                        .getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class)</span><br><span class="line">                        .getExtension(extName);</span><br><span class="line">            <span class="keyword">return</span> extension.export(arg0);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以发现自适应扩展点的作用：通过URL的参数信息获取对应扩展点，从而实现方法动态调用。对应Dubbo基本设计原二：<strong>采用URL作为配置信息的统一格式，所有扩展点都通过传递URL携带配置信息</strong>。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/04/12/Spring%EF%BC%9A%E4%BA%8B%E5%8A%A1/" rel="prev" title="Spring：事务">
+      <i class="fa fa-chevron-left"></i> Spring：事务
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/04/12/Dubbo%EF%BC%9A%E6%9C%8D%E5%8A%A1%E5%8F%91%E5%B8%83/" rel="next" title="Dubbo：服务发布">
+      Dubbo：服务发布 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Dubbo-SPI%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">Dubbo SPI概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Dubbo-SPI%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">Dubbo SPI机制源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E6%8C%87%E5%AE%9A%E7%9A%84%E6%89%A9%E5%B1%95%E7%82%B9"><span class="nav-number">2.1.</span> <span class="nav-text">获取指定的扩展点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E8%87%AA%E9%80%82%E5%BA%94%E6%89%A9%E5%B1%95%E7%82%B9"><span class="nav-number">2.2.</span> <span class="nav-text">获取自适应扩展点</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://niumi.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "http://example.com/2021/04/12/Dubbo%EF%BC%9ASPI%E6%9C%BA%E5%88%B6/";
+    this.page.identifier = "2021/04/12/Dubbo：SPI机制/";
+    this.page.title = "Dubbo：SPI机制";
+    };
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://niumi.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>

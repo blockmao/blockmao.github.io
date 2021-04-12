@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="Dubbo：服务引用">
+<meta property="og:url" content="http://example.com/2021/04/12/Dubbo%EF%BC%9A%E6%9C%8D%E5%8A%A1%E5%BC%95%E7%94%A8/index.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210412205008road-1072821_960_720.jpg">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2018/3/8/162064597145fd0f?w=1240&h=664&f=png&s=370292">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2018/3/8/16206459713dcd9e?w=1240&h=219&f=png&s=48073">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2018/3/8/1620645971dc6f42?w=1240&h=617&f=png&s=74957">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2018/3/8/1620645972090566?w=1240&h=536&f=png&s=62499">
+<meta property="article:published_time" content="2021-04-12T12:48:08.000Z">
+<meta property="article:modified_time" content="2021-04-12T12:51:03.498Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210412205008road-1072821_960_720.jpg">
+
+<link rel="canonical" href="http://example.com/2021/04/12/Dubbo%EF%BC%9A%E6%9C%8D%E5%8A%A1%E5%BC%95%E7%94%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Dubbo：服务引用 | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/12/Dubbo%EF%BC%9A%E6%9C%8D%E5%8A%A1%E5%BC%95%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Dubbo：服务引用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-04-12 20:48:08 / 修改时间：20:51:03" itemprop="dateCreated datePublished" datetime="2021-04-12T20:48:08+08:00">2021-04-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Dubbo/" itemprop="url" rel="index"><span itemprop="name">Dubbo</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2021/04/12/Dubbo%EF%BC%9A%E6%9C%8D%E5%8A%A1%E5%BC%95%E7%94%A8/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2021/04/12/Dubbo：服务引用/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210412205008road-1072821_960_720.jpg" alt="景区"></p>
+<span id="more"></span>
+
+<h2 id="服务引用主流程"><a href="#服务引用主流程" class="headerlink" title="服务引用主流程"></a>服务引用主流程</h2><p>消费者引用一个服务的主过程，如下图所示：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/3/8/162064597145fd0f?w=1240&h=664&f=png&s=370292" alt="图片.png"></p>
+<blockquote>
+<p>首先ReferenceConfig类的init方法调用Protocol的refer方法生成Invoker 实例(如上图中的红色部分)，这是服务消费的关键。接下来把Invoker转换为客户端需要的接口(如：HelloWorld)。</p>
+</blockquote>
+<h2 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h2><h3 id="入口分析——ReferenceBean"><a href="#入口分析——ReferenceBean" class="headerlink" title="入口分析——ReferenceBean"></a>入口分析——ReferenceBean</h3><p><img src="https://user-gold-cdn.xitu.io/2018/3/8/16206459713dcd9e?w=1240&h=219&f=png&s=48073" alt="ReferenceBean类结构图"></p>
+<p>ReferenceBean类实现了FactoryBean接口，通过getBean方法返回的不是FactoryBean本身，而是FactoryBean#getObject方法所返回的对象。</p>
+<p>getObject方法返回ReferenceBean类的实例变量ref，其源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">getObject</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> get();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> T <span class="title">get</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (destroyed)&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;Already destroyed!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (ref == <span class="keyword">null</span>) &#123;</span><br><span class="line">        init();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ref;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>init方法对ref变量进行赋值，源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ref = createProxy(map);</span><br></pre></td></tr></table></figure>
+
+<p>接下来我们一起看看<code>createProxy</code>方法，源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> T <span class="title">createProxy</span><span class="params">(Map&lt;String, String&gt; map)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 1、根据referenceBean属性构建tmpUrl</span></span><br><span class="line">    URL tmpUrl = <span class="keyword">new</span> URL(<span class="string">&quot;temp&quot;</span>, <span class="string">&quot;localhost&quot;</span>, <span class="number">0</span>, map);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">boolean</span> isJvmRefer;</span><br><span class="line">    <span class="keyword">if</span> (isInjvm() == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (url != <span class="keyword">null</span> &amp;&amp; url.length() &gt; <span class="number">0</span>) &#123; <span class="comment">//指定URL的情况下，不做本地引用</span></span><br><span class="line">            isJvmRefer = <span class="keyword">false</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (InjvmProtocol.getInjvmProtocol().isInjvmRefer(tmpUrl)) &#123;</span><br><span class="line">            <span class="comment">//默认情况下如果本地有服务暴露，则引用本地服务.</span></span><br><span class="line">            isJvmRefer = <span class="keyword">true</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            isJvmRefer = <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        isJvmRefer = isInjvm().booleanValue();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 本地引用</span></span><br><span class="line">    <span class="keyword">if</span> (isJvmRefer) &#123;</span><br><span class="line">        URL url = <span class="keyword">new</span> URL(Constants.LOCAL_PROTOCOL, NetUtils.LOCALHOST, <span class="number">0</span>, interfaceClass.getName()).addParameters(map);</span><br><span class="line">        invoker = refprotocol.refer(interfaceClass, url);</span><br><span class="line">        <span class="keyword">if</span> (logger.isInfoEnabled()) &#123;</span><br><span class="line">            logger.info(<span class="string">&quot;Using injvm service &quot;</span> + interfaceClass.getName());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 用户指定URL，指定的URL可能是对点对直连地址，也可能是注册中心URL</span></span><br><span class="line">        <span class="keyword">if</span> (url != <span class="keyword">null</span> &amp;&amp; url.length() &gt; <span class="number">0</span>) &#123; </span><br><span class="line">            String[] us = Constants.SEMICOLON_SPLIT_PATTERN.split(url);</span><br><span class="line">            <span class="keyword">if</span> (us != <span class="keyword">null</span> &amp;&amp; us.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">for</span> (String u : us) &#123;</span><br><span class="line">                    URL url = URL.valueOf(u);</span><br><span class="line">                    <span class="keyword">if</span> (url.getPath() == <span class="keyword">null</span> || url.getPath().length() == <span class="number">0</span>) &#123;</span><br><span class="line">                        url = url.setPath(interfaceName);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) &#123;</span><br><span class="line">                        urls.add(url.addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map)));</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        urls.add(ClusterUtils.mergeUrl(url, map));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123; </span><br><span class="line">            <span class="comment">// 通过注册中心配置拼装URL</span></span><br><span class="line">            List&lt;URL&gt; us = loadRegistries(<span class="keyword">false</span>);</span><br><span class="line">            <span class="keyword">if</span> (us != <span class="keyword">null</span> &amp;&amp; us.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">for</span> (URL u : us) &#123;</span><br><span class="line">                    URL monitorUrl = loadMonitor(u);</span><br><span class="line">                    <span class="keyword">if</span> (monitorUrl != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        map.put(Constants.MONITOR_KEY, URL.encode(monitorUrl.toFullString()));</span><br><span class="line">                    &#125;</span><br><span class="line">                    urls.add(u.addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map)));</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 2、调用procotol获取invoker对象</span></span><br><span class="line">        <span class="keyword">if</span> (urls.size() == <span class="number">1</span>) &#123;  <span class="comment">// 只存在一个注册中心</span></span><br><span class="line">            invoker = refprotocol.refer(interfaceClass, urls.get(<span class="number">0</span>));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            List&lt;Invoker&lt;?&gt;&gt; invokers = <span class="keyword">new</span> ArrayList&lt;Invoker&lt;?&gt;&gt;();</span><br><span class="line">            URL registryURL = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">for</span> (URL url : urls) &#123;</span><br><span class="line">                invokers.add(refprotocol.refer(interfaceClass, url));</span><br><span class="line">                <span class="keyword">if</span> (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) &#123; <span class="comment">// 用了最后一个registry url</span></span><br><span class="line">                    registryURL = url; </span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (registryURL != <span class="keyword">null</span>) &#123; <span class="comment">// 有 注册中心协议的URL</span></span><br><span class="line">                <span class="comment">// 对有注册中心的Cluster 只用 AvailableCluster</span></span><br><span class="line">                URL u = registryURL.addParameter(Constants.CLUSTER_KEY, AvailableCluster.NAME); </span><br><span class="line">                invoker = cluster.join(<span class="keyword">new</span> StaticDirectory(u, invokers));</span><br><span class="line">            &#125;  <span class="keyword">else</span> &#123; <span class="comment">// 不是 注册中心的URL</span></span><br><span class="line">                invoker = cluster.join(<span class="keyword">new</span> StaticDirectory(invokers));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 3、创建invoker的代理对象</span></span><br><span class="line">    <span class="keyword">return</span> (T) proxyFactory.getProxy(invoker);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>createProxy方法的过程如下：</p>
+<p>1、根据ReferenceBean的属性拼接URL；</p>
+<p>2、调用refprotocol.refer()方法获取invoker对象；</p>
+<p>3、创建invoker对象的代理对象。</p>
+<h3 id="获取invoker对象的过程"><a href="#获取invoker对象的过程" class="headerlink" title="获取invoker对象的过程"></a>获取invoker对象的过程</h3><p><code>refprotocol.refer</code>方法的时序图如下：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/3/8/1620645971dc6f42?w=1240&h=617&f=png&s=74957" alt="WX20180308-113757@2x.png"></p>
+<p><code>refprotocol.refer</code>方法主要逻辑由<code>doRefer</code>方法完成的，向注册中心注册消费者的url，然后订阅引用接口的信息，最后通过<code>cluster.join(directory)</code>获取invoke对象（这个过程比较简单，直接构造invoker对象）。doRefer方法源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> &lt;T&gt; <span class="function">Invoker&lt;T&gt; <span class="title">doRefer</span><span class="params">(Cluster cluster, Registry registry, Class&lt;T&gt; type, URL url)</span> </span>&#123;</span><br><span class="line">    RegistryDirectory&lt;T&gt; directory = <span class="keyword">new</span> RegistryDirectory&lt;T&gt;(type, url);</span><br><span class="line">    directory.setRegistry(registry);</span><br><span class="line">    directory.setProtocol(protocol);</span><br><span class="line">    URL subscribeUrl = <span class="keyword">new</span> URL(Constants.CONSUMER_PROTOCOL, NetUtils.getLocalHost(), <span class="number">0</span>, type.getName(), directory.getUrl().getParameters());</span><br><span class="line">    <span class="keyword">if</span> (! Constants.ANY_VALUE.equals(url.getServiceInterface())</span><br><span class="line">            &amp;&amp; url.getParameter(Constants.REGISTER_KEY, <span class="keyword">true</span>)) &#123;</span><br><span class="line">        <span class="comment">// 向注册中心注册消费者的url        </span></span><br><span class="line">        registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY,</span><br><span class="line">                Constants.CHECK_KEY, String.valueOf(<span class="keyword">false</span>)));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 订阅引用接口的提供者</span></span><br><span class="line">    directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY, </span><br><span class="line">            Constants.PROVIDERS_CATEGORY </span><br><span class="line">            + <span class="string">&quot;,&quot;</span> + Constants.CONFIGURATORS_CATEGORY </span><br><span class="line">            + <span class="string">&quot;,&quot;</span> + Constants.ROUTERS_CATEGORY));</span><br><span class="line">    <span class="keyword">return</span> cluster.join(directory);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注册消费者url和发布服务的注册过程类似，都是创建zookeeper临时节点。我们重点关注其订阅过程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// this = doRefer()中directory</span></span><br><span class="line">registry.subscribe(url, <span class="keyword">this</span>);            </span><br></pre></td></tr></table></figure>
+<p>通过debug发现会订阅下面三个zookeeper目录：</p>
+<p><code>/dubbo/com.alibaba.dubbo.demo.DemoService/providers</code><br><code>/dubbo/com.alibaba.dubbo.demo.DemoService/configurators</code><br><code>/dubbo/com.alibaba.dubbo.demo.DemoService/routers</code></p>
+<p>当这三个目录有子节点变化时，都会出发点RegisterDirectory的notity方法。源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">notify</span><span class="params">(List&lt;URL&gt; urls)</span> </span>&#123;</span><br><span class="line">    List&lt;URL&gt; invokerUrls = <span class="keyword">new</span> ArrayList&lt;URL&gt;();</span><br><span class="line">    List&lt;URL&gt; routerUrls = <span class="keyword">new</span> ArrayList&lt;URL&gt;();</span><br><span class="line">    List&lt;URL&gt; configuratorUrls = <span class="keyword">new</span> ArrayList&lt;URL&gt;();</span><br><span class="line">    <span class="keyword">for</span> (URL url : urls) &#123;</span><br><span class="line">        String protocol = url.getProtocol();</span><br><span class="line">        String category = url.getParameter(Constants.CATEGORY_KEY, Constants.DEFAULT_CATEGORY);</span><br><span class="line">        <span class="keyword">if</span> (Constants.ROUTERS_CATEGORY.equals(category) </span><br><span class="line">                || Constants.ROUTE_PROTOCOL.equals(protocol)) &#123;</span><br><span class="line">            routerUrls.add(url);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Constants.CONFIGURATORS_CATEGORY.equals(category) </span><br><span class="line">                || Constants.OVERRIDE_PROTOCOL.equals(protocol)) &#123;</span><br><span class="line">            configuratorUrls.add(url);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Constants.PROVIDERS_CATEGORY.equals(category)) &#123;</span><br><span class="line">            invokerUrls.add(url);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            logger.warn(<span class="string">&quot;Unsupported category &quot;</span> + category + <span class="string">&quot; in notified url: &quot;</span> + url + <span class="string">&quot; from registry &quot;</span> + getUrl().getAddress() + <span class="string">&quot; to consumer &quot;</span> + NetUtils.getLocalHost());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// configurators </span></span><br><span class="line">    <span class="keyword">if</span> (configuratorUrls != <span class="keyword">null</span> &amp;&amp; configuratorUrls.size() &gt;<span class="number">0</span> )&#123;</span><br><span class="line">        <span class="keyword">this</span>.configurators = toConfigurators(configuratorUrls);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// routers</span></span><br><span class="line">    <span class="keyword">if</span> (routerUrls != <span class="keyword">null</span> &amp;&amp; routerUrls.size() &gt;<span class="number">0</span> )&#123;</span><br><span class="line">        List&lt;Router&gt; routers = toRouters(routerUrls);</span><br><span class="line">        <span class="keyword">if</span>(routers != <span class="keyword">null</span>)&#123; <span class="comment">// null - do nothing</span></span><br><span class="line">            setRouters(routers);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    List&lt;Configurator&gt; localConfigurators = <span class="keyword">this</span>.configurators; <span class="comment">// local reference</span></span><br><span class="line">    <span class="comment">// 合并override参数</span></span><br><span class="line">    <span class="keyword">this</span>.overrideDirectoryUrl = directoryUrl;</span><br><span class="line">    <span class="keyword">if</span> (localConfigurators != <span class="keyword">null</span> &amp;&amp; localConfigurators.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (Configurator configurator : localConfigurators) &#123;</span><br><span class="line">            <span class="keyword">this</span>.overrideDirectoryUrl = configurator.configure(overrideDirectoryUrl);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// providers</span></span><br><span class="line">    refreshInvoker(invokerUrls);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建invoker的代理对象"><a href="#创建invoker的代理对象" class="headerlink" title="创建invoker的代理对象"></a>创建invoker的代理对象</h3><p><img src="https://user-gold-cdn.xitu.io/2018/3/8/1620645972090566?w=1240&h=536&f=png&s=62499" alt="WX20180308-113922@2x.png"></p>
+<p>创建invoker的代理对象由JavassistProxyFactory.getProxy方法完成的，源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">getProxy</span><span class="params">(Invoker&lt;T&gt; invoker, Class&lt;?&gt;[] interfaces)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (T) Proxy.getProxy(interfaces)</span><br><span class="line">        .newInstance(<span class="keyword">new</span> InvokerInvocationHandler(invoker));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>生成的代理对象其源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">proxy0</span> <span class="keyword">implements</span> <span class="title">DC</span>, <span class="title">EchoService</span>, <span class="title">DemoService</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Method[] methods;</span><br><span class="line">    <span class="keyword">private</span> InvocationHandler handler;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">sayHello</span><span class="params">(String var1)</span> </span>&#123;</span><br><span class="line">        Object[] var2 = <span class="keyword">new</span> Object[]&#123;var1&#125;;</span><br><span class="line">        Object var3 = <span class="keyword">this</span>.handler.invoke(<span class="keyword">this</span>, methods[<span class="number">0</span>], var2);</span><br><span class="line">        <span class="keyword">return</span> (String)var3;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Object $echo(Object var1) &#123;</span><br><span class="line">        Object[] var2 = <span class="keyword">new</span> Object[]&#123;var1&#125;;</span><br><span class="line">        Object var3 = <span class="keyword">this</span>.handler.invoke(<span class="keyword">this</span>, methods[<span class="number">1</span>], var2);</span><br><span class="line">        <span class="keyword">return</span> (Object)var3;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">proxy0</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">proxy0</span><span class="params">(InvocationHandler var1)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.handler = var1;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/04/12/Dubbo%EF%BC%9A%E6%9C%8D%E5%8A%A1%E5%8F%91%E5%B8%83/" rel="prev" title="Dubbo：服务发布">
+      <i class="fa fa-chevron-left"></i> Dubbo：服务发布
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/04/12/Dubbo%EF%BC%9A%E6%8E%A5%E5%8F%A3%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B/" rel="next" title="Dubbo：接口调用过程">
+      Dubbo：接口调用过程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%BC%95%E7%94%A8%E4%B8%BB%E6%B5%81%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">服务引用主流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A5%E5%8F%A3%E5%88%86%E6%9E%90%E2%80%94%E2%80%94ReferenceBean"><span class="nav-number">2.1.</span> <span class="nav-text">入口分析——ReferenceBean</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96invoker%E5%AF%B9%E8%B1%A1%E7%9A%84%E8%BF%87%E7%A8%8B"><span class="nav-number">2.2.</span> <span class="nav-text">获取invoker对象的过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAinvoker%E7%9A%84%E4%BB%A3%E7%90%86%E5%AF%B9%E8%B1%A1"><span class="nav-number">2.3.</span> <span class="nav-text">创建invoker的代理对象</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://niumi.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "http://example.com/2021/04/12/Dubbo%EF%BC%9A%E6%9C%8D%E5%8A%A1%E5%BC%95%E7%94%A8/";
+    this.page.identifier = "2021/04/12/Dubbo：服务引用/";
+    this.page.title = "Dubbo：服务引用";
+    };
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://niumi.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>
