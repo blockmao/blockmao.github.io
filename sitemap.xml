@@ -149,14 +149,14 @@
   </url>
   
   <url>
-    <loc>http://blog.blockmao.cn/posts/35904.html</loc>
+    <loc>http://blog.blockmao.cn/posts/57239.html</loc>
     
     <lastmod>2021-04-15</lastmod>
     
   </url>
   
   <url>
-    <loc>http://blog.blockmao.cn/posts/57239.html</loc>
+    <loc>http://blog.blockmao.cn/posts/35904.html</loc>
     
     <lastmod>2021-04-15</lastmod>
     
@@ -368,14 +368,14 @@
   </url>
   
   <url>
-    <loc>http://blog.blockmao.cn/tags/%E5%88%9B%E5%BB%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/</loc>
+    <loc>http://blog.blockmao.cn/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%BC%93%E5%AD%98/</loc>
     <lastmod>2021-04-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://blog.blockmao.cn/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%BC%93%E5%AD%98/</loc>
+    <loc>http://blog.blockmao.cn/tags/%E5%88%9B%E5%BB%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/</loc>
     <lastmod>2021-04-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -440,6 +440,13 @@
   </url>
   
   <url>
+    <loc>http://blog.blockmao.cn/categories/Netty/</loc>
+    <lastmod>2021-04-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://blog.blockmao.cn/categories/Mybatis/</loc>
     <lastmod>2021-04-15</lastmod>
     <changefreq>daily</changefreq>
@@ -454,13 +461,6 @@
   </url>
   
   <url>
-    <loc>http://blog.blockmao.cn/categories/Netty/</loc>
-    <lastmod>2021-04-15</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>http://blog.blockmao.cn/categories/Spring/</loc>
     <lastmod>2021-04-15</lastmod>
     <changefreq>daily</changefreq>
@@ -468,14 +468,14 @@
   </url>
   
   <url>
-    <loc>http://blog.blockmao.cn/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/</loc>
+    <loc>http://blog.blockmao.cn/categories/%E5%88%86%E5%B8%83%E5%BC%8F/</loc>
     <lastmod>2021-04-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://blog.blockmao.cn/categories/%E5%88%86%E5%B8%83%E5%BC%8F/</loc>
+    <loc>http://blog.blockmao.cn/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/</loc>
     <lastmod>2021-04-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
