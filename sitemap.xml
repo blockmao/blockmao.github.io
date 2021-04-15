@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.blockmao.cn/posts/2050.html</loc>
+    
+    <lastmod>2021-04-15</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.blockmao.cn/posts/56946.html</loc>
+    
+    <lastmod>2021-04-15</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.blockmao.cn/posts/57358.html</loc>
     
     <lastmod>2021-04-15</lastmod>
@@ -368,6 +382,13 @@
   </url>
   
 
+  
+  <url>
+    <loc>http://blog.blockmao.cn/categories/DDD/</loc>
+    <lastmod>2021-04-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
   
   <url>
     <loc>http://blog.blockmao.cn/categories/SpringCloud/</loc>
