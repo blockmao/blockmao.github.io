@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="SLF4J详解">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/11108.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210413000156ocean-1867285_960_720.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210412235952concrete-bindings.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210412235954legacy.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041223595420190921114138.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041223595420190921123845.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041223595420190921124521.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/log-example%20%5B%7E%3Astudy%3Acode%3Alog-example%5D%20-%20%7E%3Awork%3Arepo%3Aorg%3Aslf4j%3Aslf4j-api%3A1.7.12%3Aslf4j-api-1.7.12-sources.jar!%3Aorg%3Aslf4j%3ALoggerF%E2%80%A6%202019-09-21%2012-23-52.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20190921124242.png">
+<meta property="article:published_time" content="2021-04-12T15:59:18.000Z">
+<meta property="article:modified_time" content="2021-04-15T09:42:36.680Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210413000156ocean-1867285_960_720.jpg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/11108.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>SLF4J详解 | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/11108.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SLF4J详解
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-12 23:59:18" itemprop="dateCreated datePublished" datetime="2021-04-12T23:59:18+08:00">2021-04-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-15 17:42:36" itemprop="dateModified" datetime="2021-04-15T17:42:36+08:00">2021-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%97%A5%E5%BF%97/" itemprop="url" rel="index"><span itemprop="name">日志</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210413000156ocean-1867285_960_720.jpg" alt="海洋"></p>
+<span id="more"></span>
+
+<h2 id="SLF4J概述"><a href="#SLF4J概述" class="headerlink" title="SLF4J概述"></a>SLF4J概述</h2><p>The Simple Logging Facade for Java (SLF4J) serves as a simple facade or abstraction for various logging frameworks, such as java.util.logging, logback and log4j. SLF4J allows the end-user to plug in the desired logging framework at deployment time.</p>
+<blockquote>
+<p><code>Simple Logging Facade for Java</code>（SLF4J）可用作各种日志框架的简单外观或抽象，例如<code>java.util.logging</code>，<code>logback</code>和<code>log4j</code>。<code>SLF4J</code>允许最终用户在部署时插入所需的日志记录框架。</p>
+</blockquote>
+<h3 id="Binding-with-a-logging-framework-at-deployment-time"><a href="#Binding-with-a-logging-framework-at-deployment-time" class="headerlink" title="Binding with a logging framework at deployment time"></a>Binding with a logging framework at deployment time</h3><p>The <code>SLF4J</code> distribution ships with several jar files referred to as <code>SLF4J bindings</code>, with each binding corresponding to a supported framework.</p>
+<ul>
+<li><p><strong>slf4j-log4j12-1.7.27.jar</strong></p>
+<p>  Binding for <code>log4j version 1.2</code>, a widely used logging framework. You also need to place <code>log4j.jar</code> on your class path.</p>
+</li>
+<li><p><strong>slf4j-jdk14-1.7.27.jar</strong></p>
+<p>  Binding for <code>java.util.logging</code>, also referred to as JDK 1.4 logging</p>
+</li>
+<li><p><strong>slf4j-nop-1.7.27.jar</strong></p>
+<p>  Binding for NOP, silently discarding all logging.</p>
+</li>
+<li><p><strong>slf4j-simple-1.7.27.jar</strong></p>
+<p>  Binding for Simple implementation, which outputs all events to System.err. Only messages of level INFO and higher are printed. This binding may be useful in the context of small applications.</p>
+</li>
+<li><p><strong>slf4j-jcl-1.7.27.jar</strong></p>
+<p>  Binding for <code>Jakarta Commons Logging</code>. This binding will delegate all SLF4J logging to JCL.</p>
+</li>
+<li><p><strong>logback-classic-1.2.3.jar (requires logback-core-1.2.3.jar)</strong></p>
+<p>  There are also SLF4J bindings external to the SLF4J project, <code>Logback&#39;s ch.qos.logback.classic.Logger </code>class is a direct implementation of SLF4J’s <code>org.slf4j.Logger</code> interface. </p>
+</li>
+</ul>
+<p>To switch logging frameworks, just replace slf4j bindings on your class path. For example, to switch from java.util.logging to log4j, just replace slf4j-jdk14-1.7.27.jar with slf4j-log4j12-1.7.27.jar.</p>
+<blockquote>
+<p>要切换日志框架，只需替换类路径上的slf4j绑定。例如，要从java.util.logging切换到log4j，只需将slf4j-jdk14-1.7.27.jar替换为slf4j-log4j12-1.7.27.jar即可。</p>
+</blockquote>
+<p><strong>SLF4J does not rely on any special class loader machinery. In fact, each SLF4J binding is hardwired at compile time to use one and only one specific logging framework</strong>. For example, the slf4j-log4j12-1.7.27.jar binding is bound at compile time to use log4j. In your code, in addition to slf4j-api-1.7.27.jar, you simply drop one and only one binding of your choice onto the appropriate class path location. Do not place more than one binding on your class path. </p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210412235952concrete-bindings.png"></p>
+<h3 id="Consolidate-logging-via-SLF4J（通过SLF4J整合日志记录）"><a href="#Consolidate-logging-via-SLF4J（通过SLF4J整合日志记录）" class="headerlink" title="Consolidate logging via SLF4J（通过SLF4J整合日志记录）"></a>Consolidate logging via SLF4J（通过SLF4J整合日志记录）</h3><p>SLF4J caters for this common use-case by providing bridging modules for JCL, java.util.logging and log4j. </p>
+<blockquote>
+<p>SLF4J通过为JCL，java.util.logging和log4j提供桥接模块来满足这种常见用例。</p>
+</blockquote>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210412235954legacy.png"></p>
+<h3 id="Mapped-Diagnostic-Context-MDC-support"><a href="#Mapped-Diagnostic-Context-MDC-support" class="headerlink" title="Mapped Diagnostic Context (MDC) support"></a>Mapped Diagnostic Context (MDC) support</h3><p><code>Mapped Diagnostic Context</code> is essentially a map maintained by the logging framework where the application code provides key-value pairs which can then be inserted by the logging framework in log messages. <code>MDC</code> data can also be highly helpful in filtering messages or triggering certain actions.</p>
+<blockquote>
+<p>映射诊断上下文本质上是由日志框架维护的映射，其中应用程序代码提供键值对，然后日志消息中的日志记录框架可以插入键值对。 MDC数据在过滤消息或触发某些操作方面也非常有用。</p>
+</blockquote>
+<p><code>SLF4J</code> supports <code>MDC</code>, or mapped diagnostic context. If the underlying logging framework offers <code>MDC</code> functionality, then <code>SLF4J</code> will delegate to the underlying framework’s MDC. Note that at this time, only <code>log4j</code> and <code>logback</code> offer <code>MDC</code> functionality. If the underlying framework does not offer <code>MDC</code>, for example <code>java.util.logging</code>, then <code>SLF4J</code> will still store <code>MDC</code> data but the information therein will need to be retrieved by custom user code.    </p>
+<blockquote>
+<p>SLF4J支持MDC或映射诊断上下文。 如果底层日志记录框架提供了MDC功能，那么SLF4J将委托给底层框架的MDC。 请注意，目前只有log4j和logback提供MDC功能。 如果底层框架不提供MDC，例如java.util.logging，则SLF4J仍将存储MDC数据，但其中的信息需要由自定义用户代码检索。</p>
+</blockquote>
+<h2 id="原理分析"><a href="#原理分析" class="headerlink" title="原理分析"></a>原理分析</h2><p><img src="https://gitee.com/niumi/drawing/raw/master/2021041223595420190921114138.png"></p>
+<p>通过上图可知<code>SLF4J</code>能够抽象各种具体日志框架，是由<code>StaticLoggerBinder</code>类完成。接下来重点看看<code>bind()</code>方法是如何查找<code>StaticLoggerBinder</code>类，源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">bind</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 查找类路径下所有的StaticLoggerBinder类</span></span><br><span class="line">        Set&lt;URL&gt; staticLoggerBinderPathSet = findPossibleStaticLoggerBinderPathSet();</span><br><span class="line">        <span class="comment">// 如果存在多个StaticLoggerBinder类，则打印日志</span></span><br><span class="line">        reportMultipleBindingAmbiguity(staticLoggerBinderPathSet);</span><br><span class="line">        <span class="comment">// 获取StaticLoggerBinder实例，如果不存在，则抛出NoClassDefFoundError异常</span></span><br><span class="line">        StaticLoggerBinder.getSingleton();</span><br><span class="line">        INITIALIZATION_STATE = SUCCESSFUL_INITIALIZATION;</span><br><span class="line">        <span class="comment">// 打印实际使用StaticLoggerBinder类</span></span><br><span class="line">        reportActualBinding(staticLoggerBinderPathSet);</span><br><span class="line">        fixSubstitutedLoggers();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NoClassDefFoundError ncde) &#123;</span><br><span class="line">        String msg = ncde.getMessage();</span><br><span class="line">        <span class="keyword">if</span> (messageContainsOrgSlf4jImplStaticLoggerBinder(msg)) &#123;</span><br><span class="line">            INITIALIZATION_STATE = NOP_FALLBACK_INITIALIZATION;</span><br><span class="line">            Util.report(<span class="string">&quot;Failed to load class \&quot;org.slf4j.impl.StaticLoggerBinder\&quot;.&quot;</span>);</span><br><span class="line">            Util.report(<span class="string">&quot;Defaulting to no-operation (NOP) logger implementation&quot;</span>);</span><br><span class="line">            Util.report(<span class="string">&quot;See &quot;</span> + NO_STATICLOGGERBINDER_URL + <span class="string">&quot; for further details.&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            failedBinding(ncde);</span><br><span class="line">            <span class="keyword">throw</span> ncde;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (java.lang.NoSuchMethodError nsme) &#123;</span><br><span class="line">        String msg = nsme.getMessage();</span><br><span class="line">        <span class="keyword">if</span> (msg != <span class="keyword">null</span> &amp;&amp; msg.indexOf(<span class="string">&quot;org.slf4j.impl.StaticLoggerBinder.getSingleton()&quot;</span>) != -<span class="number">1</span>) &#123;</span><br><span class="line">            INITIALIZATION_STATE = FAILED_INITIALIZATION;</span><br><span class="line">            Util.report(<span class="string">&quot;slf4j-api 1.6.x (or later) is incompatible with this binding.&quot;</span>);</span><br><span class="line">            Util.report(<span class="string">&quot;Your binding is version 1.5.5 or earlier.&quot;</span>);</span><br><span class="line">            Util.report(<span class="string">&quot;Upgrade your binding to version 1.6.x.&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> nsme;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        failedBinding(e);</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;Unexpected initialization failure&quot;</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> String  STATIC_LOGGER_BINDER_PATH = <span class="string">&quot;org/slf4j/impl/StaticLoggerBinder.class&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Set&lt;URL&gt; <span class="title">findPossibleStaticLoggerBinderPathSet</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    Set&lt;URL&gt; staticLoggerBinderPathSet = <span class="keyword">new</span> LinkedHashSet&lt;URL&gt;();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        ClassLoader loggerFactoryClassLoader = LoggerFactory.class.getClassLoader();</span><br><span class="line">        Enumeration&lt;URL&gt; paths;</span><br><span class="line">        <span class="keyword">if</span> (loggerFactoryClassLoader == <span class="keyword">null</span>) &#123;</span><br><span class="line">            paths = ClassLoader.getSystemResources(STATIC_LOGGER_BINDER_PATH);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            paths = loggerFactoryClassLoader.getResources(STATIC_LOGGER_BINDER_PATH);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">while</span> (paths.hasMoreElements()) &#123;</span><br><span class="line">            URL path = (URL) paths.nextElement();</span><br><span class="line">            staticLoggerBinderPathSet.add(path);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException ioe) &#123;</span><br><span class="line">        Util.report(<span class="string">&quot;Error getting resources from path&quot;</span>, ioe);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> staticLoggerBinderPathSet;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="SLF4J与logback集成"><a href="#SLF4J与logback集成" class="headerlink" title="SLF4J与logback集成"></a>SLF4J与logback集成</h2><ol>
+<li><p>maven依赖包如下：</p>
+ <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- slf4j-api --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.slf4j<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>slf4j-api<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.7.12<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- logback --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>ch.qos.logback<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>logback-core<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.1.3<span class="tag">&lt;/<span class="name">version</span>&gt;</span> </span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- logback-classic（已含有对slf4j的集成包） --&gt;</span> </span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>ch.qos.logback<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>logback-classic<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.1.3<span class="tag">&lt;/<span class="name">version</span>&gt;</span> </span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p>编写logback的配置文件logback.xml，内容如下:</p>
+ <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">&quot;STDOUT&quot;</span> <span class="attr">class</span>=<span class="string">&quot;ch.qos.logback.core.ConsoleAppender&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">encoder</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>%d&#123;HH:mm:ss.SSS&#125; [%thread] %-5level %logger&#123;36&#125; - %msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">&quot;DEBUG&quot;</span>&gt;</span>          </span><br><span class="line">    <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">&quot;STDOUT&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">root</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p>使用方式</p>
+ <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger=LoggerFactory.getLogger(LogbackTest.class);</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(logger.isDebugEnabled())&#123;</span><br><span class="line">        logger.debug(<span class="string">&quot;slf4j-logback debug message&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(logger.isInfoEnabled())&#123;</span><br><span class="line">        logger.info(<span class="string">&quot;slf4j-logback info message&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(logger.isTraceEnabled())&#123;</span><br><span class="line">        logger.trace(<span class="string">&quot;slf4j-logback trace message&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p><code>org.slf4j.impl.StaticLoggerBinder</code>类实现</p>
+<p> <img src="https://gitee.com/niumi/drawing/raw/master/2021041223595420190921123845.png"></p>
+<p> <img src="https://gitee.com/niumi/drawing/raw/master/2021041223595420190921124521.png"></p>
+</li>
+</ol>
+<h2 id="SLF4J与log4集成"><a href="#SLF4J与log4集成" class="headerlink" title="SLF4J与log4集成"></a>SLF4J与log4集成</h2><ol>
+<li>maven依赖包如下：</li>
+</ol>
+<pre><code><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- slf4j --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.slf4j<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>slf4j-api<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.7.12<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- slf4j-log4j --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.slf4j<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>slf4j-log4j12<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.7.12<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- log4j --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>log4j<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>log4j<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.2.17<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</code></pre>
+<ol start="2">
+<li>编写log4j.properties配置文件,放到类路径下</li>
+</ol>
+<pre><code><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">log4j.rootLogger</span> = <span class="string">debug, console</span></span><br><span class="line"><span class="meta">log4j.appender.console</span> = <span class="string">org.apache.log4j.ConsoleAppender</span></span><br><span class="line"><span class="meta">log4j.appender.console.layout</span> = <span class="string">org.apache.log4j.PatternLayout</span></span><br><span class="line"><span class="meta">log4j.appender.console.layout.ConversionPattern</span> = <span class="string">%-d&#123;yyyy-MM-dd HH:mm:ss&#125; %m%n</span></span><br></pre></td></tr></table></figure>
+</code></pre>
+<ol start="3">
+<li>使用方式</li>
+</ol>
+<pre><code><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> Logger logger=LoggerFactory.getLogger(Log4j2Slf4jTest.class);</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(logger.isTraceEnabled())&#123;</span><br><span class="line">        logger.trace(<span class="string">&quot;slf4j-log4j2 trace message&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(logger.isDebugEnabled())&#123;</span><br><span class="line">        logger.debug(<span class="string">&quot;slf4j-log4j2 debug message&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(logger.isInfoEnabled())&#123;</span><br><span class="line">        logger.info(<span class="string">&quot;slf4j-log4j2 info message&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</code></pre>
+<ol start="4">
+<li><p><code>org.slf4j.impl.StaticLoggerBinder</code>类实现</p>
+<p> <img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/log-example%20%5B%7E%3Astudy%3Acode%3Alog-example%5D%20-%20%7E%3Awork%3Arepo%3Aorg%3Aslf4j%3Aslf4j-api%3A1.7.12%3Aslf4j-api-1.7.12-sources.jar!%3Aorg%3Aslf4j%3ALoggerF%E2%80%A6%202019-09-21%2012-23-52.png"></p>
+<p> <img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20190921124242.png"></p>
+</li>
+</ol>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a target="_blank" rel="noopener" href="https://www.slf4j.org/">slf4j官方文档</a></p>
+<p><a target="_blank" rel="noopener" href="https://my.oschina.net/xianggao/blog/515996">jcl与jul、log4j1、log4j2、logback的集成原理</a></p>
+<p>```</p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/42138.html" rel="prev" title="Class.forName和ClassLoader的区别">
+      <i class="fa fa-chevron-left"></i> Class.forName和ClassLoader的区别
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/9693.html" rel="next" title="如何动态调整线上日志级别？">
+      如何动态调整线上日志级别？ <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#SLF4J%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">SLF4J概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Binding-with-a-logging-framework-at-deployment-time"><span class="nav-number">1.1.</span> <span class="nav-text">Binding with a logging framework at deployment time</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Consolidate-logging-via-SLF4J%EF%BC%88%E9%80%9A%E8%BF%87SLF4J%E6%95%B4%E5%90%88%E6%97%A5%E5%BF%97%E8%AE%B0%E5%BD%95%EF%BC%89"><span class="nav-number">1.2.</span> <span class="nav-text">Consolidate logging via SLF4J（通过SLF4J整合日志记录）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mapped-Diagnostic-Context-MDC-support"><span class="nav-number">1.3.</span> <span class="nav-text">Mapped Diagnostic Context (MDC) support</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">原理分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SLF4J%E4%B8%8Elogback%E9%9B%86%E6%88%90"><span class="nav-number">3.</span> <span class="nav-text">SLF4J与logback集成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SLF4J%E4%B8%8Elog4%E9%9B%86%E6%88%90"><span class="nav-number">4.</span> <span class="nav-text">SLF4J与log4集成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">38</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['牛觅'],
+      id          : '8e0fc1e02f2d59c7c76058ab86691728',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

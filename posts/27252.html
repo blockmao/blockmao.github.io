@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="彻底搞懂Git-Rebase">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/27252.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121833mountains-5936682_960_720.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121649commit1.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121649commit2.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121649git1.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121649git2.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121649git3.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121649git4.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121649git5.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121649git2.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121649git5.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121650git6.png">
+<meta property="article:published_time" content="2021-04-11T04:16:24.000Z">
+<meta property="article:modified_time" content="2021-04-15T09:42:36.691Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210411121833mountains-5936682_960_720.jpg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/27252.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>彻底搞懂Git-Rebase | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/27252.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          彻底搞懂Git-Rebase
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-11 12:16:24" itemprop="dateCreated datePublished" datetime="2021-04-11T12:16:24+08:00">2021-04-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-15 17:42:36" itemprop="dateModified" datetime="2021-04-15T17:42:36+08:00">2021-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Git/" itemprop="url" rel="index"><span itemprop="name">Git</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210411121833mountains-5936682_960_720.jpg"></p>
+<span id="more"></span>
+
+
+
+<blockquote>
+<p>原文地址：<a target="_blank" rel="noopener" href="http://jartto.wang/2018/12/11/git-rebase/#">http://jartto.wang/2018/12/11/git-rebase/#</a></p>
+<p>原文作者：Jartto’s blog</p>
+</blockquote>
+<p>使用 Git 已经好几年了，却始终只是熟悉一些常用的操作。对于 Git Rebase 却很少用到，直到这一次，不得不用。  </p>
+<h3 id="一、起因"><a href="#一、起因" class="headerlink" title="一、起因"></a>一、起因</h3><p>上线构建的过程中扫了一眼代码变更，突然发现，<code>commit</code> 提交竟然多达 <code>62</code> 次。我们来看看都提交了什么东西：<br><img src="https://gitee.com/niumi/drawing/raw/master/20210411121649commit1.png"></p>
+<p>这里我们先不说 <code>git</code> <a target="_blank" rel="noopener" href="http://jartto.wang/2018/07/08/git-commit/">提交规范</a>，就单纯这么多次无用的 <code>commit</code> 就很让人不舒服。可能很多人觉得无所谓，无非是多了一些提交纪录。</p>
+<p>然而，并非如此，你可能听过破窗效应，编程也是如此！</p>
+<h3 id="二、导致问题"><a href="#二、导致问题" class="headerlink" title="二、导致问题"></a>二、导致问题</h3><ul>
+<li><p>不利于代码 <code>review</code>  </p>
+<p>设想一下，你要做 <code>code review</code> ，结果一个很小的功能，提交了 <code>60</code> 多次，会不会有一些崩溃？</p>
+</li>
+<li><p>会造成分支污染  </p>
+<p>你的项目充满了无用的 <code>commit</code> 纪录，如果有一天线上出现了紧急问题，你需要回滚代码，却发现海量的 <code>commit</code> 需要一条条来看。</p>
+</li>
+</ul>
+<p>遵循项目规范才能提高团队协作效率，而不是随心所欲。</p>
+<h3 id="三、Rebase-场景一：如何合并多次提交纪录？"><a href="#三、Rebase-场景一：如何合并多次提交纪录？" class="headerlink" title="三、Rebase 场景一：如何合并多次提交纪录？"></a>三、Rebase 场景一：如何合并多次提交纪录？</h3><p>基于上面所说问题，我们不难想到：每一次功能开发， 对多个 commit 进行合并处理。</p>
+<p>这时候就需要用到 <code>git rebase</code> 了。这个命令没有太难，不常用可能源于不熟悉，所以我们来通过示例学习一下。</p>
+<ol>
+<li>我们来合并最近的 4 次提交纪录，执行：  </li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i HEAD~4</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>这时候，会自动进入 <code>vi</code> 编辑模式：  </li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">s cacc52da add: qrcode</span><br><span class="line">s f072ef48 update: indexeddb hack</span><br><span class="line">s 4e84901a feat: add indexedDB floder</span><br><span class="line">s 8f33126c feat: add test2.js</span><br><span class="line"></span><br><span class="line"><span class="comment"># Rebase 5f2452b2..8f33126c onto 5f2452b2 (4 commands)</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># Commands:</span></span><br><span class="line"><span class="comment"># p, pick = use commit</span></span><br><span class="line"><span class="comment"># r, reword = use commit, but edit the commit message</span></span><br><span class="line"><span class="comment"># e, edit = use commit, but stop for amending</span></span><br><span class="line"><span class="comment"># s, squash = use commit, but meld into previous commit</span></span><br><span class="line"><span class="comment"># f, fixup = like &quot;squash&quot;, but discard this commit&#x27;s log message</span></span><br><span class="line"><span class="comment"># x, exec = run command (the rest of the line) using shell</span></span><br><span class="line"><span class="comment"># d, drop = remove commit</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># These lines can be re-ordered; they are executed from top to bottom.</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># If you remove a line here THAT COMMIT WILL BE LOST.</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># However, if you remove everything, the rebase will be aborted.</span></span><br><span class="line"><span class="comment">#</span></span><br></pre></td></tr></table></figure>
+
+<p>有几个命令需要注意一下：</p>
+<ul>
+<li>  p, pick = use commit</li>
+<li>  r, reword = use commit, but edit the commit message</li>
+<li>  e, edit = use commit, but stop for amending</li>
+<li>  s, squash = use commit, but meld into previous commit</li>
+<li>  f, fixup = like “squash”, but discard this commit’s log message</li>
+<li>  x, exec = run command (the rest of the line) using shell</li>
+<li>  d, drop = remove commit</li>
+</ul>
+<blockquote>
+<p>pick：保留该commit（缩写:p）</p>
+<p>reword：保留该commit，但我需要修改该commit的注释（缩写:r）</p>
+<p>edit：保留该commit, 但我要停下来修改该提交(不仅仅修改注释)（缩写:e）</p>
+<p>squash：将该commit和前一个commit合并（缩写:s）</p>
+<p>fixup：将该commit和前一个commit合并，但我不要保留该提交的注释信息（缩写:f）</p>
+<p>exec：执行shell命令（缩写:x）</p>
+<p>drop：我要丢弃该commit（缩写:d）</p>
+</blockquote>
+<p>按照如上命令来修改你的提交纪录：  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">s cacc52da add: qrcode</span><br><span class="line">s f072ef48 update: indexeddb hack</span><br><span class="line">s 4e84901a feat: add indexedDB floder</span><br><span class="line">p 8f33126c feat: add test2.js</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>如果保存的时候，你碰到了这个错误：  </li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">error: cannot &#x27;squash&#x27; without a previous commit</span><br></pre></td></tr></table></figure>
+
+<p>注意不要合并先前提交的东西，也就是已经提交远程分支的纪录。</p>
+<ol start="4">
+<li>如果你异常退出了 <code>vi</code> 窗口，不要紧张：  </li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase --edit-todo</span><br></pre></td></tr></table></figure>
+
+<p>这时候会一直处在这个编辑的模式里，我们可以回去继续编辑，修改完保存一下：  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase --<span class="built_in">continue</span></span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>查看结果  </li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">log</span></span><br></pre></td></tr></table></figure>
+
+<p>三次提交合并成了一次，减少了无用的提交信息。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210411121649commit2.png"></p>
+<h3 id="四、Rebase-场景二：分支合并"><a href="#四、Rebase-场景二：分支合并" class="headerlink" title="四、Rebase 场景二：分支合并"></a>四、Rebase 场景二：分支合并</h3><ol>
+<li>我们先从 <code>master</code> 分支切出一个 <code>dev</code> 分支，进行开发：  </li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git:(master) git checkout -b feature1</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210411121649git1.png"><br>2. 这时候，你的同事完成了一次 <code>hotfix</code>，并合并入了 <code>master</code> 分支，此时 <code>master</code> 已经领先于你的 <code>feature1</code> 分支了：<br><img src="https://gitee.com/niumi/drawing/raw/master/20210411121649git2.png"><br>3. 恰巧，我们想要同步 <code>master</code> 分支的改动，首先想到了 <code>merge</code>，执行：  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git:(feature1) git merge master</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210411121649git3.png"><br>图中绿色的点就是我们合并之后的结果，执行：  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git:(feature1) git log</span><br></pre></td></tr></table></figure>
+
+<p>就会在记录里发现一些 <code>merge</code> 的信息，但是我们觉得这样污染了 <code>commit</code> 记录，想要保持一份干净的 <code>commit</code>，怎么办呢？这时候，<code>git rebase</code> 就派上用场了。</p>
+<ol start="4">
+<li>让我们来试试 <code>git rebase</code> ，先回退到同事 <code>hotfix</code> 后合并 <code>master</code> 的步骤：<br><img src="https://gitee.com/niumi/drawing/raw/master/20210411121649git4.png">  </li>
+<li>使用 <code>rebase</code> 后来看看结果：  </li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git:(feature1) git rebase master</span><br></pre></td></tr></table></figure>
+
+<p>这里补充一点：<code>rebase</code> 做了什么操作呢？</p>
+<p>首先，<code>git</code> 会把 <code>feature1</code> 分支里面的每个 <code>commit</code> 取消掉；<br>其次，把上面的操作临时保存成 <code>patch</code> 文件，存在 <code>.git/rebase</code> 目录下；<br>然后，把 <code>feature1</code> 分支更新到最新的 <code>master</code> 分支；<br>最后，把上面保存的 <code>patch</code> 文件应用到 <code>feature1</code> 分支上；</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210411121649git5.png"></p>
+<p>从 <code>commit</code> 记录我们可以看出来，<code>feature1</code> 分支是基于 <code>hotfix</code> 合并后的 <code>master</code> ，自然而然的成为了最领先的分支，而且没有 <code>merge</code> 的 <code>commit</code> 记录，是不是感觉很舒服了。</p>
+<ol start="6">
+<li>在 <code>rebase</code> 的过程中，也许会出现冲突 <code>conflict</code>。在这种情况，<code>git</code> 会停止 <code>rebase</code> 并会让你去解决冲突。在解决完冲突后，用 <code>git add</code> 命令去更新这些内容。</li>
+</ol>
+<p>注意，你无需执行 git-commit，只要执行 continue</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase --continue</span><br></pre></td></tr></table></figure>
+
+<p>这样 <code>git</code> 会继续应用余下的 <code>patch</code> 补丁文件。</p>
+<ol start="7">
+<li>在任何时候，我们都可以用 <code>--abort</code> 参数来终止 <code>rebase</code> 的行动，并且分支会回到 <code>rebase</code> 开始前的状态。  </li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase —abort</span><br></pre></td></tr></table></figure>
+
+<h3 id="五、更多-Rebase-的使用场景"><a href="#五、更多-Rebase-的使用场景" class="headerlink" title="五、更多 Rebase 的使用场景"></a>五、更多 Rebase 的使用场景</h3><p>git-rebase 存在的价值是：对一个分支做「变基」操作。</p>
+<ol>
+<li>当我们在一个过时的分支上面开发的时候，执行 <code>rebase</code> 以此同步 <code>master</code> 分支最新变动；  </li>
+<li>假如我们要启动一个放置了很久的并行工作，现在有时间来继续这件事情，很显然这个分支已经落后了。这时候需要在最新的基准上面开始工作，所以 <code>rebase</code> 是最合适的选择。</li>
+</ol>
+<h3 id="六、为什么会是危险操作？"><a href="#六、为什么会是危险操作？" class="headerlink" title="六、为什么会是危险操作？"></a>六、为什么会是危险操作？</h3><p>根据上文来看，<code>git-rebase</code> 很完美，解决了我们的两个问题：  </p>
+<ol>
+<li>合并 <code>commit</code> 记录，保持分支整洁；  </li>
+<li>相比 <code>merge</code> 来说会减少分支合并的记录；</li>
+</ol>
+<p>如果你提交了代码到远程，提交前是这样的：<br><img src="https://gitee.com/niumi/drawing/raw/master/20210411121649git2.png"></p>
+<p>提交后远程分支变成了这样：<br><img src="https://gitee.com/niumi/drawing/raw/master/20210411121649git5.png"></p>
+<p>而此时你的同事也在 <code>feature1</code> 上开发，他的分支依然还是：<br><img src="https://gitee.com/niumi/drawing/raw/master/20210411121650git6.png"></p>
+<p>那么当他 <code>pull</code> 远程 <code>master</code> 的时候，就会有丢失提交纪录。这就是为什么我们经常听到有人说 <code>git rebase</code> 是一个危险命令，因为它改变了历史，我们应该谨慎使用。</p>
+<p>除非你可以肯定该 <code>feature1</code> 分支只有你自己使用，否则请谨慎操作。</p>
+<p>结论：只要你的分支上需要 <code>rebase</code> 的所有 <code>commits</code> 历史还没有被 <code>push</code> 过，就可以安全地使用 <code>git-rebase</code>来操作。</p>
+<h3 id="七、参考："><a href="#七、参考：" class="headerlink" title="七、参考："></a>七、参考：</h3><ol>
+<li><a target="_blank" rel="noopener" href="http://gitbook.liuhui998.com/4_2.html">rebase</a>  </li>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/news/231201">git-rebase 使用总结</a>  </li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/gtlbtnq9mr3/article/details/80222523">git 中的 rebase 操作</a> </li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/kidsitcn/p/5339382.html">git-rebase vs git-merge 详解</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/37221.html" rel="prev" title="Git版本回退：git reset&git revert">
+      <i class="fa fa-chevron-left"></i> Git版本回退：git reset&git revert
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/19168.html" rel="next" title="JVM：通过逃逸分析就能让对象在栈上分配？">
+      JVM：通过逃逸分析就能让对象在栈上分配？ <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E8%B5%B7%E5%9B%A0"><span class="nav-number">1.</span> <span class="nav-text">一、起因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%AF%BC%E8%87%B4%E9%97%AE%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">二、导致问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81Rebase-%E5%9C%BA%E6%99%AF%E4%B8%80%EF%BC%9A%E5%A6%82%E4%BD%95%E5%90%88%E5%B9%B6%E5%A4%9A%E6%AC%A1%E6%8F%90%E4%BA%A4%E7%BA%AA%E5%BD%95%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">三、Rebase 场景一：如何合并多次提交纪录？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81Rebase-%E5%9C%BA%E6%99%AF%E4%BA%8C%EF%BC%9A%E5%88%86%E6%94%AF%E5%90%88%E5%B9%B6"><span class="nav-number">4.</span> <span class="nav-text">四、Rebase 场景二：分支合并</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E6%9B%B4%E5%A4%9A-Rebase-%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">5.</span> <span class="nav-text">五、更多 Rebase 的使用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E6%98%AF%E5%8D%B1%E9%99%A9%E6%93%8D%E4%BD%9C%EF%BC%9F"><span class="nav-number">6.</span> <span class="nav-text">六、为什么会是危险操作？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E5%8F%82%E8%80%83%EF%BC%9A"><span class="nav-number">7.</span> <span class="nav-text">七、参考：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">38</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['牛觅'],
+      id          : 'ec3ba82cf9f24ab0192fc722ba7eeb6b',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

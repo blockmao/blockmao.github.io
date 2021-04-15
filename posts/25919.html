@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="Dubbo：接口调用过程">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/25919.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210412205525woman-6158131_960_720.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100361555164135756-296a4df1-b989-4af4-91a3-ce06b98d5d23.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100361558829483506-ad91b1ca-1ae3-4035-8e2d-f6d8e9c5af4a.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100361555164135516-ff576394-70c6-46b9-85c3-eca4a0bb7aa3.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100361555164135504-a513ccea-c44e-43f9-b15f-c7298dde711e.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100361555164135404-f932d7f2-2a36-45cb-895b-96551e47744b.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135567-88ed9320-641b-4fa1-97a3-41e451f30959.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135526-7786f46f-12c8-4904-94e0-25c923de78b1.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135399-6016c5cb-0cd8-4b1f-aaab-253c6355d9a0.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135410-cbe7a4ea-5ca6-44cc-b326-974995d59765.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135598-bf907947-5833-47a5-9c22-76beef2cc33e.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135761-ed3e7c4e-1ef0-4adf-bfff-be6b08abf632.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135668-f2117081-8b0c-4f3c-8e08-953990ed4035.jpeg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100381555164135465-0617b0d0-6cbb-4cc6-b019-f8517b24e92e.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100381555164135316-abfef517-b8e5-4881-8ee9-77ae8880766d.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104122100381555164135625-60e9c3c6-1595-4112-a266-090ecef23643.png">
+<meta property="article:published_time" content="2021-04-12T12:53:25.000Z">
+<meta property="article:modified_time" content="2021-04-15T09:42:36.648Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210412205525woman-6158131_960_720.jpg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/25919.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Dubbo：接口调用过程 | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/25919.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Dubbo：接口调用过程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-12 20:53:25" itemprop="dateCreated datePublished" datetime="2021-04-12T20:53:25+08:00">2021-04-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-15 17:42:36" itemprop="dateModified" datetime="2021-04-15T17:42:36+08:00">2021-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Dubbo/" itemprop="url" rel="index"><span itemprop="name">Dubbo</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210412205525woman-6158131_960_720.jpg" alt="可爱"></p>
+<span id="more"></span>
+
+<h1 id="服务调用主流程"><a href="#服务调用主流程" class="headerlink" title="服务调用主流程"></a>服务调用主流程</h1><p>在进行源码分析之前，先通过一张图了解Dubbo服务调用过程。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100361555164135756-296a4df1-b989-4af4-91a3-ce06b98d5d23.png" alt="image"></p>
+<p>首先服务消费者通过<code>代理对象Proxy</code> 发起远程调用，接着通过<code>网络客户端Client</code> 将编码后的请求发送给服务提供方的网络层上，也就是 Server。</p>
+<p>Server 在收到请求后，首先要做的事情是对数据包进行<strong>解码</strong>。然后将解码后的请求发送至<strong>分发器 Dispatcher</strong>，再由分发器将请求派发到<strong>指定的线程池</strong>上，最后由线程池调用具体的服务。这就是一个远程调用请求的发送与接收过程。</p>
+<h1 id="服务消费方调用服务"><a href="#服务消费方调用服务" class="headerlink" title="服务消费方调用服务"></a>服务消费方调用服务</h1><h2 id="调用方式"><a href="#调用方式" class="headerlink" title="调用方式"></a>调用方式</h2><p>Dubbo 支持同步和异步两种调用方式，其中异步调用还可细分为“有返回值”的异步调用和“无返回值”的异步调用。所谓“无返回值”异步调用是指服务消费方只管调用，但不关心调用结果，此时 Dubbo 会直接返回一个空的 RpcResult。若要使用异步特性，需要服务消费方手动进行配置。默认情况下，Dubbo 使用同步调用方式。</p>
+<p>Dubbo 默认使用 Javassist 框架为服务接口生成动态代理类，因此我们需要先将代理类进行反编译才能看到源码。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">proxy0</span> <span class="keyword">implements</span> <span class="title">ClassGenerator</span>.<span class="title">DC</span>, <span class="title">EchoService</span>, <span class="title">DemoService</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 方法数组</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Method[] methods;</span><br><span class="line">    <span class="keyword">private</span> InvocationHandler handler;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">proxy0</span><span class="params">(InvocationHandler invocationHandler)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.handler = invocationHandler;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">proxy0</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">sayHello</span><span class="params">(String string)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 将参数存储到 Object 数组中</span></span><br><span class="line">        Object[] arrobject = <span class="keyword">new</span> Object[]&#123;string&#125;;</span><br><span class="line">        <span class="comment">// 调用 InvocationHandler 实现类的 invoke 方法得到调用结果</span></span><br><span class="line">        Object object = <span class="keyword">this</span>.handler.invoke(<span class="keyword">this</span>, methods[<span class="number">0</span>], arrobject);</span><br><span class="line">        <span class="comment">// 返回调用结果</span></span><br><span class="line">        <span class="keyword">return</span> (String)object;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** 回声测试方法 */</span></span><br><span class="line">    <span class="keyword">public</span> Object $echo(Object object) &#123;</span><br><span class="line">        Object[] arrobject = <span class="keyword">new</span> Object[]&#123;object&#125;;</span><br><span class="line">        Object object2 = <span class="keyword">this</span>.handler.invoke(<span class="keyword">this</span>, methods[<span class="number">1</span>], arrobject);</span><br><span class="line">        <span class="keyword">return</span> object2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>代理类的逻辑比较简单。首先将运行时参数存储到数组中，然后调用 InvocationHandler 接口实现类的 invoke 方法，得到调用结果，最后将结果转型并返回给调用方。关于代理类的逻辑就说这么多，继续向下分析。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InvokerInvocationHandler</span> <span class="keyword">implements</span> <span class="title">InvocationHandler</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Invoker&lt;?&gt; invoker;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">InvokerInvocationHandler</span><span class="params">(Invoker&lt;?&gt; handler)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.invoker = handler;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        String methodName = method.getName();</span><br><span class="line">        Class&lt;?&gt;[] parameterTypes = method.getParameterTypes();</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 拦截定义在 Object 类中的方法（未被子类重写），比如 wait/notify</span></span><br><span class="line">        <span class="keyword">if</span> (method.getDeclaringClass() == Object.class) &#123;</span><br><span class="line">            <span class="keyword">return</span> method.invoke(invoker, args);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 如果 toString、hashCode 和 equals 等方法被子类重写了，这里也直接调用</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="string">&quot;toString&quot;</span>.equals(methodName) &amp;&amp; parameterTypes.length == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> invoker.toString();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (<span class="string">&quot;hashCode&quot;</span>.equals(methodName) &amp;&amp; parameterTypes.length == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> invoker.hashCode();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (<span class="string">&quot;equals&quot;</span>.equals(methodName) &amp;&amp; parameterTypes.length == <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> invoker.equals(args[<span class="number">0</span>]);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 将 method 和 args 封装到 RpcInvocation 中，并执行后续的调用</span></span><br><span class="line">        <span class="keyword">return</span> invoker.invoke(<span class="keyword">new</span> RpcInvocation(method, args)).recreate();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100361558829483506-ad91b1ca-1ae3-4035-8e2d-f6d8e9c5af4a.png" alt="image.png"></p>
+<p>由于本文重点是分析服务调用，因此省略中间环节（服务降级、集群容错），直接分析DubboInvoker。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DubboInvoker</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractInvoker</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ExchangeClient[] clients;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">protected</span> Result <span class="title">doInvoke</span><span class="params">(<span class="keyword">final</span> Invocation invocation)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        RpcInvocation inv = (RpcInvocation) invocation;</span><br><span class="line">        <span class="keyword">final</span> String methodName = RpcUtils.getMethodName(invocation);</span><br><span class="line">        <span class="comment">// 设置 path 和 version 到 attachment 中</span></span><br><span class="line">        inv.setAttachment(Constants.PATH_KEY, getUrl().getPath());</span><br><span class="line">        inv.setAttachment(Constants.VERSION_KEY, version);</span><br><span class="line"></span><br><span class="line">        ExchangeClient currentClient;</span><br><span class="line">        <span class="keyword">if</span> (clients.length == <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="comment">// 从 clients 数组中获取 ExchangeClient</span></span><br><span class="line">            currentClient = clients[<span class="number">0</span>];</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            currentClient = clients[index.getAndIncrement() % clients.length];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 获取异步配置</span></span><br><span class="line">            <span class="keyword">boolean</span> isAsync = RpcUtils.isAsync(getUrl(), invocation);</span><br><span class="line">            <span class="comment">// isOneway 为 true，表示“单向”通信</span></span><br><span class="line">            <span class="keyword">boolean</span> isOneway = RpcUtils.isOneway(getUrl(), invocation);</span><br><span class="line">            <span class="keyword">int</span> timeout = getUrl().getMethodParameter(methodName, Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 异步无返回值</span></span><br><span class="line">            <span class="keyword">if</span> (isOneway) &#123;</span><br><span class="line">                <span class="keyword">boolean</span> isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, <span class="keyword">false</span>);</span><br><span class="line">                <span class="comment">// 发送请求</span></span><br><span class="line">                currentClient.send(inv, isSent);</span><br><span class="line">                <span class="comment">// 设置上下文中的 future 字段为 null</span></span><br><span class="line">                RpcContext.getContext().setFuture(<span class="keyword">null</span>);</span><br><span class="line">                <span class="comment">// 返回一个空的 RpcResult</span></span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> RpcResult();</span><br><span class="line">            &#125; </span><br><span class="line"></span><br><span class="line">            <span class="comment">// 异步有返回值</span></span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (isAsync) &#123;</span><br><span class="line">                <span class="comment">// 发送请求，并得到一个 ResponseFuture 实例</span></span><br><span class="line">                ResponseFuture future = currentClient.request(inv, timeout);</span><br><span class="line">                <span class="comment">// 设置 future 到上下文中</span></span><br><span class="line">                RpcContext.getContext().setFuture(<span class="keyword">new</span> FutureAdapter&lt;Object&gt;(future));</span><br><span class="line">                <span class="comment">// 暂时返回一个空结果</span></span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> RpcResult();</span><br><span class="line">            &#125; </span><br><span class="line"></span><br><span class="line">            <span class="comment">// 同步调用</span></span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                RpcContext.getContext().setFuture(<span class="keyword">null</span>);</span><br><span class="line">                <span class="comment">// 发送请求，得到一个 ResponseFuture 实例，并调用该实例的 get 方法进行等待</span></span><br><span class="line">                <span class="keyword">return</span> (Result) currentClient.request(inv, timeout).get();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (TimeoutException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(..., <span class="string">&quot;Invoke remote method timeout....&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (RemotingException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(..., <span class="string">&quot;Failed to invoke remote method: ...&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 省略其他方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面的代码包含了 Dubbo 对同步和异步调用的处理逻辑，搞懂了上面的代码，会对 Dubbo 的同步和异步调用方式有更深入的了解。Dubbo 实现同步和异步调用比较关键的一点就在于由谁调用 ResponseFuture 的 get 方法。同步调用模式下，由框架自身调用 ResponseFuture 的 get 方法。异步调用模式下，则由用户调用该方法。ResponseFuture 是一个接口，下面我们来看一下它的默认实现类 DefaultFuture 的源码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DefaultFuture</span> <span class="keyword">implements</span> <span class="title">ResponseFuture</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;Long, Channel&gt; CHANNELS = </span><br><span class="line">        <span class="keyword">new</span> ConcurrentHashMap&lt;Long, Channel&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;Long, DefaultFuture&gt; FUTURES = </span><br><span class="line">        <span class="keyword">new</span> ConcurrentHashMap&lt;Long, DefaultFuture&gt;();</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> id;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Channel channel;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Request request;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> timeout;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Lock lock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Condition done = lock.newCondition();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> Response response;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DefaultFuture</span><span class="params">(Channel channel, Request request, <span class="keyword">int</span> timeout)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.channel = channel;</span><br><span class="line">        <span class="keyword">this</span>.request = request;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 获取请求 id，这个 id 很重要，后面还会见到</span></span><br><span class="line">        <span class="keyword">this</span>.id = request.getId();</span><br><span class="line">        <span class="keyword">this</span>.timeout = timeout &gt; <span class="number">0</span> ? timeout : channel.getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);</span><br><span class="line">        <span class="comment">// 存储 &lt;requestId, DefaultFuture&gt; 映射关系到 FUTURES 中</span></span><br><span class="line">        FUTURES.put(id, <span class="keyword">this</span>);</span><br><span class="line">        CHANNELS.put(id, channel);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">get</span><span class="params">()</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> get(timeout);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">get</span><span class="params">(<span class="keyword">int</span> timeout)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (timeout &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">            timeout = Constants.DEFAULT_TIMEOUT;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 检测服务提供方是否成功返回了调用结果</span></span><br><span class="line">        <span class="keyword">if</span> (!isDone()) &#123;</span><br><span class="line">            <span class="keyword">long</span> start = System.currentTimeMillis();</span><br><span class="line">            lock.lock();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 循环检测服务提供方是否成功返回了调用结果</span></span><br><span class="line">                <span class="keyword">while</span> (!isDone()) &#123;</span><br><span class="line">                    <span class="comment">// 如果调用结果尚未返回，这里等待一段时间</span></span><br><span class="line">                    done.await(timeout, TimeUnit.MILLISECONDS);</span><br><span class="line">                    <span class="comment">// 如果调用结果成功返回，或等待超时，此时跳出 while 循环，执行后续的逻辑</span></span><br><span class="line">                    <span class="keyword">if</span> (isDone() || System.currentTimeMillis() - start &gt; timeout) &#123;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                lock.unlock();</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            <span class="comment">// 如果调用结果仍未返回，则抛出超时异常</span></span><br><span class="line">            <span class="keyword">if</span> (!isDone()) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> TimeoutException(sent &gt; <span class="number">0</span>, channel, getTimeoutMessage(<span class="keyword">false</span>));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 返回调用结果</span></span><br><span class="line">        <span class="keyword">return</span> returnFromResponse();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isDone</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 通过检测 response 字段为空与否，判断是否收到了调用结果</span></span><br><span class="line">        <span class="keyword">return</span> response != <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">private</span> Object <span class="title">returnFromResponse</span><span class="params">()</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        Response res = response;</span><br><span class="line">        <span class="keyword">if</span> (res == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;response cannot be null&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 如果调用结果的状态为 Response.OK，则表示调用过程正常，服务提供方成功返回了调用结果</span></span><br><span class="line">        <span class="keyword">if</span> (res.getStatus() == Response.OK) &#123;</span><br><span class="line">            <span class="keyword">return</span> res.getResult();</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 抛出异常</span></span><br><span class="line">        <span class="keyword">if</span> (res.getStatus() == Response.CLIENT_TIMEOUT || res.getStatus() == Response.SERVER_TIMEOUT) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> TimeoutException(res.getStatus() == Response.SERVER_TIMEOUT, channel, res.getErrorMessage());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RemotingException(channel, res.getErrorMessage());</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 省略其他方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>当服务消费者还未接收到调用结果时，用户线程调用 get 方法会被阻塞住。同步调用模式下，框架获得 DefaultFuture 对象后，会立即调用 get 方法进行等待。而异步模式下则是将该对象封装到 FutureAdapter 实例中，并将 FutureAdapter 实例设置到 RpcContext 中，供用户使用。FutureAdapter 是一个适配器，用于将 Dubbo 中的 ResponseFuture 与 JDK 中的 Future 进行适配。这样当用户线程调用 Future 的 get 方法时，经过 FutureAdapter 适配，最终会调用 ResponseFuture 实现类对象的 get 方法，也就是 DefaultFuture 的 get 方法。</p>
+<h2 id="发送请求"><a href="#发送请求" class="headerlink" title="发送请求"></a>发送请求</h2><p>在深入分析源码前，我们先来看一张图（DubboInvoke实例化）。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100361555164135516-ff576394-70c6-46b9-85c3-eca4a0bb7aa3.png" alt="image"></p>
+<p>首先分析 ReferenceCountExchangeClient 的源码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ReferenceCountExchangeClient</span> <span class="keyword">implements</span> <span class="title">ExchangeClient</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> URL url;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> AtomicInteger referenceCount = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ReferenceCountExchangeClient</span><span class="params">(ExchangeClient client, ConcurrentMap&lt;String, LazyConnectExchangeClient&gt; ghostClientMap)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.client = client;</span><br><span class="line">        <span class="comment">// 引用计数自增</span></span><br><span class="line">        referenceCount.incrementAndGet();</span><br><span class="line">        <span class="keyword">this</span>.url = client.getUrl();</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ResponseFuture <span class="title">request</span><span class="params">(Object request)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="comment">// 直接调用被装饰对象的同签名方法</span></span><br><span class="line">        <span class="keyword">return</span> client.request(request);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ResponseFuture <span class="title">request</span><span class="params">(Object request, <span class="keyword">int</span> timeout)</span> </span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="comment">// 直接调用被装饰对象的同签名方法</span></span><br><span class="line">        <span class="keyword">return</span> client.request(request, timeout);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** 引用计数自增，该方法由外部调用 */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">incrementAndGetCount</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// referenceCount 自增</span></span><br><span class="line">        referenceCount.incrementAndGet();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">(<span class="keyword">int</span> timeout)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// referenceCount 自减</span></span><br><span class="line">        <span class="keyword">if</span> (referenceCount.decrementAndGet() &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (timeout == <span class="number">0</span>) &#123;</span><br><span class="line">                client.close();</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                client.close(timeout);</span><br><span class="line">            &#125;</span><br><span class="line">            client = replaceWithLazyClient();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 省略部分方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>ReferenceCountExchangeClient 内部定义了一个引用计数变量 referenceCount，每当该对象被引用一次 referenceCount 都会进行自增。每当 close 方法被调用时，referenceCount 进行自减。ReferenceCountExchangeClient 内部仅实现了一个引用计数的功能，其他方法并无复杂逻辑，均是直接调用被装饰对象的相关方法。继续向下分析，这次是 HeaderExchangeClient。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HeaderExchangeClient</span> <span class="keyword">implements</span> <span class="title">ExchangeClient</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ScheduledThreadPoolExecutor scheduled = <span class="keyword">new</span> ScheduledThreadPoolExecutor(<span class="number">2</span>, <span class="keyword">new</span> NamedThreadFactory(<span class="string">&quot;dubbo-remoting-client-heartbeat&quot;</span>, <span class="keyword">true</span>));</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Client client;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ExchangeChannel channel;</span><br><span class="line">    <span class="keyword">private</span> ScheduledFuture&lt;?&gt; heartbeatTimer;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> heartbeat;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> heartbeatTimeout;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">HeaderExchangeClient</span><span class="params">(Client client, <span class="keyword">boolean</span> needHeartbeat)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (client == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;client == null&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.client = client;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 创建 HeaderExchangeChannel 对象</span></span><br><span class="line">        <span class="keyword">this</span>.channel = <span class="keyword">new</span> HeaderExchangeChannel(client);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 以下代码均与心跳检测逻辑有关</span></span><br><span class="line">        String dubbo = client.getUrl().getParameter(Constants.DUBBO_VERSION_KEY);</span><br><span class="line">        <span class="keyword">this</span>.heartbeat = client.getUrl().getParameter(Constants.HEARTBEAT_KEY, dubbo != <span class="keyword">null</span> &amp;&amp; dubbo.startsWith(<span class="string">&quot;1.0.&quot;</span>) ? Constants.DEFAULT_HEARTBEAT : <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">this</span>.heartbeatTimeout = client.getUrl().getParameter(Constants.HEARTBEAT_TIMEOUT_KEY, heartbeat * <span class="number">3</span>);</span><br><span class="line">        <span class="keyword">if</span> (heartbeatTimeout &lt; heartbeat * <span class="number">2</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;heartbeatTimeout &lt; heartbeatInterval * 2&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (needHeartbeat) &#123;</span><br><span class="line">            <span class="comment">// 开启心跳检测定时器</span></span><br><span class="line">            startHeartbeatTimer();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ResponseFuture <span class="title">request</span><span class="params">(Object request)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="comment">// 直接 HeaderExchangeChannel 对象的同签名方法</span></span><br><span class="line">        <span class="keyword">return</span> channel.request(request);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ResponseFuture <span class="title">request</span><span class="params">(Object request, <span class="keyword">int</span> timeout)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="comment">// 直接 HeaderExchangeChannel 对象的同签名方法</span></span><br><span class="line">        <span class="keyword">return</span> channel.request(request, timeout);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        doClose();</span><br><span class="line">        channel.close();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doClose</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 停止心跳检测定时器</span></span><br><span class="line">        stopHeartbeatTimer();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">startHeartbeatTimer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        stopHeartbeatTimer();</span><br><span class="line">        <span class="keyword">if</span> (heartbeat &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            heartbeatTimer = scheduled.scheduleWithFixedDelay(</span><br><span class="line">                    <span class="keyword">new</span> HeartBeatTask(<span class="keyword">new</span> HeartBeatTask.ChannelProvider() &#123;</span><br><span class="line">                        <span class="meta">@Override</span></span><br><span class="line">                        <span class="function"><span class="keyword">public</span> Collection&lt;Channel&gt; <span class="title">getChannels</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                            <span class="keyword">return</span> Collections.&lt;Channel&gt;singletonList(HeaderExchangeClient.<span class="keyword">this</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;, heartbeat, heartbeatTimeout),</span><br><span class="line">                    heartbeat, heartbeat, TimeUnit.MILLISECONDS);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">stopHeartbeatTimer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (heartbeatTimer != <span class="keyword">null</span> &amp;&amp; !heartbeatTimer.isCancelled()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                heartbeatTimer.cancel(<span class="keyword">true</span>);</span><br><span class="line">                scheduled.purge();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">                <span class="keyword">if</span> (logger.isWarnEnabled()) &#123;</span><br><span class="line">                    logger.warn(e.getMessage(), e);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        heartbeatTimer = <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 省略部分方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>HeaderExchangeClient</code>仅仅封装了一些关于心跳检测的逻辑，具体功能是由<code>HeaderExchangeChannel</code>完成的。因此就不多说了，继续向下看</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">HeaderExchangeChannel</span> <span class="keyword">implements</span> <span class="title">ExchangeChannel</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Channel channel;</span><br><span class="line">    </span><br><span class="line">    HeaderExchangeChannel(Channel channel) &#123;</span><br><span class="line">        <span class="keyword">if</span> (channel == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;channel == null&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 这里的 channel 指向的是 NettyClient</span></span><br><span class="line">        <span class="keyword">this</span>.channel = channel;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ResponseFuture <span class="title">request</span><span class="params">(Object request)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> request(request, channel.getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ResponseFuture <span class="title">request</span><span class="params">(Object request, <span class="keyword">int</span> timeout)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (closed) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RemotingException(..., <span class="string">&quot;Failed to send request ...);</span></span><br><span class="line"><span class="string">        &#125;</span></span><br><span class="line"><span class="string">        // 创建 Request 对象</span></span><br><span class="line"><span class="string">        Request req = new Request();</span></span><br><span class="line"><span class="string">        req.setVersion(Version.getProtocolVersion());</span></span><br><span class="line"><span class="string">        // 设置双向通信标志为 true</span></span><br><span class="line"><span class="string">        req.setTwoWay(true);</span></span><br><span class="line"><span class="string">        // 这里的 request 变量类型为 RpcInvocation</span></span><br><span class="line"><span class="string">        req.setData(request);</span></span><br><span class="line"><span class="string">                                        </span></span><br><span class="line"><span class="string">        // 创建 DefaultFuture 对象</span></span><br><span class="line"><span class="string">        DefaultFuture future = new DefaultFuture(channel, req, timeout);</span></span><br><span class="line"><span class="string">        try &#123;</span></span><br><span class="line"><span class="string">            // 调用 NettyClient 的 send 方法发送请求</span></span><br><span class="line"><span class="string">            channel.send(req);</span></span><br><span class="line"><span class="string">        &#125; catch (RemotingException e) &#123;</span></span><br><span class="line"><span class="string">            future.cancel();</span></span><br><span class="line"><span class="string">            throw e;</span></span><br><span class="line"><span class="string">        &#125;</span></span><br><span class="line"><span class="string">        // 返回 DefaultFuture 对象</span></span><br><span class="line"><span class="string">        return future;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面的方法首先定义了一个Request对象，然后再将该对象传给 NettyClient 的 send 方法，进行后续的调用。需要说明的是，NettyClient 中并未实现 send 方法，该方法继承自父类 AbstractPeer，下面直接分析 AbstractPeer 的代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractPeer</span> <span class="keyword">implements</span> <span class="title">Endpoint</span>, <span class="title">ChannelHandler</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">send</span><span class="params">(Object message)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="comment">// 该方法由 AbstractClient 类实现</span></span><br><span class="line">        send(message, url.getParameter(Constants.SENT_KEY, <span class="keyword">false</span>));</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 省略其他方法</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractClient</span> <span class="keyword">extends</span> <span class="title">AbstractEndpoint</span> <span class="keyword">implements</span> <span class="title">Client</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">send</span><span class="params">(Object message, <span class="keyword">boolean</span> sent)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (send_reconnect &amp;&amp; !isConnected()) &#123;</span><br><span class="line">            connect();</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 获取 Channel，getChannel 是一个抽象方法，具体由子类实现</span></span><br><span class="line">        Channel channel = getChannel();</span><br><span class="line">        <span class="keyword">if</span> (channel == <span class="keyword">null</span> || !channel.isConnected()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RemotingException(<span class="keyword">this</span>, <span class="string">&quot;message can not send ...&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 继续向下调用</span></span><br><span class="line">        channel.send(message, sent);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">abstract</span> Channel <span class="title">getChannel</span><span class="params">()</span></span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 省略其他方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>获取到 NettyChannel 实例后，即可进行后续的调用。下面看一下 NettyChannel的send方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">send</span><span class="params">(Object message, <span class="keyword">boolean</span> sent)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.send(message, sent);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">boolean</span> success = <span class="keyword">true</span>;</span><br><span class="line">    <span class="keyword">int</span> timeout = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 发送消息(包含请求和响应消息)</span></span><br><span class="line">        ChannelFuture future = channel.write(message);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// sent 的值源于 &lt;dubbo:method sent=&quot;true/false&quot; /&gt; 中 sent 的配置值，有两种配置值：</span></span><br><span class="line">        <span class="comment">//   1. true: 等待消息发出，消息发送失败将抛出异常</span></span><br><span class="line">        <span class="comment">//   2. false: 不等待消息发出，将消息放入 IO 队列，即刻返回</span></span><br><span class="line">        <span class="comment">// 默认情况下 sent = false；</span></span><br><span class="line">        <span class="keyword">if</span> (sent) &#123;</span><br><span class="line">            timeout = getUrl().getPositiveParameter(Constants.TIMEOUT_KEY,</span><br><span class="line">                                                    Constants.DEFAULT_TIMEOUT);</span><br><span class="line">            <span class="comment">// 等待消息发出，若在规定时间没能发出，success 会被置为 false</span></span><br><span class="line">            success = future.await(timeout);</span><br><span class="line">        &#125;</span><br><span class="line">        Throwable cause = future.getCause();</span><br><span class="line">        <span class="keyword">if</span> (cause != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> cause;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RemotingException(<span class="keyword">this</span>, <span class="string">&quot;Failed to send message ...&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 若 success 为 false，这里抛出异常</span></span><br><span class="line">    <span class="keyword">if</span> (!success) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RemotingException(<span class="keyword">this</span>, <span class="string">&quot;Failed to send message ...&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="2-3-NettyClient"><a href="#2-3-NettyClient" class="headerlink" title="2.3 NettyClient"></a>2.3 NettyClient</h2><p>NettyClient类继承结构图如下：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100361555164135504-a513ccea-c44e-43f9-b15f-c7298dde711e.png" alt="image"></p>
+<p>NettyClient实例化</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100361555164135404-f932d7f2-2a36-45cb-895b-96551e47744b.png" alt="image"></p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135567-88ed9320-641b-4fa1-97a3-41e451f30959.png" alt="image"></p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135526-7786f46f-12c8-4904-94e0-25c923de78b1.png" alt="image"></p>
+<p>通过Debug，nettyClientHandler实例如下：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135399-6016c5cb-0cd8-4b1f-aaab-253c6355d9a0.png" alt="image"></p>
+<h1 id="服务提供方处理请求"><a href="#服务提供方处理请求" class="headerlink" title="服务提供方处理请求"></a>服务提供方处理请求</h1><h2 id="NettyServer"><a href="#NettyServer" class="headerlink" title="NettyServer"></a>NettyServer</h2><p>通过之前的文章我们知道<strong>Server</strong>是在服务暴露的过程中创建的，在默认情况下<strong>Server为NettyServer</strong>。其类继承结构如下：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135410-cbe7a4ea-5ca6-44cc-b326-974995d59765.png" alt="image"></p>
+<p>NettyServer的构造方法如下：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135598-bf907947-5833-47a5-9c22-76beef2cc33e.png" alt="image"></p>
+<p>熟悉Netty都应该知道Server的业务处理是由<code>NettyServerHandler</code>类完成的，因此相当重要。通过Debug其实例如下：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135761-ed3e7c4e-1ef0-4adf-bfff-be6b08abf632.png" alt="image"></p>
+<h2 id="调用服务"><a href="#调用服务" class="headerlink" title="调用服务"></a>调用服务</h2><p>解码器将数据包解析成 Request 对象后，nettyServerHandler的 channelRead 方法紧接着会收到这个对象，并将这个对象继续向下传递。这期间该对象会被依次传递给 NettyServer、MultiMessageHandler、HeartbeatHandler 以及 AllChannelHandler。最后由 AllChannelHandler 将该对象封装到 Runnable 实现类对象中，并将 Runnable 放入线程池中执行后续的调用逻辑。整个调用栈如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">nettyServerHandler#channelRead(ChannelHandlerContext, MessageEvent)</span><br><span class="line">  —&gt; AbstractPeer#received(Channel, Object)</span><br><span class="line">    —&gt; MultiMessageHandler#received(Channel, Object)</span><br><span class="line">      —&gt; HeartbeatHandler#received(Channel, Object)</span><br><span class="line">        —&gt; AllChannelHandler#received(Channel, Object)</span><br><span class="line">          —&gt; ExecutorService#execute(Runnable)    &#x2F;&#x2F; 由线程池执行后续的调用逻辑</span><br></pre></td></tr></table></figure>
+
+
+
+<p>Dubbo 将底层通信框架中接收请求的线程称为 <strong>IO 线程</strong>。如果一些事件处理逻辑可以很快执行完，比如只在内存打一个标记，此时直接在 IO 线程上执行该段逻辑即可。但如果事件的处理逻辑比较耗时，比如该段逻辑会发起数据库查询或者 HTTP 请求。此时我们就不应该让事件处理逻辑在 IO 线程上执行，而是应该派发到线程池中去执行。原因也很简单，IO 线程主要用于接收请求，如果 IO 线程被占满，将导致它不能接收新的请求。以上就是线程派发的背景，下面我们再来通过 Dubbo 调用图，看一下线程派发器所处的位置。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100371555164135668-f2117081-8b0c-4f3c-8e08-953990ed4035.jpeg" alt="image"></p>
+<p>如上图，红框中的 Dispatcher 就是线程派发器。需要说明的是，Dispatcher 真实的职责创建具有线程派发能力的 ChannelHandler，比如 AllChannelHandler、MessageOnlyChannelHandler 和 ExecutionChannelHandler 等，其本身并不具备线程派发能力。Dubbo 支持 5 种不同的线程派发策略，下面通过一个表格列举一下。</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>all</td>
+<td>所有消息都派发到线程池，包括请求，响应，连接事件，断开事件等</td>
+</tr>
+<tr>
+<td>direct</td>
+<td>所有消息都不派发到线程池，全部在 IO 线程上直接执行</td>
+</tr>
+<tr>
+<td>message</td>
+<td>只有<strong>请求</strong>响应**消息派发到线程池，其它消息均在 IO 线程上执行</td>
+</tr>
+<tr>
+<td>execution</td>
+<td>只有<strong>请求</strong>消息派发到线程池，不含响应。其它消息均在 IO 线程上执行</td>
+</tr>
+<tr>
+<td>connection</td>
+<td>在 IO 线程上，将连接断开事件放入队列，有序逐个执行，其它消息派发到线程池</td>
+</tr>
+</tbody></table>
+<p>默认配置下，Dubbo 使用<code>all</code>派发策略，即将所有的消息都派发到线程池中。下面我们来分析一下 AllChannelHandler 的代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AllChannelHandler</span> <span class="keyword">extends</span> <span class="title">WrappedChannelHandler</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AllChannelHandler</span><span class="params">(ChannelHandler handler, URL url)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(handler, url);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/** 处理连接事件 */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">connected</span><span class="params">(Channel channel)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="comment">// 获取线程池</span></span><br><span class="line">        ExecutorService cexecutor = getExecutorService();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 将连接事件派发到线程池中处理</span></span><br><span class="line">            cexecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.CONNECTED));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(..., <span class="string">&quot; error when process connected event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/** 处理断开事件 */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">disconnected</span><span class="params">(Channel channel)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        ExecutorService cexecutor = getExecutorService();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            cexecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.DISCONNECTED));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(..., <span class="string">&quot;error when process disconnected event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/** 处理请求和响应消息，这里的 message 变量类型可能是 Request，也可能是 Response */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">received</span><span class="params">(Channel channel, Object message)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        ExecutorService cexecutor = getExecutorService();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 将请求和响应消息派发到线程池中处理</span></span><br><span class="line">            cexecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="keyword">if</span>(message <span class="keyword">instanceof</span> Request &amp;&amp; t <span class="keyword">instanceof</span> RejectedExecutionException)&#123;</span><br><span class="line">                Request request = (Request)message;</span><br><span class="line">                <span class="comment">// 如果通信方式为双向通信，此时将 Server side ... threadpool is exhausted </span></span><br><span class="line">                <span class="comment">// 错误信息封装到 Response 中，并返回给服务消费方。</span></span><br><span class="line">                <span class="keyword">if</span>(request.isTwoWay())&#123;</span><br><span class="line">                    String msg = <span class="string">&quot;Server side(&quot;</span> + url.getIp() + <span class="string">&quot;,&quot;</span> + url.getPort() </span><br><span class="line">                        + <span class="string">&quot;) threadpool is exhausted ,detail msg:&quot;</span> + t.getMessage();</span><br><span class="line">                    Response response = <span class="keyword">new</span> Response(request.getId(), request.getVersion());</span><br><span class="line">                    response.setStatus(Response.SERVER_THREADPOOL_EXHAUSTED_ERROR);</span><br><span class="line">                    response.setErrorMessage(msg);</span><br><span class="line">                    <span class="comment">// 返回包含错误信息的 Response 对象</span></span><br><span class="line">                    channel.send(response);</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(..., <span class="string">&quot; error when process received event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/** 处理异常信息 */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">caught</span><span class="params">(Channel channel, Throwable exception)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        ExecutorService cexecutor = getExecutorService();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            cexecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.CAUGHT, exception));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(..., <span class="string">&quot;error when process caught event ...&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如上，请求对象会被封装 ChannelEventRunnable 中，ChannelEventRunnable 将会是服务调用过程的新起点。所以接下来我们以 ChannelEventRunnable 为起点向下探索，该类的主要代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ChannelEventRunnable</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LoggerFactory.getLogger(ChannelEventRunnable.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ChannelHandler handler;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Channel channel;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ChannelState state;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Throwable exception;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Object message;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ChannelEventRunnable</span><span class="params">(Channel channel, ChannelHandler handler, ChannelState state)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>(channel, handler, state, <span class="keyword">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ChannelEventRunnable</span><span class="params">(Channel channel, ChannelHandler handler, ChannelState state, Object message)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>(channel, handler, state, message, <span class="keyword">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ChannelEventRunnable</span><span class="params">(Channel channel, ChannelHandler handler, ChannelState state, Throwable t)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>(channel, handler, state, <span class="keyword">null</span>, t);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ChannelEventRunnable</span><span class="params">(Channel channel, ChannelHandler handler, ChannelState state, Object message, Throwable exception)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.channel = channel;</span><br><span class="line">        <span class="keyword">this</span>.handler = handler;</span><br><span class="line">        <span class="keyword">this</span>.state = state;</span><br><span class="line">        <span class="keyword">this</span>.message = message;</span><br><span class="line">        <span class="keyword">this</span>.exception = exception;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (state == ChannelState.RECEIVED) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                handler.received(channel, message);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                logger.warn(<span class="string">&quot;ChannelEventRunnable handle &quot;</span> + state + <span class="string">&quot; operation error, channel is &quot;</span> + channel</span><br><span class="line">                        + <span class="string">&quot;, message is &quot;</span> + message, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">switch</span> (state) &#123;</span><br><span class="line">            <span class="keyword">case</span> CONNECTED:</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    handler.connected(channel);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    logger.warn(<span class="string">&quot;ChannelEventRunnable handle &quot;</span> + state + <span class="string">&quot; operation error, channel is &quot;</span> + channel, e);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> DISCONNECTED:</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    handler.disconnected(channel);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    logger.warn(<span class="string">&quot;ChannelEventRunnable handle &quot;</span> + state + <span class="string">&quot; operation error, channel is &quot;</span> + channel, e);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> SENT:</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    handler.sent(channel, message);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    logger.warn(<span class="string">&quot;ChannelEventRunnable handle &quot;</span> + state + <span class="string">&quot; operation error, channel is &quot;</span> + channel</span><br><span class="line">                            + <span class="string">&quot;, message is &quot;</span> + message, e);</span><br><span class="line">                &#125;</span><br><span class="line">            <span class="keyword">case</span> CAUGHT:</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    handler.caught(channel, exception);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    logger.warn(<span class="string">&quot;ChannelEventRunnable handle &quot;</span> + state + <span class="string">&quot; operation error, channel is &quot;</span> + channel</span><br><span class="line">                            + <span class="string">&quot;, message is: &quot;</span> + message + <span class="string">&quot;, exception is &quot;</span> + exception, e);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                logger.warn(<span class="string">&quot;unknown state: &quot;</span> + state + <span class="string">&quot;, message is &quot;</span> + message);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="编解码"><a href="#编解码" class="headerlink" title="编解码"></a>编解码</h1><h3 id="NettyCodecAdapter"><a href="#NettyCodecAdapter" class="headerlink" title="NettyCodecAdapter"></a>NettyCodecAdapter</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100381555164135465-0617b0d0-6cbb-4cc6-b019-f8517b24e92e.png" alt="image"></p>
+<p>Codec2接口定义编解码方法，如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SPI</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Codec2</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Adaptive(&#123;Constants.CODEC_KEY&#125;)</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">encode</span><span class="params">(Channel channel, ChannelBuffer buffer, Object message)</span> </span></span><br><span class="line"><span class="function">                                                                                                        <span class="keyword">throws</span> IOException</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Adaptive(&#123;Constants.CODEC_KEY&#125;)</span></span><br><span class="line">    <span class="function">Object <span class="title">decode</span><span class="params">(Channel channel, ChannelBuffer buffer)</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">enum</span> <span class="title">DecodeResult</span> </span>&#123;</span><br><span class="line">        NEED_MORE_INPUT, SKIP_SOME_INPUT</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="类继承结构"><a href="#类继承结构" class="headerlink" title="类继承结构"></a>类继承结构</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/202104122100381555164135316-abfef517-b8e5-4881-8ee9-77ae8880766d.png" alt="image"></p>
+<p>Dubbo数据包结构</p>
+<p> <img src="https://gitee.com/niumi/drawing/raw/master/202104122100381555164135625-60e9c3c6-1595-4112-a266-090ecef23643.png" alt="image"></p>
+<p>Dubbo 数据包分为消息头和消息体，消息头用于存储一些元信息，比如魔数（Magic），数据包类型（Request/Response），消息体长度（Data Length）等。消息体中用于存储具体的调用消息，比如方法名称，参数列表等。下面简单列举一下消息头的内容。</p>
+<table>
+<thead>
+<tr>
+<th>偏移量(Bit)</th>
+<th>字段</th>
+<th>取值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0 ~ 7</td>
+<td>魔数高位</td>
+<td>0xda00</td>
+</tr>
+<tr>
+<td>8 ~ 15</td>
+<td>魔数低位</td>
+<td>0xbb</td>
+</tr>
+<tr>
+<td>16</td>
+<td>数据包类型</td>
+<td>0 - Response, 1 - Request</td>
+</tr>
+<tr>
+<td>17</td>
+<td>调用方式</td>
+<td>仅在第16位被设为1的情况下有效，0 - 单向调用，1 - 双向调用</td>
+</tr>
+<tr>
+<td>18</td>
+<td>事件标识</td>
+<td>0 - 当前数据包是请求或响应包，1 - 当前数据包是心跳包</td>
+</tr>
+<tr>
+<td>19 ~ 23</td>
+<td>序列化器编号</td>
+<td>2 - Hessian2Serialization 3 - JavaSerialization 4 - CompactedJavaSerialization 6 - FastJsonSerialization 7 - NativeJavaSerialization 8 - KryoSerialization 9 - FstSerialization</td>
+</tr>
+<tr>
+<td>24 ~ 31</td>
+<td>状态</td>
+<td>20 - OK 30 - CLIENT_TIMEOUT 31 - SERVER_TIMEOUT 40 - BAD_REQUEST 50 - BAD_RESPONSE ……</td>
+</tr>
+<tr>
+<td>32 ~ 95</td>
+<td>请求编号</td>
+<td>共8字节，运行时生成</td>
+</tr>
+<tr>
+<td>96 ~ 127</td>
+<td>消息体长度</td>
+<td>运行时计算</td>
+</tr>
+</tbody></table>
+<h2 id="服务消费方接收调用结果"><a href="#服务消费方接收调用结果" class="headerlink" title="服务消费方接收调用结果"></a>服务消费方接收调用结果</h2><p>响应数据解码完成后，Dubbo 会将响应对象派发到线程池上。要注意的是，线程池中的线程并非用户的调用线程，所以要想办法将响应对象从线程池线程传递到用户线程上。前面已分析过用户线程在发送完请求后的动作，即调用 DefaultFuture 的 get 方法等待响应对象的到来。当响应对象到来后，用户线程会被唤醒，并通过<strong>调用编号</strong>获取属于自己的响应对象。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HeaderExchangeHandler</span> <span class="keyword">implements</span> <span class="title">ChannelHandlerDelegate</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">received</span><span class="params">(Channel channel, Object message)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        channel.setAttribute(KEY_READ_TIMESTAMP, System.currentTimeMillis());</span><br><span class="line">        ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (message <span class="keyword">instanceof</span> Request) &#123;</span><br><span class="line">                <span class="comment">// 处理请求，前面已分析过，省略</span></span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (message <span class="keyword">instanceof</span> Response) &#123;</span><br><span class="line">                <span class="comment">// 处理响应</span></span><br><span class="line">                handleResponse(channel, (Response) message);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (message <span class="keyword">instanceof</span> String) &#123;</span><br><span class="line">                <span class="comment">// telnet 相关，忽略</span></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                handler.received(exchangeChannel, message);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            HeaderExchangeChannel.removeChannelIfDisconnected(channel);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">handleResponse</span><span class="params">(Channel channel, Response response)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (response != <span class="keyword">null</span> &amp;&amp; !response.isHeartbeat()) &#123;</span><br><span class="line">            <span class="comment">// 继续向下调用</span></span><br><span class="line">            DefaultFuture.received(channel, response);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DefaultFuture</span> <span class="keyword">implements</span> <span class="title">ResponseFuture</span> </span>&#123;  </span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Lock lock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Condition done = lock.newCondition();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> Response response;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">received</span><span class="params">(Channel channel, Response response)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 根据调用编号从 FUTURES 集合中查找指定的 DefaultFuture 对象</span></span><br><span class="line">            DefaultFuture future = FUTURES.remove(response.getId());</span><br><span class="line">            <span class="keyword">if</span> (future != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// 继续向下调用</span></span><br><span class="line">                future.doReceived(response);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                logger.warn(<span class="string">&quot;The timeout response finally returned at ...&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            CHANNELS.remove(response.getId());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doReceived</span><span class="params">(Response res)</span> </span>&#123;</span><br><span class="line">        lock.lock();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 保存响应对象</span></span><br><span class="line">            response = res;</span><br><span class="line">            <span class="keyword">if</span> (done != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// 唤醒用户线程</span></span><br><span class="line">                done.signal();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            lock.unlock();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (callback != <span class="keyword">null</span>) &#123;</span><br><span class="line">            invokeCallback(callback);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>以上逻辑是将响应对象保存到相应的 DefaultFuture 实例中，然后再唤醒用户线程，随后用户线程即可从 DefaultFuture 实例中获取到相应结果。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/48988.html" rel="prev" title="Dubbo：服务引用">
+      <i class="fa fa-chevron-left"></i> Dubbo：服务引用
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/4074.html" rel="next" title="Spring：XML schema扩展机制">
+      Spring：XML schema扩展机制 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8%E4%B8%BB%E6%B5%81%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">服务调用主流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E6%B6%88%E8%B4%B9%E6%96%B9%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.</span> <span class="nav-text">服务消费方调用服务</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E7%94%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">2.1.</span> <span class="nav-text">调用方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%91%E9%80%81%E8%AF%B7%E6%B1%82"><span class="nav-number">2.2.</span> <span class="nav-text">发送请求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-NettyClient"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 NettyClient</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E6%8F%90%E4%BE%9B%E6%96%B9%E5%A4%84%E7%90%86%E8%AF%B7%E6%B1%82"><span class="nav-number">3.</span> <span class="nav-text">服务提供方处理请求</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#NettyServer"><span class="nav-number">3.1.</span> <span class="nav-text">NettyServer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1"><span class="nav-number">3.2.</span> <span class="nav-text">调用服务</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%96%E8%A7%A3%E7%A0%81"><span class="nav-number">4.</span> <span class="nav-text">编解码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NettyCodecAdapter"><span class="nav-number">4.0.1.</span> <span class="nav-text">NettyCodecAdapter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B1%BB%E7%BB%A7%E6%89%BF%E7%BB%93%E6%9E%84"><span class="nav-number">4.0.2.</span> <span class="nav-text">类继承结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E6%B6%88%E8%B4%B9%E6%96%B9%E6%8E%A5%E6%94%B6%E8%B0%83%E7%94%A8%E7%BB%93%E6%9E%9C"><span class="nav-number">4.1.</span> <span class="nav-text">服务消费方接收调用结果</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">38</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['牛觅'],
+      id          : '2805595692a23075f77f6b78128ede07',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
