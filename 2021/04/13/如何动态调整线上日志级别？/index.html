@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="如何动态调整线上日志级别？">
+<meta property="og:url" content="http://example.com/2021/04/13/%E5%A6%82%E4%BD%95%E5%8A%A8%E6%80%81%E8%B0%83%E6%95%B4%E7%BA%BF%E4%B8%8A%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB%EF%BC%9F/index.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210413001152city-438393_960_720.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008221843.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008221725.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008222235.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008222436.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008222536.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008225923.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008234315.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008234411.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008235235.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008235628.png">
+<meta property="article:published_time" content="2021-04-12T16:09:34.000Z">
+<meta property="article:modified_time" content="2021-04-12T16:18:59.512Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210413001152city-438393_960_720.jpg">
+
+<link rel="canonical" href="http://example.com/2021/04/13/%E5%A6%82%E4%BD%95%E5%8A%A8%E6%80%81%E8%B0%83%E6%95%B4%E7%BA%BF%E4%B8%8A%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB%EF%BC%9F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>如何动态调整线上日志级别？ | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/13/%E5%A6%82%E4%BD%95%E5%8A%A8%E6%80%81%E8%B0%83%E6%95%B4%E7%BA%BF%E4%B8%8A%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          如何动态调整线上日志级别？
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-04-13 00:09:34 / 修改时间：00:18:59" itemprop="dateCreated datePublished" datetime="2021-04-13T00:09:34+08:00">2021-04-13</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%97%A5%E5%BF%97/" itemprop="url" rel="index"><span itemprop="name">日志</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2021/04/13/%E5%A6%82%E4%BD%95%E5%8A%A8%E6%80%81%E8%B0%83%E6%95%B4%E7%BA%BF%E4%B8%8A%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB%EF%BC%9F/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2021/04/13/如何动态调整线上日志级别？/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210413001152city-438393_960_720.jpg" alt="行人"></p>
+<span id="more"></span>
+
+
+
+<p>作为开发人员，定位问题是我们的日常工作，而日志是我们定位问题非常重要的依据。传统方式定位问题时，往往是如下步骤：</p>
+<ol>
+<li>将日志级别设低，例如 DEBUG ；</li>
+<li>重启应用；</li>
+<li>复现问题，观察日志；</li>
+</ol>
+<p>实际上是可以动态修改日志级别，无需重启应用，立即生效。本文收集了3种动态修改日志级别的文章，分别是</p>
+<ol>
+<li><a target="_blank" rel="noopener" href="http://www.itmuch.com/spring-boot/change-logger-level/">Spring Boot 2动态修改日志级别</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/yusimiao/article/details/95032376">阿里在线诊断工具Arthas调整日志等级记录</a></li>
+<li><a target="_blank" rel="noopener" href="https://tech.meituan.com/2017/02/17/change-log-level.html">美团日志级别动态调整——小工具解决大问题</a></li>
+</ol>
+<h2 id="Spirng-Boot动态修改日志级别"><a href="#Spirng-Boot动态修改日志级别" class="headerlink" title="Spirng Boot动态修改日志级别"></a>Spirng Boot动态修改日志级别</h2><p>从 Spring Boot 1.5 开始，Spring Boot Actuator 组件就已提供动态修改日志级别的能力。</p>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><p>1.引入<code>spring-boot-starter-actuator</code>依赖，内容如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-web<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-actuator<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>2.编写测试代码，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DemoApplication</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(DemoApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DemoController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Logger logger = LoggerFactory.getLogger(DemoController.class);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/helloworld&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">helloworld</span><span class="params">()</span></span>&#123;</span><br><span class="line">        logger.debug(<span class="string">&quot;welcome to learn spring boot&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;welcome to learn spring boot&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>3.配置文件</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">management:</span></span><br><span class="line">  <span class="attr">endpoints:</span></span><br><span class="line">    <span class="attr">web:</span></span><br><span class="line">      <span class="attr">exposure:</span></span><br><span class="line">        <span class="attr">include:</span> <span class="string">&#x27;loggers&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+<p>Spring Boot 2.x默认只暴露 /health 以及 /info 端点，而日志控制需要用到 /loggers 端点，故而需要设置将其暴露。</p>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p><code>/loggers</code>端点提供了查看以及修改日志级别的能力。</p>
+<ol>
+<li><strong>查看当前应用各包/类的日志级别</strong>：访问 <a target="_blank" rel="noopener" href="http://localhost:8080/actuator/loggers">http://localhost:8080/actuator/loggers</a> ，可看到类似如下的结果：<img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008221843.png"></li>
+<li><strong>查看指定包/类日志详情</strong>：访问 <a target="_blank" rel="noopener" href="http://localhost:8080/actuator/loggers/com.blockmao.springboot.demo.DemoController">http://localhost:8080/actuator/loggers/com.blockmao.springboot.demo.DemoController</a> ，可看到类似如下的结果： <img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008221725.png"></li>
+<li><strong>修改日志级别</strong>：默认的日志级别是INFO，所以<code>DemoController</code>的debug日志不会打印。下面来尝试将该类的日志级别设为<code>DEBUG</code>，如下 <img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008222235.png"> 此时，访问 <a target="_blank" rel="noopener" href="http://localhost:8080/helloworld">http://localhost:8080/helloworld</a> 会看到类似如下的日志： <img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008222436.png"> 并且，此时再访问 <a target="_blank" rel="noopener" href="http://localhost:8080/actuator/loggers/com.itmuch.logging.TestController">http://localhost:8080/actuator/loggers/com.itmuch.logging.TestController</a> ，可看到类似如下的结果： <img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008222536.png"></li>
+</ol>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p><strong>Actuator</strong>有约定，<code> /actuator/xxx</code>端点的定义代码在 <code>xxxEndpoint</code>中。找到类<code>org.springframework.boot.actuate.logging.LoggersEndpoint </code>，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Endpoint(id = &quot;loggers&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LoggersEndpoint</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> LoggingSystem loggingSystem;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@WriteOperation</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">configureLogLevel</span><span class="params">(<span class="meta">@Selector</span> String name,</span></span></span><br><span class="line"><span class="function"><span class="params">			<span class="meta">@Nullable</span> LogLevel configuredLevel)</span> </span>&#123;</span><br><span class="line">		Assert.notNull(name, <span class="string">&quot;Name must not be empty&quot;</span>);</span><br><span class="line">		<span class="keyword">this</span>.loggingSystem.setLogLevel(name, configuredLevel);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// ...其他省略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中， <code>Endpoint</code> 、<code>WriteOperation</code> 、<code>@Selector </code>都是Spring Boot 2.0开始提供的新注解。</p>
+<p><code>@Endpoint(id = &quot;loggers&quot;) </code>用来描述Spring Boot Actuator 的端点，这样就会产生一个<code>/actuator/loggers </code>的路径，它类似于Spring MVC的<code>@RequestMapping(&quot;loggers&quot;)</code>。</p>
+<p>@WriteOperation 表示这是一个写操作，它类似于Spring MVC的 @PostMapping 。Spring Boot Actuator还提供了其他操作，如下表：</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>HTTP method</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@ReadOperation</td>
+<td>GET</td>
+</tr>
+<tr>
+<td>@WriteOperation</td>
+<td>POST</td>
+</tr>
+<tr>
+<td>@DeleteOperation</td>
+<td>DELETE</td>
+</tr>
+</tbody></table>
+<p>@Selector用于筛选@Endpoint注解返回值的子集，它类似于Spring MVC的@PathVariable 。</p>
+<p>这样，上面的代码就很好理解了— <code>configureLogLevel</code> 方法：送POST请求后，name就是我们传的包名或者类名，configuredLevel就是我们传的消息体。</p>
+<p><code>org.springframework.boot.logging.LoggingSystem#setLogLevel</code>是抽象方法，具体实现由子类完成。<code>LoggingSystem</code>类结构如下图所示：</p>
+<p><img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008225923.png"></p>
+<p>LoggingSystem有这么多实现类，Spring Boot怎么知道什么情况下用什么LoggingSystem呢？可在 <code>org.springframework.boot.logging.LoggingSystem</code> 找到类似如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">LoggingSystem</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;String, String&gt; SYSTEMS;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">static</span> &#123;</span><br><span class="line">		Map&lt;String, String&gt; systems = <span class="keyword">new</span> LinkedHashMap&lt;&gt;();</span><br><span class="line">		systems.put(<span class="string">&quot;ch.qos.logback.core.Appender&quot;</span>,</span><br><span class="line">				<span class="string">&quot;org.springframework.boot.logging.logback.LogbackLoggingSystem&quot;</span>);</span><br><span class="line">		systems.put(<span class="string">&quot;org.apache.logging.log4j.core.impl.Log4jContextFactory&quot;</span>,</span><br><span class="line">				<span class="string">&quot;org.springframework.boot.logging.log4j2.Log4J2LoggingSystem&quot;</span>);</span><br><span class="line">		systems.put(<span class="string">&quot;java.util.logging.LogManager&quot;</span>,</span><br><span class="line">				<span class="string">&quot;org.springframework.boot.logging.java.JavaLoggingSystem&quot;</span>);</span><br><span class="line">		SYSTEMS = Collections.unmodifiableMap(systems);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Detect and return the logging system in use. Supports Logback and Java Logging.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> classLoader the classloader</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the logging system</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> LoggingSystem <span class="title">get</span><span class="params">(ClassLoader classLoader)</span> </span>&#123;</span><br><span class="line">		String loggingSystem = System.getProperty(SYSTEM_PROPERTY);</span><br><span class="line">		<span class="keyword">if</span> (StringUtils.hasLength(loggingSystem)) &#123;</span><br><span class="line">			<span class="keyword">if</span> (NONE.equals(loggingSystem)) &#123;</span><br><span class="line">				<span class="keyword">return</span> <span class="keyword">new</span> NoOpLoggingSystem();</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">return</span> get(classLoader, loggingSystem);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> SYSTEMS.entrySet().stream()</span><br><span class="line">				.filter((entry) -&gt; ClassUtils.isPresent(entry.getKey(), classLoader))</span><br><span class="line">				.map((entry) -&gt; get(classLoader, entry.getValue())).findFirst()</span><br><span class="line">				.orElseThrow(() -&gt; <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">						<span class="string">&quot;No suitable logging system located&quot;</span>));</span><br><span class="line">	&#125;</span><br><span class="line">  <span class="comment">// 省略不相关内容...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由代码不难发现，其实就是构建了一个名为 SYSTEMS 的map，作为各种日志系统的字典；然后在 get 方法中，看应用是否加载了map中的类；如果加载了，就通过反射，初始化<code>LoggingSystem</code> 。例如：Spring Boot发现当前应用加载了<code>ch.qos.logback.core.Appender</code> ，就去实例化 <code>org.springframework.boot.logging.logback.LogbackLoggingSystem </code>。</p>
+<h2 id="Arthas-ognl命令动态修改日志级别"><a href="#Arthas-ognl命令动态修改日志级别" class="headerlink" title="Arthas ognl命令动态修改日志级别"></a>Arthas ognl命令动态修改日志级别</h2><p>使用<code>ognl</code>命令可以动态修改日志级别，步骤如下：</p>
+<ol>
+<li><p>查找当前类的classLoaderHash</p>
+<p> <img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008234315.png"></p>
+</li>
+<li><p>用OGNL获取logger  <img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008234411.png"></p>
+</li>
+</ol>
+<blockquote>
+<p>可以发现日志使用的是Logback框架。</p>
+</blockquote>
+<ol start="3">
+<li><p>单独设置DemoController的logger level<img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008235235.png"></p>
+</li>
+<li><p>全局设置logger level</p>
+<p> <img src="https://raw.githubusercontent.com/codersm/GraphBed/master/img/20191008235628.png"></p>
+<p> 如果使用的日志框架是<code>log4j</code>，则使用上述<code>ognl</code>命令则会报错。至于为什么？请阅读<a target="_blank" rel="noopener" href="https://blog.blockmao.cn/2019/09/21/Java%E6%97%A5%E5%BF%97%E6%A1%86%E6%9E%B6%EF%BC%9ASLF4J%E8%AF%A6%E8%A7%A3/#more">Java日志：SLF4J详解</a></p>
+</li>
+</ol>
+<h2 id="美团日志级别动态调整小工具"><a href="#美团日志级别动态调整小工具" class="headerlink" title="美团日志级别动态调整小工具"></a>美团日志级别动态调整小工具</h2><ol>
+<li><p>初始化：确定所使用的日志框架，获取配置文件中所有的Logger内存实例，并将它们的引用缓存到Map容器中。</p>
+ <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">String type = StaticLoggerBinder.getSingleton().getLoggerFactoryClassStr();</span><br><span class="line">    <span class="keyword">if</span> (LogConstant.LOG4J_LOGGER_FACTORY.equals(type)) &#123;</span><br><span class="line">        logFrameworkType = LogFrameworkType.LOG4J;</span><br><span class="line">        Enumeration enumeration = org.apache.log4j.LogManager.getCurrentLoggers();</span><br><span class="line">        <span class="keyword">while</span> (enumeration.hasMoreElements()) &#123;</span><br><span class="line">            org.apache.log4j.Logger logger = (org.apache.log4j.Logger) enumeration.nextElement();</span><br><span class="line">            <span class="keyword">if</span> (logger.getLevel() != <span class="keyword">null</span>) &#123;</span><br><span class="line">                loggerMap.put(logger.getName(), logger);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        org.apache.log4j.Logger rootLogger = org.apache.log4j.LogManager.getRootLogger();</span><br><span class="line">        loggerMap.put(rootLogger.getName(), rootLogger);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (LogConstant.LOGBACK_LOGGER_FACTORY.equals(type)) &#123;</span><br><span class="line">        logFrameworkType = LogFrameworkType.LOGBACK;</span><br><span class="line">        ch.qos.logback.classic.LoggerContext loggerContext = (ch.qos.logback.classic.LoggerContext) LoggerFactory.getILoggerFactory();</span><br><span class="line">        <span class="keyword">for</span> (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (logger.getLevel() != <span class="keyword">null</span>) &#123;</span><br><span class="line">                loggerMap.put(logger.getName(), logger);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);</span><br><span class="line">        loggerMap.put(rootLogger.getName(), rootLogger);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (LogConstant.LOG4J2_LOGGER_FACTORY.equals(type)) &#123;</span><br><span class="line">        logFrameworkType = LogFrameworkType.LOG4J2;</span><br><span class="line">        org.apache.logging.log4j.core.LoggerContext loggerContext = (org.apache.logging.log4j.core.LoggerContext) org.apache.logging.log4j.LogManager.getContext(<span class="keyword">false</span>);</span><br><span class="line">        Map&lt;String, org.apache.logging.log4j.core.config.LoggerConfig&gt; map = loggerContext.getConfiguration().getLoggers();</span><br><span class="line">        <span class="keyword">for</span> (org.apache.logging.log4j.core.config.LoggerConfig loggerConfig : map.values()) &#123;</span><br><span class="line">            String key = loggerConfig.getName();</span><br><span class="line">            <span class="keyword">if</span> (StringUtils.isBlank(key)) &#123;</span><br><span class="line">                key = <span class="string">&quot;root&quot;</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            loggerMap.put(key, loggerConfig);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        logFrameworkType = LogFrameworkType.UNKNOWN;</span><br><span class="line">        LOG.error(<span class="string">&quot;Log框架无法识别: type=&#123;&#125;&quot;</span>, type);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>获取Logger列表：从本地Map容器取出</p>
+ <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> String <span class="title">getLoggerList</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    JSONObject result = <span class="keyword">new</span> JSONObject();</span><br><span class="line">    result.put(<span class="string">&quot;logFramework&quot;</span>, logFrameworkType);</span><br><span class="line">    JSONArray loggerList = <span class="keyword">new</span> JSONArray();</span><br><span class="line">    <span class="keyword">for</span> (ConcurrentMap.Entry&lt;String, Object&gt; entry : loggerMap.entrySet()) &#123;</span><br><span class="line">        JSONObject loggerJSON = <span class="keyword">new</span> JSONObject();</span><br><span class="line">        loggerJSON.put(<span class="string">&quot;loggerName&quot;</span>, entry.getKey());</span><br><span class="line">        <span class="keyword">if</span> (logFrameworkType == LogFrameworkType.LOG4J) &#123;</span><br><span class="line">            org.apache.log4j.Logger targetLogger = (org.apache.log4j.Logger) entry.getValue();</span><br><span class="line">            loggerJSON.put(<span class="string">&quot;logLevel&quot;</span>, targetLogger.getLevel().toString());</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (logFrameworkType == LogFrameworkType.LOGBACK) &#123;</span><br><span class="line">            ch.qos.logback.classic.Logger targetLogger = (ch.qos.logback.classic.Logger) entry.getValue();</span><br><span class="line">            loggerJSON.put(<span class="string">&quot;logLevel&quot;</span>, targetLogger.getLevel().toString());</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (logFrameworkType == LogFrameworkType.LOG4J2) &#123;</span><br><span class="line">            org.apache.logging.log4j.core.config.LoggerConfig targetLogger = (org.apache.logging.log4j.core.config.LoggerConfig) entry.getValue();</span><br><span class="line">            loggerJSON.put(<span class="string">&quot;logLevel&quot;</span>, targetLogger.getLevel().toString());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            loggerJSON.put(<span class="string">&quot;logLevel&quot;</span>, <span class="string">&quot;Logger的类型未知,无法处理!&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        loggerList.add(loggerJSON);</span><br><span class="line">    &#125;</span><br><span class="line">    result.put(<span class="string">&quot;loggerList&quot;</span>, loggerList);</span><br><span class="line">    LOG.info(<span class="string">&quot;getLoggerList: result=&#123;&#125;&quot;</span>, result.toString());</span><br><span class="line">    <span class="keyword">return</span> result.toString();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+<li><p>修改Logger的级别</p>
+ <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> String <span class="title">setLogLevel</span><span class="params">(JSONArray data)</span> </span>&#123;</span><br><span class="line">        LOG.info(<span class="string">&quot;setLogLevel: data=&#123;&#125;&quot;</span>, data);</span><br><span class="line">        List&lt;LoggerBean&gt; loggerList = parseJsonData(data);</span><br><span class="line">        <span class="keyword">if</span> (CollectionUtils.isEmpty(loggerList)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (LoggerBean loggerbean : loggerList) &#123;</span><br><span class="line">            Object logger = loggerMap.get(loggerbean.getName());</span><br><span class="line">            <span class="keyword">if</span> (logger == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;需要修改日志级别的Logger不存在&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (logFrameworkType == LogFrameworkType.LOG4J) &#123;</span><br><span class="line">                org.apache.log4j.Logger targetLogger = (org.apache.log4j.Logger) logger;</span><br><span class="line">                org.apache.log4j.Level targetLevel = org.apache.log4j.Level.toLevel(loggerbean.getLevel());</span><br><span class="line">                targetLogger.setLevel(targetLevel);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (logFrameworkType == LogFrameworkType.LOGBACK) &#123;</span><br><span class="line">                ch.qos.logback.classic.Logger targetLogger = (ch.qos.logback.classic.Logger) logger;</span><br><span class="line">                ch.qos.logback.classic.Level targetLevel = ch.qos.logback.classic.Level.toLevel(loggerbean.getLevel());</span><br><span class="line">                targetLogger.setLevel(targetLevel);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (logFrameworkType == LogFrameworkType.LOG4J2) &#123;</span><br><span class="line">                org.apache.logging.log4j.core.config.LoggerConfig loggerConfig = (org.apache.logging.log4j.core.config.LoggerConfig) logger;</span><br><span class="line">                org.apache.logging.log4j.Level targetLevel = org.apache.logging.log4j.Level.toLevel(loggerbean.getLevel());</span><br><span class="line">                loggerConfig.setLevel(targetLevel);</span><br><span class="line">                org.apache.logging.log4j.core.LoggerContext ctx = (org.apache.logging.log4j.core.LoggerContext) org.apache.logging.log4j.LogManager.getContext(<span class="keyword">false</span>);</span><br><span class="line">                ctx.updateLoggers(); <span class="comment">// This causes all Loggers to refetch information from their LoggerConfig.</span></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;Logger的类型未知,无法处理!&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;success&quot;</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/04/12/SLF4J%E8%AF%A6%E8%A7%A3/" rel="prev" title="SLF4J详解">
+      <i class="fa fa-chevron-left"></i> SLF4J详解
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/04/15/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/" rel="next" title="设计模式：单例模式">
+      设计模式：单例模式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Spirng-Boot%E5%8A%A8%E6%80%81%E4%BF%AE%E6%94%B9%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB"><span class="nav-number">1.</span> <span class="nav-text">Spirng Boot动态修改日志级别</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.1.</span> <span class="nav-text">示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-number">1.2.</span> <span class="nav-text">测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">1.3.</span> <span class="nav-text">原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Arthas-ognl%E5%91%BD%E4%BB%A4%E5%8A%A8%E6%80%81%E4%BF%AE%E6%94%B9%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB"><span class="nav-number">2.</span> <span class="nav-text">Arthas ognl命令动态修改日志级别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BE%8E%E5%9B%A2%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB%E5%8A%A8%E6%80%81%E8%B0%83%E6%95%B4%E5%B0%8F%E5%B7%A5%E5%85%B7"><span class="nav-number">3.</span> <span class="nav-text">美团日志级别动态调整小工具</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">38</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://niumi.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "http://example.com/2021/04/13/%E5%A6%82%E4%BD%95%E5%8A%A8%E6%80%81%E8%B0%83%E6%95%B4%E7%BA%BF%E4%B8%8A%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB%EF%BC%9F/";
+    this.page.identifier = "2021/04/13/如何动态调整线上日志级别？/";
+    this.page.title = "如何动态调整线上日志级别？";
+    };
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://niumi.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>
