@@ -20,17 +20,20 @@
     var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="温故知新">
-<meta property="og:type" content="article">
+  <meta property="og:type" content="article">
 <meta property="og:title" content="设计模式：迭代器模式">
 <meta property="og:url" content="http://blog.blockmao.cn/posts/41807.html">
 <meta property="og:site_name" content="牛觅博客">
-<meta property="og:description" content="温故知新">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041723261520210417232400tiger-6175826_960_720.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104172326152021041723231020210417225048202104172250433Xvm5e.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104172326152021041723231020210417224056image-20210417224056737.png">
 <meta property="article:published_time" content="2021-04-17T15:22:37.000Z">
-<meta property="article:modified_time" content="2021-04-17T15:22:37.086Z">
+<meta property="article:modified_time" content="2021-04-17T15:26:47.169Z">
 <meta property="article:author" content="牛觅">
+<meta property="article:tag" content="行为型设计模式">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/2021041723261520210417232400tiger-6175826_960_720.jpg">
 
 <link rel="canonical" href="http://blog.blockmao.cn/posts/41807.html">
 
@@ -191,8 +194,18 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2021-04-17 23:22:37" itemprop="dateCreated datePublished" datetime="2021-04-17T23:22:37+08:00">2021-04-17</time>
+              <time title="创建时间：2021-04-17 23:22:37 / 修改时间：23:26:47" itemprop="dateCreated datePublished" datetime="2021-04-17T23:22:37+08:00">2021-04-17</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+                </span>
             </span>
 
           
@@ -213,7 +226,42 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/2021041723261520210417232400tiger-6175826_960_720.jpg" alt="虎"></p>
+<span id="more"></span>
+
+<h2 id="原理和实现"><a href="#原理和实现" class="headerlink" title="原理和实现"></a>原理和实现</h2><p>迭代器模式（Iterator Design Pattern），也叫作游标模式（Cursor Design Pattern）。它用来遍历集合对象（也可以叫“容器”或“聚合对象”），实际上就是包含一组对象的对象，比如数组、链表、树、图、跳表。</p>
+<p>迭代器模式将集合对象的遍历操作从集合类中拆分出来，放到迭代器类中，让两者的职责更加单一。一个完整的迭代器模式一般会涉及<strong>容器</strong>和<strong>容器迭代器</strong>两部分内容。为了达到基于接口而非实现编程的目的，容器又包含容器接口、容器实现类，迭代器又包含迭代器接口、迭代器实现类。如下图所示：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104172326152021041723231020210417225048202104172250433Xvm5e.png" alt="202104172250433Xvm5e"></p>
+<p>现在我们需要针对 ArrayList 和 LinkedList 两个线性容器，设计实现对应的迭代器。按照之前给出的迭代器模式的类图，我们定义一个迭代器接口 Iterator，以及针对两种容器的具体的迭代器实现类 ArrayIterator 和 ListIterator。</p>
+<p>1、<strong>Iterator 接口的定义</strong>，代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 接口定义方式一</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Iterator</span>&lt;<span class="title">E</span>&gt; </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">boolean</span> <span class="title">hasNext</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">next</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function">E <span class="title">currentItem</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 接口定义方式二</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Iterator</span>&lt;<span class="title">E</span>&gt; </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">boolean</span> <span class="title">hasNext</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function">E <span class="title">next</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在第一种定义中，next() 函数用来将游标后移一位元素，currentItem() 函数用来返回当前游标指向的元素。在第二种定义中，返回当前元素与后移一位这两个操作，要放到同一个函数 next() 中完成。</p>
+<p>第一种定义方式更加灵活一些，比如我们可以多次调用 currentItem() 查询当前元素，而不移动游标。所以，在接下来的实现中，我们选择第一种接口定义方式。</p>
+<p>2、 <strong>ArrayIterator的代码实现</strong>，具体如下所示</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ArrayIterator</span>&lt;<span class="title">E</span>&gt; <span class="keyword">implements</span> <span class="title">Iterator</span>&lt;<span class="title">E</span>&gt; </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">int</span> cursor;</span><br><span class="line">  <span class="keyword">private</span> ArrayList&lt;E&gt; arrayList;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">ArrayIterator</span><span class="params">(ArrayList&lt;E&gt; arrayList)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.cursor = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">this</span>.arrayList = arrayList;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">hasNext</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> cursor != arrayList.size(); <span class="comment">//注意这里，cursor在指向最后一个元素的时候，hasNext()仍旧返回true。</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">next</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    cursor++;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> E <span class="title">currentItem</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (cursor &gt;= arrayList.size()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> arrayList.get(cursor);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Demo</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    ArrayList&lt;String&gt; names = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    names.add(<span class="string">&quot;xzg&quot;</span>);</span><br><span class="line">    names.add(<span class="string">&quot;wang&quot;</span>);</span><br><span class="line">    names.add(<span class="string">&quot;zheng&quot;</span>);</span><br><span class="line">    </span><br><span class="line">    Iterator&lt;String&gt; iterator = <span class="keyword">new</span> ArrayIterator(names);</span><br><span class="line">    <span class="keyword">while</span> (iterator.hasNext()) &#123;</span><br><span class="line">      System.out.println(iterator.currentItem());</span><br><span class="line">      iterator.next();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>通过这个例子，<strong>总结一下迭代器的设计思路</strong>。</p>
+<ol>
+<li>迭代器中需要定义 <code>hasNext()</code>、<code>currentItem()</code>、<code>next()</code> 三个最基本的方法；</li>
+<li>待遍历的容器对象通过依赖注入传递到迭代器类中；</li>
+<li>容器通过 <code>iterator()</code> 方法来创建迭代器。</li>
+</ol>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104172326152021041723231020210417224056image-20210417224056737.png" alt="image-20210417224056737"></p>
+<h2 id="迭代器模式的优势"><a href="#迭代器模式的优势" class="headerlink" title="迭代器模式的优势"></a>迭代器模式的优势</h2><ul>
+<li><p>首先，对于类似数组和链表这样的数据结构，遍历方式比较简单，直接使用 for 循环来遍历就足够了。但是，对于复杂的数据结构（比如树、图）来说，有各种复杂的遍历方式。</p>
+<p>比如，树有前中后序、按层遍历，图有深度优先、广度优先遍历等等。如果由客户端代码来实现这些遍历算法，势必增加开发成本，而且容易写错。如果将这部分遍历的逻辑写到容器类中，也会导致容器类代码的复杂性。</p>
+</li>
+<li><p>其次，将游标指向的当前位置等信息，存储在迭代器类中，每个迭代器独享游标信息。这样，我们就可以创建多个不同的迭代器，同时对同一个容器进行遍历而互不影响。</p>
+</li>
+<li><p>最后，容器和迭代器都提供了抽象的接口，方便我们在开发的时候，基于接口而非具体的实现编程。当需要切换新的遍历算法的时候，比如，从前往后遍历链表切换成从后往前遍历链表，客户端代码只需要将迭代器类从 LinkedIterator 切换为 ReversedLinkedIterator 即可，其他代码都不需要修改。除此之外，添加新的遍历算法，我们只需要扩展新的迭代器类，也更符合开闭原则。</p>
+</li>
+</ul>
+
     </div>
 
     
@@ -221,6 +269,9 @@
     
 
       <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%A1%8C%E4%B8%BA%E5%9E%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 行为型设计模式</a>
+          </div>
 
         
 
@@ -291,6 +342,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%90%86%E5%92%8C%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.</span> <span class="nav-text">原理和实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%AD%E4%BB%A3%E5%99%A8%E6%A8%A1%E5%BC%8F%E7%9A%84%E4%BC%98%E5%8A%BF"><span class="nav-number">2.</span> <span class="nav-text">迭代器模式的优势</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
