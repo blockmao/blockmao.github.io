@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="设计模式：适配器模式">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/22428.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210506195240pexels-photo-167699.jpeg">
+<meta property="og:image" content="https://res.weread.qq.com/wrepub/epub_33114758_494">
+<meta property="og:image" content="https://res.weread.qq.com/wrepub/epub_33114758_499">
+<meta property="article:published_time" content="2021-05-04T05:52:49.000Z">
+<meta property="article:modified_time" content="2021-05-06T11:53:17.050Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210506195240pexels-photo-167699.jpeg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/22428.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>设计模式：适配器模式 | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/22428.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          设计模式：适配器模式
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-05-04 13:52:49" itemprop="dateCreated datePublished" datetime="2021-05-04T13:52:49+08:00">2021-05-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-05-06 19:53:17" itemprop="dateModified" datetime="2021-05-06T19:53:17+08:00">2021-05-06</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210506195240pexels-photo-167699.jpeg" alt="白天白雾覆盖下的绿色松树"></p>
+<span id="more"></span>
+
+<h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>适配器模式（Adapter Design Pattern）其定义如下：</p>
+<blockquote>
+<p>Convert the interface of a class into another interface clients expect.  Adapter lets classes work together that couldn’t otherwise because of incompatible interfaces.</p>
+</blockquote>
+<p>翻译中文就是：将一个类的接口变成客户端所期望的另一种接口，从而使原本因接口不匹配而导致无法在一起工作的两个类能够一起工作。</p>
+<p>当前系统存在两种接口A和B，客户端只支持访问A接口，但是当前系统没有A接口对象，有B接口对象，而客户端无法识别B接口，因此需要通过一个适配器C，将B接口内容转换成A接口，从而使得客户端能够从A接口获取B接口的内容。</p>
+<p>在软件开发中，基本上任何问题都可以通过增加一个中间层来解决。适配器模式其实就是一个中间层。综上，适配器模式起着转化/委托的作用，将一种接口转化为另一种符合需求的接口。</p>
+<p>适配器模式有3种形式：类适配器、对象适配器。适配器模式一般包含3个角色。</p>
+<ul>
+<li><p><strong>目标角色（ITarget）</strong>：也就是我们期望的接口。</p>
+</li>
+<li><p><strong>源角色（Adaptee）</strong>：存在于系统中，是指内容满足客户需求（需转换）但接口不匹配的接口实例。</p>
+</li>
+<li><p><strong>适配器（Adapter）</strong>：将Adaptee转化为目标角色ITarget的类实例。</p>
+</li>
+</ul>
+<p>客户端需要访问的是ITarget接口，但ITarget接口没有一个实例符合需求，而Adaptee实例符合需求，但是客户端无法直接使用Adaptee（接口不兼容）；因此，需要一个Adapter来进行中转，使Adaptee能转化为ITarget接口的形式。</p>
+<h2 id="类适配器"><a href="#类适配器" class="headerlink" title="类适配器"></a>类适配器</h2><p>类适配器的原理就是通过继承来实现适配器功能。具体做法是，让Adapter实现ITarget接口，并且继承Adaptee，这样Adapter就具备了ITarget和Adaptee的特性，可以将两者进行转化。</p>
+<p><img src="https://res.weread.qq.com/wrepub/epub_33114758_494"></p>
+<h2 id="对象适配器"><a href="#对象适配器" class="headerlink" title="对象适配器"></a>对象适配器</h2><p>对象适配器的原理就是通过组合来实现适配器功能。具体做法是，首先让Adapter实现ITarget接口，然后内部持有Adaptee实例，最后在ITarget接口规定的方法内转换Adaptee。</p>
+<p><img src="https://res.weread.qq.com/wrepub/epub_33114758_499"></p>
+<h1 id="案例分析"><a href="#案例分析" class="headerlink" title="案例分析"></a>案例分析</h1><p>Java 中有很多日志框架，比较常用的有 log4j、logback，以及 JDK 提供的 JUL(java.util.logging) 和 Apache 的 JCL(Jakarta Commons Logging) 等。大部分日志框架都提供了相似的功能，比如按照不同级别（debug、info、warn、erro……）打印日志等，但它们却并没有实现统一的接口。</p>
+<p>Slf4j提供了统一的接口定义，还提供了针对不同日志框架的适配器。对不同日志框架的接口进行二次封装，适配成统一的 Slf4j 接口定义。具体的代码示例如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// slf4j统一的接口定义</span></span><br><span class="line"><span class="keyword">package</span> org.slf4j;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Logger</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isTraceEnabled</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">trace</span><span class="params">(String msg)</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">trace</span><span class="params">(String format, Object arg)</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">trace</span><span class="params">(String format, Object arg1, Object arg2)</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">trace</span><span class="params">(String format, Object[] argArray)</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">trace</span><span class="params">(String msg, Throwable t)</span></span>;</span><br><span class="line"> </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isDebugEnabled</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">debug</span><span class="params">(String msg)</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">debug</span><span class="params">(String format, Object arg)</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">debug</span><span class="params">(String format, Object arg1, Object arg2)</span></span></span><br><span class="line"><span class="function">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">debug</span><span class="params">(String format, Object[] argArray)</span></span></span><br><span class="line"><span class="function">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">debug</span><span class="params">(String msg, Throwable t)</span></span>;</span><br><span class="line">  <span class="comment">//...省略info、warn、error等一堆接口</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// log4j日志框架的适配器</span></span><br><span class="line"><span class="comment">// Log4jLoggerAdapter实现了LocationAwareLogger接口，</span></span><br><span class="line"><span class="comment">// 其中LocationAwareLogger继承自Logger接口，</span></span><br><span class="line"><span class="comment">// 也就相当于Log4jLoggerAdapter实现了Logger接口。</span></span><br><span class="line"><span class="keyword">package</span> org.slf4j.impl;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Log4jLoggerAdapter</span> <span class="keyword">extends</span> <span class="title">MarkerIgnoringBase</span></span></span><br><span class="line"><span class="class">  <span class="keyword">implements</span> <span class="title">LocationAwareLogger</span>, <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> <span class="keyword">transient</span> org.apache.log4j.Logger logger; <span class="comment">// log4j</span></span><br><span class="line"> </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isDebugEnabled</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> logger.isDebugEnabled();</span><br><span class="line">  &#125;</span><br><span class="line"> </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">debug</span><span class="params">(String msg)</span> </span>&#123;</span><br><span class="line">    logger.log(FQCN, Level.DEBUG, msg, <span class="keyword">null</span>);</span><br><span class="line">  &#125;</span><br><span class="line"> </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">debug</span><span class="params">(String format, Object arg)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">      FormattingTuple ft = MessageFormatter.format(format, arg);</span><br><span class="line">      logger.log(FQCN, Level.DEBUG, ft.getMessage(), ft.getThrowable());</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"> </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">debug</span><span class="params">(String format, Object arg1, Object arg2)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">      FormattingTuple ft = MessageFormatter.format(format, arg1, arg2);</span><br><span class="line">      logger.log(FQCN, Level.DEBUG, ft.getMessage(), ft.getThrowable());</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"> </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">debug</span><span class="params">(String format, Object[] argArray)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">      FormattingTuple ft = MessageFormatter.arrayFormat(format, argArray);</span><br><span class="line">      logger.log(FQCN, Level.DEBUG, ft.getMessage(), ft.getThrowable());</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"> </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">debug</span><span class="params">(String msg, Throwable t)</span> </span>&#123;</span><br><span class="line">    logger.log(FQCN, Level.DEBUG, msg, t);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//...省略一堆接口的实现...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在开发业务系统或者开发框架、组件的时候，统一使用 Slf4j 提供的接口来编写打印日志的代码，具体使用哪种日志框架实现（log4j、logback……），是可以动态地指定的，只需要将相应的 SDK 导入到项目中即可。</p>
+<p>如果一些老的项目没有使用 Slf4j，而是直接使用比如 JCL 来打印日志，那如果想要替换成其他日志框架，比如 log4j，该怎么办呢？实际上，Slf4j 不仅仅提供了从其他日志框架到 Slf4j 的适配器，还提供了反向适配器，也就是从 Slf4j 到其他日志框架的适配。我们可以先将 JCL 切换为 Slf4j，然后再将 Slf4j 切换为 log4j。经过两次适配器的转换，我们就能成功将 log4j 切换为了 logback。</p>
+<h1 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h1><p>一般来说，适配器模式可以看作一种“补偿模式”，用来补救设计上的缺陷。应用这种模式算是“无奈之举”。如果在设计初期，我们就能协调规避接口不兼容的问题，那这种模式就没有应用的机会了。</p>
+<h2 id="封装有缺陷的接口设计"><a href="#封装有缺陷的接口设计" class="headerlink" title="封装有缺陷的接口设计"></a>封装有缺陷的接口设计</h2><p>假设我们依赖的外部系统在接口设计方面有缺陷（比如包含大量静态方法），引入之后会影响到我们自身代码的可测试性。为了隔离设计上的缺陷，我们希望对外部系统提供的接口进行二次封装，抽象出更好的接口设计，这个时候就可以使用适配器模式了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CD</span> </span>&#123; <span class="comment">//这个类来自外部sdk，我们无权修改它的代码</span></span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">staticFunction1</span><span class="params">()</span> </span>&#123; <span class="comment">//... &#125;</span></span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">uglyNamingFunction2</span><span class="params">()</span> </span>&#123; <span class="comment">//... &#125;</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">tooManyParamsFunction3</span><span class="params">(<span class="keyword">int</span> paramA, <span class="keyword">int</span> paramB, ...)</span> </span>&#123; <span class="comment">//... &#125;</span></span><br><span class="line">  </span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lowPerformanceFunction4</span><span class="params">()</span> </span>&#123; <span class="comment">//... &#125;</span></span><br><span class="line">&#125;</span><br><span class="line">      </span><br><span class="line"><span class="comment">// 使用适配器模式进行重构</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ITarget</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">function1</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">function2</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">fucntion3</span><span class="params">(ParamsWrapperDefinition paramsWrapper)</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">function4</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">&#125;</span><br><span class="line">      </span><br><span class="line"><span class="comment">// 注意：适配器类的命名不一定非得末尾带Adaptor</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CDAdaptor</span> <span class="keyword">extends</span> <span class="title">CD</span> <span class="keyword">implements</span> <span class="title">ITarget</span> </span>&#123;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">function1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">     <span class="keyword">super</span>.staticFunction1();</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">function2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.uglyNamingFucntion2();</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">function3</span><span class="params">(ParamsWrapperDefinition paramsWrapper)</span> </span>&#123;</span><br><span class="line">     <span class="keyword">super</span>.tooManyParamsFunction3(paramsWrapper.getParamA(), ...);</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">function4</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//...reimplement it...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id=""><a href="#" class="headerlink" title=""></a></h3><h2 id="统一多个类的接口设计"><a href="#统一多个类的接口设计" class="headerlink" title="统一多个类的接口设计"></a>统一多个类的接口设计</h2><p>某个功能的实现依赖多个外部系统（或者说类）。通过适配器模式，将它们的接口适配为统一的接口定义，然后我们就可以使用多态的特性来复用代码逻辑。</p>
+<p>假设我们的系统要对用户输入的文本内容做敏感词过滤，为了提高过滤的召回率，我们引入了多款第三方敏感词过滤系统，依次对用户输入的内容进行过滤，过滤掉尽可能多的敏感词。但是，每个系统提供的过滤接口都是不同的。这就意味着我们没法复用一套逻辑来调用各个系统。这个时候，我们就可以使用适配器模式，将所有系统的接口适配为统一的接口定义，这样我们可以复用调用敏感词过滤的代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ASensitiveWordsFilter</span> </span>&#123; <span class="comment">// A敏感词过滤系统提供的接口</span></span><br><span class="line">  <span class="comment">//text是原始文本，函数输出用***替换敏感词之后的文本</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">filterSexyWords</span><span class="params">(String text)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">filterPoliticalWords</span><span class="params">(String text)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125; </span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BSensitiveWordsFilter</span>  </span>&#123; <span class="comment">// B敏感词过滤系统提供的接口</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">filter</span><span class="params">(String text)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CSensitiveWordsFilter</span> </span>&#123; <span class="comment">// C敏感词过滤系统提供的接口</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">filter</span><span class="params">(String text, String mask)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 未使用适配器模式之前的代码：代码的可测试性、扩展性不好</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RiskManagement</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> ASensitiveWordsFilter aFilter = <span class="keyword">new</span> ASensitiveWordsFilter();</span><br><span class="line">  <span class="keyword">private</span> BSensitiveWordsFilter bFilter = <span class="keyword">new</span> BSensitiveWordsFilter();</span><br><span class="line">  <span class="keyword">private</span> CSensitiveWordsFilter cFilter = <span class="keyword">new</span> CSensitiveWordsFilter();</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">filterSensitiveWords</span><span class="params">(String text)</span> </span>&#123;</span><br><span class="line">    String maskedText = aFilter.filterSexyWords(text);</span><br><span class="line">    maskedText = aFilter.filterPoliticalWords(maskedText);</span><br><span class="line">    maskedText = bFilter.filter(maskedText);</span><br><span class="line">    maskedText = cFilter.filter(maskedText, <span class="string">&quot;***&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> maskedText;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用适配器模式进行改造</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ISensitiveWordsFilter</span> </span>&#123; <span class="comment">// 统一接口定义</span></span><br><span class="line">  <span class="function">String <span class="title">filter</span><span class="params">(String text)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ASensitiveWordsFilterAdaptor</span> <span class="keyword">implements</span> <span class="title">ISensitiveWordsFilter</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> ASensitiveWordsFilter aFilter;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">filter</span><span class="params">(String text)</span> </span>&#123;</span><br><span class="line">    String maskedText = aFilter.filterSexyWords(text);</span><br><span class="line">    maskedText = aFilter.filterPoliticalWords(maskedText);</span><br><span class="line">    <span class="keyword">return</span> maskedText;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//...省略BSensitiveWordsFilterAdaptor、CSensitiveWordsFilterAdaptor...</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 扩展性更好，更加符合开闭原则，如果添加一个新的敏感词过滤系统，</span></span><br><span class="line"><span class="comment">// 这个类完全不需要改动；而且基于接口而非实现编程，代码的可测试性更好。</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RiskManagement</span> </span>&#123; </span><br><span class="line">    </span><br><span class="line">  <span class="keyword">private</span> List&lt;ISensitiveWordsFilter&gt; filters = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"> </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addSensitiveWordsFilter</span><span class="params">(ISensitiveWordsFilter filter)</span> </span>&#123;</span><br><span class="line">    filters.add(filter);</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">filterSensitiveWords</span><span class="params">(String text)</span> </span>&#123;</span><br><span class="line">    String maskedText = text;</span><br><span class="line">    <span class="keyword">for</span> (ISensitiveWordsFilter filter : filters) &#123;</span><br><span class="line">      maskedText = filter.filter(maskedText);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> maskedText;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="替换依赖的外部系统"><a href="#替换依赖的外部系统" class="headerlink" title="替换依赖的外部系统"></a>替换依赖的外部系统</h2><p>当我们把项目中依赖的一个外部系统替换为另一个外部系统的时候，利用适配器模式，可以减少对代码的改动。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 外部系统A</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">IA</span> </span>&#123;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">fa</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> <span class="keyword">implements</span> <span class="title">IA</span> </span>&#123;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">fa</span><span class="params">()</span> </span>&#123; <span class="comment">//... &#125;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 在我们的项目中，外部系统A的使用示例</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Demo</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> IA a;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">Demo</span><span class="params">(IA a)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.a = a;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">&#125;  </span><br><span class="line">Demo d = <span class="keyword">new</span> Demo(<span class="keyword">new</span> A());</span><br><span class="line"></span><br><span class="line"><span class="comment">// 将外部系统A替换成外部系统B</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BAdaptor</span> <span class="title">implemnts</span> <span class="title">IA</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> B b;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">BAdaptor</span><span class="params">(B b)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.b= b;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">fa</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    b.fb();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 借助BAdaptor，Demo的代码中，调用IA接口的地方都无需改动，</span></span><br><span class="line"><span class="comment">// 只需要将BAdaptor如下注入到Demo即可。</span></span><br><span class="line">Demo d = <span class="keyword">new</span> Demo(<span class="keyword">new</span> BAdaptor(<span class="keyword">new</span> B()));</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="适配不同格式的数据"><a href="#适配不同格式的数据" class="headerlink" title="适配不同格式的数据"></a>适配不同格式的数据</h2><p>适配器模式主要用于接口的适配，实际上，它还可以用在不同格式的数据之间的适配。比如，把从不同征信系统拉取的不同格式的征信数据，统一为相同的格式，以方便存储和使用。再比如，Java 中的 Arrays.asList() 也可以看作一种数据适配器，将数组类型的数据转化为集合容器类型。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; stooges = Arrays.asList(<span class="string">&quot;Larry&quot;</span>, <span class="string">&quot;Moe&quot;</span>, <span class="string">&quot;Curly&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/61369.html" rel="prev" title="设计模式：代理模式">
+      <i class="fa fa-chevron-left"></i> 设计模式：代理模式
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/64842.html" rel="next" title="设计模式：桥接模式">
+      设计模式：桥接模式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B1%BB%E9%80%82%E9%85%8D%E5%99%A8"><span class="nav-number">1.1.</span> <span class="nav-text">类适配器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E8%B1%A1%E9%80%82%E9%85%8D%E5%99%A8"><span class="nav-number">1.2.</span> <span class="nav-text">对象适配器</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A1%88%E4%BE%8B%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">案例分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">3.</span> <span class="nav-text">应用场景</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%81%E8%A3%85%E6%9C%89%E7%BC%BA%E9%99%B7%E7%9A%84%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.1.</span> <span class="nav-text">封装有缺陷的接口设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">3.1.1.</span> <span class="nav-text"></span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%9F%E4%B8%80%E5%A4%9A%E4%B8%AA%E7%B1%BB%E7%9A%84%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.2.</span> <span class="nav-text">统一多个类的接口设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%BF%E6%8D%A2%E4%BE%9D%E8%B5%96%E7%9A%84%E5%A4%96%E9%83%A8%E7%B3%BB%E7%BB%9F"><span class="nav-number">3.3.</span> <span class="nav-text">替换依赖的外部系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%82%E9%85%8D%E4%B8%8D%E5%90%8C%E6%A0%BC%E5%BC%8F%E7%9A%84%E6%95%B0%E6%8D%AE"><span class="nav-number">3.4.</span> <span class="nav-text">适配不同格式的数据</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">63</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['blockmao'],
+      id          : 'e8b8750e59c9b2253d1817c15b96af63',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

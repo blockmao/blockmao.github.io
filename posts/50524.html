@@ -28,7 +28,7 @@
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210417213839bridge-6175815_960_720.jpg">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041721423820210417214228QmwtfN.png">
 <meta property="article:published_time" content="2021-04-17T05:47:46.000Z">
-<meta property="article:modified_time" content="2021-04-17T15:24:40.825Z">
+<meta property="article:modified_time" content="2021-05-06T11:49:28.052Z">
 <meta property="article:author" content="牛觅">
 <meta property="article:tag" content="行为型设计模式">
 <meta name="twitter:card" content="summary">
@@ -193,10 +193,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-04-17 13:47:46 / 修改时间：23:24:40" itemprop="dateCreated datePublished" datetime="2021-04-17T13:47:46+08:00">2021-04-17</time>
+              <time title="创建时间：2021-04-17 13:47:46" itemprop="dateCreated datePublished" datetime="2021-04-17T13:47:46+08:00">2021-04-17</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-05-06 19:49:28" itemprop="dateModified" datetime="2021-05-06T19:49:28+08:00">2021-05-06</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -239,6 +245,18 @@
 <p>中介者模式的一个比较经典的例子，就是<strong>航空管制</strong>。</p>
 <p>为了让飞机在飞行的时候互不干扰，每架飞机都需要知道其他飞机每时每刻的位置，这就需要时刻跟其他飞机通信。飞机通信形成的通信网络就会无比复杂。这个时候，我们通过引入“塔台”这样一个中介，让每架飞机只跟塔台来通信，发送自己的位置给塔台，由塔台来负责每架飞机的航线调度。这样就大大简化了通信网络。</p>
 <p>原本业务逻辑会分散在各个控件中，现在都集中到了中介类中。实际上，这样做既有好处，也有坏处。好处是简化了控件之间的交互，坏处是中介类有可能会变成大而复杂的“上帝类”（God Class）。所以，在使用中介模式的时候，我们要根据实际的情况，平衡对象之间交互的复杂度和中介类本身的复杂度。</p>
+<h2 id="中介者模式-VS-门面模式"><a href="#中介者模式-VS-门面模式" class="headerlink" title="中介者模式 VS 门面模式"></a>中介者模式 VS 门面模式</h2><p>门面模式是以封装和隔离为主要任务，而中介者模式则是以调和同事类之间的关系为主，因为要调和，所以具有了部分的业务逻辑控制。两者的主要区别如下：</p>
+<ul>
+<li><p>功能区别</p>
+<p>门面模式只是增加了一个门面，他对子系统来说没有增加任何的功能，子系统若脱离门面模式是完全可以独立运行的。而中介者模式则增加了业务功能，他把各个同事类中的原有耦合关系移植到了中介者，同事类不可能脱离中介者而独立存在，除非想增加系统的复杂性和降低扩展性。</p>
+</li>
+<li><p>知晓状态不同</p>
+<p>对门面模式来说，子系统不知道有门面存在，而对中介者来说，每个同事类都知道中介者存在，因为要依靠中介者调和同事之间的关系，他们对中介者非常了解。</p>
+</li>
+<li><p>封装程度不同</p>
+<p>门面模式是一种简单的封装，所有的请求处理都委托给子系统完成，而中介者模式则需要有一个中心，由中心协调同事类完成，并且中心本身也完成部分业务，他属于更进一步的业务功能封装。</p>
+</li>
+</ul>
 
     </div>
 
@@ -323,6 +341,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E4%BB%8B%E8%80%85%E6%A8%A1%E5%BC%8F-VS-%E9%97%A8%E9%9D%A2%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">中介者模式 VS 门面模式</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -338,20 +357,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">50</span>
+          <span class="site-state-item-count">63</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">16</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
