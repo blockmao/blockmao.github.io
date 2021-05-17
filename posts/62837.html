@@ -26,10 +26,10 @@
 <meta property="og:site_name" content="牛觅博客">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210506195602pexels-photo-348520.jpeg">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/2184951-073c2f46582d1ad2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/443/format/webp">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/2184951-b606dbcf328a8d84.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/734/format/webp">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210517100213erjYKK.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210517100245bfXyaX.jpg">
 <meta property="article:published_time" content="2021-05-01T10:25:15.000Z">
-<meta property="article:modified_time" content="2021-05-06T11:56:04.423Z">
+<meta property="article:modified_time" content="2021-05-17T02:02:56.834Z">
 <meta property="article:author" content="牛觅">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210506195602pexels-photo-348520.jpeg">
@@ -201,7 +201,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-05-06 19:56:04" itemprop="dateModified" datetime="2021-05-06T19:56:04+08:00">2021-05-06</time>
+                <time title="修改时间：2021-05-17 10:02:56" itemprop="dateModified" datetime="2021-05-17T10:02:56+08:00">2021-05-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -261,11 +261,11 @@
 <p>这种实现方式，相信大家都知道有一个弊端：如果我在单位时间1s内的前10ms，已经通过了100个请求，那后面的990ms，拒绝请求，我们把这种现象称为“<strong>突刺现象</strong>”。</p>
 <h3 id="漏桶算法"><a href="#漏桶算法" class="headerlink" title="漏桶算法"></a>漏桶算法</h3><p>为了消除”突刺现象”，可以采用漏桶算法实现限流，漏桶算法这个名字就很形象，算法内部有一个容器，类似生活用到的漏斗，当请求进来时，相当于水倒入漏斗，然后从下端小口慢慢匀速的流出。不管上面流量多大，下面流出的速度始终保持不变。</p>
 <p>不管服务调用方多么不稳定，通过漏桶算法进行限流，每10毫秒处理一次请求。因为处理的速度是固定的，请求进来的速度是未知的，可能突然进来很多请求，没来得及处理的请求就先放在桶里，既然是个桶，肯定是有容量上限，如果桶满了，那么新进来的请求就丢弃。</p>
-<p><img src="https://upload-images.jianshu.io/upload_images/2184951-073c2f46582d1ad2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/443/format/webp" alt="img"></p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210517100213erjYKK.jpg" alt="20210517100213erjYKK"></p>
 <p>在算法实现方面，可以准备一个队列，用来保存请求，另外通过一个线程池（ScheduledExecutorService）来定期从队列中获取请求并执行，可以一次性获取多个并发执行。</p>
 <p>这种算法，在使用过后也存在弊端：<strong>无法应对短时间的突发流量</strong>。</p>
 <h3 id="令牌桶算法"><a href="#令牌桶算法" class="headerlink" title="令牌桶算法"></a>令牌桶算法</h3><p>从某种意义上讲，令牌桶算法是对漏桶算法的一种改进，桶算法能够限制请求调用的速率，而令牌桶算法能够在限制调用的平均速率的同时还允许一定程度的突发调用。</p>
-<p><img src="https://upload-images.jianshu.io/upload_images/2184951-b606dbcf328a8d84.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/734/format/webp" alt="img"></p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210517100245bfXyaX.jpg" alt="20210517100245bfXyaX"></p>
 <p>在令牌桶算法中，存在一个桶，用来存放固定数量的令牌。算法中存在一种机制，以一定的速率往桶中放令牌。每次请求调用需要先获取令牌，只有拿到令牌，才有机会继续执行，否则选择选择等待可用的令牌、或者直接拒绝。</p>
 <p>放令牌这个动作是持续不断的进行，如果桶中令牌数达到上限，就丢弃令牌，所以就存在这种情况，桶中一直有大量的可用令牌，这时进来的请求就可以直接拿到令牌执行，比如设置qps为100，那么限流器初始化完成一秒后，桶中就已经有100个令牌了，这时服务还没完全启动好，等启动完成对外提供服务时，该限流器可以抵挡瞬时的100个请求。所以，只有桶中没有令牌时，请求才会进行等待，最后相当于以一定的速率执行。</p>
 <p>实现思路：可以准备一个队列，用来保存令牌，另外通过一个线程池定期生成令牌放到队列中，每来一个请求，就从队列中获取一个令牌，并继续执行。</p>
