@@ -33,7 +33,7 @@
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210421234456CgpVE1_vL6mAcikTAAYJgBAIkz4743.png">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210421234456CgpVE1_vL6-AKGvaAAUZP14MgzM418.png">
 <meta property="article:published_time" content="2021-04-21T01:55:39.000Z">
-<meta property="article:modified_time" content="2021-05-19T01:54:50.096Z">
+<meta property="article:modified_time" content="2021-05-19T14:19:55.562Z">
 <meta property="article:author" content="牛觅">
 <meta property="article:tag" content="分布式">
 <meta name="twitter:card" content="summary">
@@ -206,7 +206,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-05-19 09:54:50" itemprop="dateModified" datetime="2021-05-19T09:54:50+08:00">2021-05-19</time>
+                <time title="修改时间：2021-05-19 22:19:55" itemprop="dateModified" datetime="2021-05-19T22:19:55+08:00">2021-05-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -293,7 +293,8 @@
 <ul>
 <li><strong>JDK 动态代理</strong>。在运行时可以动态创建代理类，但是 JDK 动态代理的功能比较局限，代理对象必须实现一个接口，否则抛出异常。因为代理类会继承 Proxy 类，然而 Java 是不支持多重继承的，只能通过接口实现多态。JDK 动态代理所生成的代理类是接口的实现类，不能代理接口中不存在的方法。JDK 动态代理是通过反射调用的形式代理类中的方法，比直接调用肯定是性能要慢的。</li>
 <li><strong>Cglib 动态代理</strong>。Cglib 是基于 ASM 字节码生成框架实现的，通过字节码技术生成的代理类，所以代理类的类型是不受限制的。而且 Cglib 生成的代理类是继承于被代理类，所以可以提供更加灵活的功能。在代理方法方面，Cglib 是有优势的，它采用了 FastClass 机制，为代理类和被代理类各自创建一个 Class，这个 Class 会为代理类和被代理类的方法分配 index 索引，FastClass 就可以通过 index 直接定位要调用的方法，并直接调用，这是一种空间换时间的优化思路。</li>
-<li><strong>Javassist 和 ASM</strong>。二者都是 Java 字节码操作框架，使用起来难度较大，需要开发者对 Class 文件结构以及 JVM 都有所了解，但是它们都比反射的性能要高。Byte Buddy 也是一个字节码生成和操作的类库，Byte Buddy 功能强大，相比于 Javassist 和 ASM，Byte Buddy 提供了更加便捷的 API，用于创建和修改 Java 类，无须理解字节码的格式，而且 Byte Buddy 更加轻量，性能更好。</li>
+<li><strong>Javassist 和 ASM</strong>。二者都是 Java 字节码操作框架，使用起来难度较大，需要开发者对 Class 文件结构以及 JVM 都有所了解，但是它们都比反射的性能要高。</li>
+<li><strong>Byte Buddy</strong> 也是一个字节码生成和操作的类库，Byte Buddy 功能强大，相比于 Javassist 和 ASM，Byte Buddy 提供了更加便捷的 API，用于创建和修改 Java 类，无须理解字节码的格式，而且 Byte Buddy 更加轻量，性能更好。</li>
 </ul>
 
     </div>
@@ -395,14 +396,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">63</span>
+          <span class="site-state-item-count">66</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
