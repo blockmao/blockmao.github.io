@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="理解OAuth 2.0">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/51457.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.pixabay.com/photo/2020/01/01/17/36/asturias-4734034_960_720.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210530181850Capto_Annotation.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210530184755OAuth2%E7%9A%84%E5%AE%9A%E4%B9%89.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210530183208OAuth2.0%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210530185124OAuth2%E4%BC%98%E5%8A%BF.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210530183939QtQNGa.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210530185705Wgz2xC.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202105301859589aWlWP.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021053019033981uIfr.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202105301905174OsyTW.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210530191504OAuth2%E6%8E%88%E6%9D%83%E7%B1%BB%E5%9E%8B%E9%80%89%E6%8B%A9.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210603100748gh9Q13.jpg">
+<meta property="article:published_time" content="2021-06-05T01:18:35.000Z">
+<meta property="article:modified_time" content="2021-06-05T01:23:10.619Z">
+<meta property="article:author" content="牛觅">
+<meta property="article:tag" content="微服务安全">
+<meta property="article:tag" content="OAuth2">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.pixabay.com/photo/2020/01/01/17/36/asturias-4734034_960_720.jpg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/51457.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>理解OAuth 2.0 | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/51457.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          理解OAuth 2.0
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-06-05 09:18:35 / 修改时间：09:23:10" itemprop="dateCreated datePublished" datetime="2021-06-05T09:18:35+08:00">2021-06-05</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">微服务架构</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://cdn.pixabay.com/photo/2020/01/01/17/36/asturias-4734034_960_720.jpg" alt="自然"></p>
+<span id="more"></span>
+
+<h1 id="OAuth-2解决什么问题"><a href="#OAuth-2解决什么问题" class="headerlink" title="OAuth 2解决什么问题"></a>OAuth 2解决什么问题</h1><p>有一个”云冲印”的网站，可以将用户储存在Google的照片，冲印出来。用户为了使用该服务，必须让”云冲印”读取自己储存在Google上的照片。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210530181850Capto_Annotation.png" alt="Capto_Annotation"></p>
+<p>问题是只有得到用户的授权，Google才会同意”云冲印”读取这些照片。那么，”云冲印”怎样获得用户的授权呢？</p>
+<p>传统方法是，用户将自己的Google用户名和密码，告诉”云冲印”，后者就可以读取用户的照片了。这样的做法有以下几个严重的缺点。</p>
+<ol>
+<li><p>“云冲印”为了后续的服务，会保存用户的密码，这样很不安全。</p>
+</li>
+<li><p>Google不得不部署密码登录，而我们知道，单纯的密码登录并不安全。</p>
+</li>
+<li><p>“云冲印”拥有了获取用户储存在Google所有资料的权力，用户没法限制”云冲印”获得授权的范围和有效期。</p>
+</li>
+<li><p>用户只有修改密码，才能收回赋予”云冲印”的权力。但是这样做，会使得其他所有获得用户授权的第三方应用程序全部失效。</p>
+</li>
+<li><p>只要有一个第三方应用程序被破解，就会导致用户密码泄漏，以及所有被密码保护的数据泄漏。</p>
+</li>
+</ol>
+<p><strong>OAuth 2.0就是为了解决上面这些问题而诞生的。</strong></p>
+<h1 id="术语"><a href="#术语" class="headerlink" title="术语"></a>术语</h1><ul>
+<li><p><strong>Resource Owner</strong>：资源所有者，本文中又称”用户”（user）。</p>
+</li>
+<li><p><strong>Third-party application</strong>：第三方应用程序，本文中又称”客户端”（client）。</p>
+</li>
+<li><p><strong>Authorization server</strong>：认证服务器，即服务提供商专门用来处理认证的服务器。</p>
+</li>
+<li><p><strong>Resource server</strong>：资源服务器，即服务提供商存放用户生成的资源的服务器。它与认证服务器，可以是同一台服务器，也可以是不同的服务器。</p>
+</li>
+</ul>
+<h1 id="OAuth-2的定义"><a href="#OAuth-2的定义" class="headerlink" title="OAuth 2的定义"></a>OAuth 2的定义</h1><p><img src="https://gitee.com/niumi/drawing/raw/master/20210530184755OAuth2%E7%9A%84%E5%AE%9A%E4%B9%89.png" alt="20210530184755OAuth2的定义"></p>
+<h1 id="OAuth-2应用场景"><a href="#OAuth-2应用场景" class="headerlink" title="OAuth 2应用场景"></a>OAuth 2应用场景</h1><p><img src="https://gitee.com/niumi/drawing/raw/master/20210530183208OAuth2.0%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF.png" alt="20210530183208OAuth2.0应用场景"></p>
+<h1 id="OAuth-2优势"><a href="#OAuth-2优势" class="headerlink" title="OAuth 2优势"></a>OAuth 2优势</h1><p><img src="https://gitee.com/niumi/drawing/raw/master/20210530185124OAuth2%E4%BC%98%E5%8A%BF.png" alt="20210530185124OAuth2优势"></p>
+<h1 id="OAuth-2运行流程"><a href="#OAuth-2运行流程" class="headerlink" title="OAuth 2运行流程"></a>OAuth 2运行流程</h1><p>OAuth 2.0的运行流程如下图，摘自RFC 6749。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210530183939QtQNGa.jpg" alt="20210530183939QtQNGa"></p>
+<ol>
+<li>（A）用户打开客户端以后，客户端要求用户给予授权。</li>
+<li>（B）<strong>用户同意给予客户端授权</strong>。</li>
+<li>（C）客户端使用上一步获得的授权，向认证服务器申请令牌。</li>
+<li>（D）认证服务器对客户端进行认证以后，确认无误，同意发放令牌。</li>
+<li>（E）客户端使用令牌，向资源服务器申请获取资源。</li>
+<li>（F）资源服务器确认令牌无误，同意向客户端开放资源。</li>
+</ol>
+<p><em>不难看出来，上面六个步骤之中，B是关键，即用户怎样才能给于客户端授权。有了这个授权以后，客户端就可以获取令牌，进而凭令牌获取资源</em>。</p>
+<h1 id="客户端的授权模式"><a href="#客户端的授权模式" class="headerlink" title="客户端的授权模式"></a>客户端的授权模式</h1><p>客户端必须得到用户的授权（authorization grant），才能获得令牌（access token）。OAuth 2.0定义了四种授权方式。</p>
+<ul>
+<li>授权码模式（authorization code）</li>
+<li>简化模式（implicit）</li>
+<li>密码模式（resource owner password credentials）</li>
+<li>客户端模式（client credentials）</li>
+</ul>
+<h2 id="授权码模式"><a href="#授权码模式" class="headerlink" title="授权码模式"></a>授权码模式</h2><p>授权码模式（authorization code）是功能最完整、流程最严密的授权模式。它的特点就是通过客户端的后台服务器，与”服务提供商”的认证服务器进行互动。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210530185705Wgz2xC.jpg" alt="20210530185705Wgz2xC"></p>
+<ol>
+<li>（A）用户访问客户端，后者将前者导向认证服务器。</li>
+<li>（B）用户选择是否给予客户端授权。</li>
+<li>（C）假设用户给予授权，认证服务器将用户导向客户端事先指定的”重定向URI”（redirection URI），同时附上一个授权码。</li>
+<li>（D）客户端收到授权码，附上早先的”重定向URI”，向认证服务器申请令牌。这一步是在客户端的后台的服务器上完成的，对用户不可见。</li>
+<li>（E）认证服务器核对了授权码和重定向URI，确认无误后，向客户端发送访问令牌（access token）和更新令牌（refresh token）。</li>
+</ol>
+<h2 id="简化模式"><a href="#简化模式" class="headerlink" title="简化模式"></a>简化模式</h2><p>简化模式（implicit grant type）不通过第三方应用程序的服务器，直接在浏览器中向认证服务器申请令牌，跳过了”授权码”这个步骤，因此得名。所有步骤在浏览器中完成，令牌对访问者是可见的，且客户端不需要认证。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202105301859589aWlWP.jpg" alt="202105301859589aWlWP"></p>
+<ol>
+<li>（A）客户端将用户导向认证服务器。</li>
+<li>（B）用户决定是否给于客户端授权。</li>
+<li>（C）假设用户给予授权，认证服务器将用户导向客户端指定的”重定向URI”，并在URI的Hash部分包含了访问令牌。</li>
+<li>（D）浏览器向资源服务器发出请求，其中不包括上一步收到的Hash值。</li>
+<li>（E）资源服务器返回一个网页，其中包含的代码可以获取Hash值中的令牌。</li>
+<li>（F）浏览器执行上一步获得的脚本，提取出令牌。</li>
+<li>（G）浏览器将令牌发给客户端。</li>
+</ol>
+<h2 id="密码模式"><a href="#密码模式" class="headerlink" title="密码模式"></a>密码模式</h2><p>密码模式（Resource Owner Password Credentials Grant）中，用户向客户端提供自己的用户名和密码。客户端使用这些信息，向”服务商提供商”索要授权。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/2021053019033981uIfr.jpg" alt="2021053019033981uIfr"></p>
+<ol>
+<li>（A）用户向客户端提供用户名和密码。</li>
+<li>（B）客户端将用户名和密码发给认证服务器，向后者请求令牌。</li>
+<li>（C）认证服务器确认无误后，向客户端提供访问令牌。</li>
+</ol>
+<h2 id="客户端模式"><a href="#客户端模式" class="headerlink" title="客户端模式"></a>客户端模式</h2><p>客户端模式（Client Credentials Grant）指客户端以自己的名义，而不是以用户的名义，向”服务提供商”进行认证。严格地说，客户端模式并不属于OAuth框架所要解决的问题。在这种模式中，用户直接向客户端注册，客户端以自己的名义要求”服务提供商”提供服务，其实不存在授权问题。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202105301905174OsyTW.jpg" alt="202105301905174OsyTW"></p>
+<ol>
+<li>（A）客户端向认证服务器进行身份认证，并要求一个访问令牌。</li>
+<li>（B）认证服务器确认无误后，向客户端提供访问令牌。</li>
+</ol>
+<h1 id="如何选择授权模式-？"><a href="#如何选择授权模式-？" class="headerlink" title="如何选择授权模式 ？"></a>如何选择授权模式 ？</h1><p><img src="https://gitee.com/niumi/drawing/raw/master/20210530191504OAuth2%E6%8E%88%E6%9D%83%E7%B1%BB%E5%9E%8B%E9%80%89%E6%8B%A9.png" alt="20210530191504OAuth2授权类型选择"></p>
+<h1 id="刷新令牌"><a href="#刷新令牌" class="headerlink" title="刷新令牌"></a>刷新令牌</h1><p>刷新令牌由授权服务器颁发给客户端，用于当前访问令牌变得无效或过期时获取新的访问令牌，简化重新授权流程。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210603100748gh9Q13.jpg" alt="20210603100748gh9Q13"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E5%AE%89%E5%85%A8/" rel="tag"># 微服务安全</a>
+              <a href="/tags/OAuth2/" rel="tag"># OAuth2</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/3579.html" rel="prev" title="设计模式：命令模式">
+      <i class="fa fa-chevron-left"></i> 设计模式：命令模式
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#OAuth-2%E8%A7%A3%E5%86%B3%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98"><span class="nav-number">1.</span> <span class="nav-text">OAuth 2解决什么问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AF%E8%AF%AD"><span class="nav-number">2.</span> <span class="nav-text">术语</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OAuth-2%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-number">3.</span> <span class="nav-text">OAuth 2的定义</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OAuth-2%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">4.</span> <span class="nav-text">OAuth 2应用场景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OAuth-2%E4%BC%98%E5%8A%BF"><span class="nav-number">5.</span> <span class="nav-text">OAuth 2优势</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OAuth-2%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="nav-number">6.</span> <span class="nav-text">OAuth 2运行流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E6%8E%88%E6%9D%83%E6%A8%A1%E5%BC%8F"><span class="nav-number">7.</span> <span class="nav-text">客户端的授权模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%88%E6%9D%83%E7%A0%81%E6%A8%A1%E5%BC%8F"><span class="nav-number">7.1.</span> <span class="nav-text">授权码模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8C%96%E6%A8%A1%E5%BC%8F"><span class="nav-number">7.2.</span> <span class="nav-text">简化模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%86%E7%A0%81%E6%A8%A1%E5%BC%8F"><span class="nav-number">7.3.</span> <span class="nav-text">密码模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%A8%A1%E5%BC%8F"><span class="nav-number">7.4.</span> <span class="nav-text">客户端模式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E9%80%89%E6%8B%A9%E6%8E%88%E6%9D%83%E6%A8%A1%E5%BC%8F-%EF%BC%9F"><span class="nav-number">8.</span> <span class="nav-text">如何选择授权模式 ？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%B7%E6%96%B0%E4%BB%A4%E7%89%8C"><span class="nav-number">9.</span> <span class="nav-text">刷新令牌</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">68</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['blockmao'],
+      id          : '797db868c987f43ad8964b3cc210106f',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
