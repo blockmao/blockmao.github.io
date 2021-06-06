@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="MySQL：事务与锁机制">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/12078.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.pixabay.com/photo/2020/02/06/16/00/forest-4824761_960_720.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202106061015174o1N8c.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606103718QvV9s5.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606103854yfynC9.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606104141xqRjvr.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606104641Vsjz90.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606105308psH71Z.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606110015NGgprw.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606110216g2IMPt.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202106061104002xRASq.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606110502jmV0GZ.jpg">
+<meta property="article:published_time" content="2021-06-06T03:08:19.000Z">
+<meta property="article:modified_time" content="2021-06-06T03:13:26.216Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.pixabay.com/photo/2020/02/06/16/00/forest-4824761_960_720.png">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/12078.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL：事务与锁机制 | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/12078.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL：事务与锁机制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-06-06 11:08:19 / 修改时间：11:13:26" itemprop="dateCreated datePublished" datetime="2021-06-06T11:08:19+08:00">2021-06-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://cdn.pixabay.com/photo/2020/02/06/16/00/forest-4824761_960_720.png" alt="森林"></p>
+<span id="more"></span>
+
+<h1 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h1><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>什么是事务？事务具有哪些特性？</p>
+<p>简单来说，事务是指作为单个逻辑工作单元执行的一系列操作，这些操作要么全做，要么全不做，是一个不可分割的工作单元。</p>
+<p>一个逻辑工作单元要成为事务，在关系型数据库管理系统中，必须满足 4 个特性，即所谓的 ACID：原子性、一致性、隔离性和持久性。</p>
+<ul>
+<li><p><strong>一致性</strong>：事务开始之前和事务结束之后，数据库的完整性限制未被破坏。</p>
+</li>
+<li><p><strong>原子性</strong>：事务的所有操作，要么全部完成，要么全部不完成，不会结束在某个中间环节。</p>
+</li>
+<li><p><strong>持久性</strong>：事务完成之后，事务所做的修改进行持久化保存，不会丢失。</p>
+</li>
+<li><p><strong>隔离性</strong>：当多个事务并发访问数据库中的同一数据时，所表现出来的相互关系。</p>
+</li>
+</ul>
+<h2 id="事务特性"><a href="#事务特性" class="headerlink" title="事务特性"></a>事务特性</h2><p><img src="https://gitee.com/niumi/drawing/raw/master/202106061015174o1N8c.jpg" alt="202106061015174o1N8c"></p>
+<h3 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h3><p>一致性其实包括两部分内容，分别是约束一致性和数据一致性。</p>
+<ul>
+<li><p><strong>约束一致性</strong>：大家应该很容易想到数据库中创建表结构时所指定的外键、Check、唯一索引等约束。可惜在 MySQL 中，是不支持 Check 的，只支持另外两种，所以约束一致性就非常容易理解了。</p>
+</li>
+<li><p><strong>数据一致性</strong>：是一个综合性的规定，或者说是一个把握全局的规定。因为它是由原子性、持久性、隔离性共同保证的结果，而不是单单依赖于某一种技术。</p>
+</li>
+</ul>
+<h3 id="原子性"><a href="#原子性" class="headerlink" title="原子性"></a>原子性</h3><p>原子性就是前面提到的两个“要么”，即要么改了，要么没改。也就是说用户感受不到一个正在改的状态。MySQL 是通过 WAL（Write Ahead Log）技术来实现这种效果的。</p>
+<p>原子性和 WAL 到底有什么关系呢？举例说明，如果事务提交了，那改了的数据就生效了，如果此时 Buffer Pool 的脏页没有刷盘，如何来保证改了的数据生效呢？就需要使用 Redo 日志恢复出来的数据。而如果事务没有提交，且 Buffer Pool 的脏页被刷盘了，那这个本不应该存在的数据如何消失呢？就需要通过 Undo 来实现了，==Undo 又是通过 Redo 来保证的==，所以最终原子性的保证还是靠 Redo 的 WAL 机制实现的。</p>
+<h3 id="持久性"><a href="#持久性" class="headerlink" title="持久性"></a>持久性</h3><p>持久性是如何保证的呢？一旦事务提交，通过原子性，即便是遇到宕机，也可以从逻辑上将数据找回来后再次写入物理存储空间，这样就从逻辑和物理两个方面保证了数据不会丢失，即保证了数据库的持久性。</p>
+<h3 id="隔离性"><a href="#隔离性" class="headerlink" title="隔离性"></a>隔离性</h3><p>所谓隔离性，指的是一个事务的执行不能被其他事务干扰，即一个事务内部的操作及使用的数据对其他的并发事务是隔离的。锁和多版本控制就符合隔离性。</p>
+<p>InnoDB 支持的隔离性有 4 种，隔离性从低到高分别为：读未提交、读提交、可重复读、可串行化。</p>
+<ul>
+<li><p><strong>读未提交（RU，Read Uncommitted）</strong>。它能读到其他一个事务的中间过程，违背了 ACID 特性，存在脏读的问题，所以基本不会用到，可以忽略。</p>
+</li>
+<li><p><strong>读提交（RC，Read Committed）</strong>。它表示如果其他事务已经提交，那么我们就可以看到，这也是一种最普遍适用的级别。但由于一些历史原因，可能 RC 在生产环境中用的并不多。</p>
+</li>
+<li><p><strong>可重复读（RR，Repeatable Read）</strong>，是目前被使用得最多的一种级别。其特点是有 Gap 锁、目前还是默认的级别、在这种级别下会经常发生死锁、低并发等问题。</p>
+</li>
+<li><p><strong>可串行化</strong>，这种实现方式，其实已经并不是多版本了，又回到了单版本的状态，因为它所有的实现都是通过锁来实现的。</p>
+</li>
+</ul>
+<h1 id="并发事务控制"><a href="#并发事务控制" class="headerlink" title="并发事务控制"></a>并发事务控制</h1><h2 id="单版本控制-锁"><a href="#单版本控制-锁" class="headerlink" title="单版本控制-锁"></a>单版本控制-锁</h2><p>锁用独占的方式来保证在只有一个版本的情况下事务之间相互隔离，所以锁可以理解为单版本控制。</p>
+<p>在 MySQL 事务中，锁的实现与隔离级别有关系，在 RR（Repeatable Read）隔离级别下，MySQL 为了解决幻读的问题，以牺牲并行度为代价，通过 Gap 锁来防止数据的写入，而这种锁，因为其并行度不够，冲突很多，经常会引起死锁。</p>
+<p>现在流行的 Row 模式可以避免很多冲突甚至死锁问题，所以推荐默认使用 Row + RC（Read Committed）模式的隔离级别，可以很大程度上提高数据库的读写并行度。</p>
+<h2 id="多版本控制-MVCC"><a href="#多版本控制-MVCC" class="headerlink" title="多版本控制-MVCC"></a>多版本控制-MVCC</h2><p>多版本控制也叫作 MVCC，是指在数据库中，为了实现高并发的数据访问，对数据进行多版本处理，并通过事务的可见性来保证事务能看到自己应该看到的数据版本。</p>
+<p>那个多版本是如何生成的呢？每一次对数据库的修改，都会在 Undo 日志中记录当前修改记录的事务号及修改前数据状态的存储地址（即 ROLL_PTR），以便在必要的时候可以回滚到老的数据版本。例如，一个读事务查询到当前记录，而最新的事务还未提交，根据原子性，读事务看不到最新数据，但可以去回滚段中找到老版本的数据，这样就生成了多个版本。</p>
+<p>多版本控制很巧妙地将稀缺资源的独占互斥转换为并发，大大提高了数据库的吞吐量及读写性能。</p>
+<h1 id="MVCC实现原理"><a href="#MVCC实现原理" class="headerlink" title="MVCC实现原理"></a>MVCC实现原理</h1><p>MySQL InnoDB 存储引擎，实现的是基于多版本的并发控制协议——MVCC，而不是基于锁的并发控制。</p>
+<p>MVCC 最大的好处是读不加锁，读写不冲突。在读多写少的 OLTP（On-Line Transaction Processing）应用中，读写不冲突是非常重要的，极大的提高了系统的并发性能，这也是为什么现阶段几乎所有的 RDBMS（Relational Database Management System），都支持 MVCC 的原因。</p>
+<h2 id="快照读与当前读"><a href="#快照读与当前读" class="headerlink" title="快照读与当前读"></a>快照读与当前读</h2><p>在 MVCC 并发控制中，读操作可以分为两类: 快照读（Snapshot Read）与当前读 （Current Read）。</p>
+<ul>
+<li><p><strong>快照读</strong>：读取的是记录的可见版本（有可能是历史版本），不用加锁。</p>
+</li>
+<li><p><strong>当前读</strong>：读取的是记录的最新版本，并且当前读返回的记录，都会加锁，保证其他事务不会再并发修改这条记录。 </p>
+</li>
+</ul>
+<p>==注意：MVCC 只在 Read Commited 和 Repeatable Read 两种隔离级别下工作。==</p>
+<p>如何区分快照读和当前读呢？ 可以简单的理解为：</p>
+<ul>
+<li><p><strong>快照读</strong>：简单的 select 操作，属于快照读，不需要加锁。 </p>
+</li>
+<li><p><strong>当前读</strong>：特殊的读操作，插入/更新/删除操作，属于当前读，需要加锁。 </p>
+</li>
+</ul>
+<h2 id="MVCC多版本实现"><a href="#MVCC多版本实现" class="headerlink" title="MVCC多版本实现"></a>MVCC多版本实现</h2><p>为了让大家更直观地理解 MVCC 的实现原理，这里举一个“事务对某行记录更新的过程”的案例来讲解 MVCC 中多版本的实现。</p>
+<p>假设 F1～F6 是表中字段的名字，1～6 是其对应的数据。后面三个隐含字段分别对应该行的隐含ID、事务号和回滚指针，如下图所示。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210606103718QvV9s5.jpg" alt="20210606103718QvV9s5"></p>
+<ul>
+<li><p>隐含 ID（DB_ROW_ID），6 个字节，当由 InnoDB 自动产生聚集索引时，聚集索引包括这个 DB_ROW_ID 的值。</p>
+</li>
+<li><p>事务号（DB_TRX_ID），6 个字节，标记了最新更新这条行记录的 Transaction ID，每处理一个事务，其值自动 +1。</p>
+</li>
+<li><p>回滚指针（DB_ROLL_PT），7 个字节，指向当前记录项的 Rollback Segment 的 Undo log记录，通过这个指针才能查找之前版本的数据。</p>
+</li>
+</ul>
+<p>具体的更新过程，简单描述如下。</p>
+<ol>
+<li><p>首先，假如这条数据是刚 INSERT 的，可以认为 ID 为 1，其他两个字段为空。</p>
+</li>
+<li><p>然后，当事务 1 更改该行的数据值时，会进行如下操作，如下图所示。</p>
+</li>
+</ol>
+<p>​     <img src="https://gitee.com/niumi/drawing/raw/master/20210606103854yfynC9.jpg" alt="20210606103854yfynC9"></p>
+<blockquote>
+<ul>
+<li><p>用排他锁锁定该行；记录 Redo log；</p>
+</li>
+<li><p>把该行修改前的值复制到 Undo log，即图中下面的行；</p>
+</li>
+<li><p>修改当前行的值，填写事务编号，使回滚指针指向 Undo log 中修改前的行。</p>
+</li>
+</ul>
+</blockquote>
+<ol start="3">
+<li><p>接下来，与事务 1 相同，此时 Undo log 中有两行记录，并且通过回滚指针连在一起。因此，如果 Undo log 一直不删除，则会通过当前记录的回滚指针回溯到该行创建时的初始内容，所幸的是在 InnoDB 中存在 purge 线程，它会查询那些比现在最老的活动事务还早的 Undo log，并删除它们，从而保证 Undo log 文件不会无限增长。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210606104141xqRjvr.jpg" alt="20210606104141xqRjvr"></p>
+</li>
+</ol>
+<h1 id="并发事务问题及解决方案"><a href="#并发事务问题及解决方案" class="headerlink" title="并发事务问题及解决方案"></a>并发事务问题及解决方案</h1><h2 id="并发事务问题"><a href="#并发事务问题" class="headerlink" title="并发事务问题"></a>并发事务问题</h2><h3 id="脏读"><a href="#脏读" class="headerlink" title="脏读"></a>脏读</h3><p>一个事务正在对一条记录做修改，在这个事务完成并提交前，这条记录的数据就处于不一致状态；这时，另一个事务也来读取同一条记录，如果不加控制，第二个事务读取了这些“脏”数据，并据此做进一步的处理，就会产生未提交的数据依赖关系。这种现象被形象的叫作”脏读”（Dirty Reads）。</p>
+<h3 id="不可重复读"><a href="#不可重复读" class="headerlink" title="不可重复读"></a>不可重复读</h3><p>一个事务在读取某些数据后的某个时间，再次读取以前读过的数据，却发现其==读出的数据已经发生了改变、或某些记录已经被删除了==！这种现象就叫作“ 不可重复读”（Non-Repeatable Reads）。</p>
+<h3 id="幻读"><a href="#幻读" class="headerlink" title="幻读"></a>幻读</h3><p>一个事务按相同的查询条件重新读取以前检索过的数据，却发现其他事务插入了满足其查询条件的新数据，这种现象就称为“幻读”（Phantom Reads）。</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>产生的这些问题，MySQL 数据库是通过事务隔离级别来解决的。要求大家能够记住这种关系的矩阵表；记住各种事务隔离级别及各自都解决了什么问题，如下图所示。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210606104641Vsjz90.jpg" alt="20210606104641Vsjz90"></p>
+<h1 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h1><h2 id="概述-1"><a href="#概述-1" class="headerlink" title="概述"></a>概述</h2><h3 id="MySQL锁分类"><a href="#MySQL锁分类" class="headerlink" title="MySQL锁分类"></a>MySQL锁分类</h3><p>在 MySQL 中有三种级别的锁：页级锁、表级锁、行级锁。</p>
+<ul>
+<li><p>表级锁：开销小，加锁快；不会出现死锁；锁定粒度大，发生锁冲突的概率最高，并发度最低。 会发生在：MyISAM、memory、InnoDB、BDB 等存储引擎中。</p>
+</li>
+<li><p>行级锁：开销大，加锁慢；会出现死锁；锁定粒度最小，发生锁冲突的概率最低，并发度最高。会发生在：InnoDB 存储引擎。</p>
+</li>
+<li><p>页级锁：开销和加锁时间界于表锁和行锁之间；会出现死锁；锁定粒度界于表锁和行锁之间，并发度一般。会发生在：BDB 存储引擎。</p>
+</li>
+</ul>
+<p>三种级别的锁分别对应存储引擎关系如下图所示。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210606105308psH71Z.jpg" alt="20210606105308psH71Z"></p>
+<p>注意：MySQL 中的表锁包括读锁和写锁。只需记住这个表锁模式兼容矩阵即可。</p>
+<h3 id="InnoDB中的锁"><a href="#InnoDB中的锁" class="headerlink" title="InnoDB中的锁"></a>InnoDB中的锁</h3><p>在 MySQL InnoDB 存储引擎中，锁分为行锁和表锁。其中行锁包括两种锁。</p>
+<ul>
+<li><p><strong>共享锁（S）</strong>：多个事务可以一起读，共享锁之间不互斥，共享锁会阻塞排它锁。</p>
+</li>
+<li><p><strong>排他锁（X）</strong>：允许获得排他锁的事务更新数据，阻止其他事务取得相同数据集的共享读锁和排他写锁。</p>
+</li>
+</ul>
+<p>另外，为了允许行锁和表锁共存，实现多粒度锁机制，InnoDB 还有两种内部使用的意向锁（Intention Locks），这两种意向锁都是表锁。表锁又分为三种。</p>
+<ul>
+<li><p><strong>意向共享锁（IS）</strong>：事务在给一个数据行加共享锁前必须先取得该表的 IS 锁。</p>
+</li>
+<li><p><strong>意向排他锁（IX）</strong>：事务在给一个数据行加排他锁前必须先取得该表的 IX 锁。</p>
+</li>
+<li><p><strong>自增锁（AUTO-INC Locks）</strong>：特殊表锁，自增长计数器通过该“锁”来获得子增长计数器最大的计数值。</p>
+</li>
+</ul>
+<p>在加行锁之前必须先获得表级意向锁，否则等待 innodb_lock_wait_timeout 超时后根据innodb_rollback_on_timeout 决定是否回滚事务。</p>
+<h3 id="InnoDB行锁"><a href="#InnoDB行锁" class="headerlink" title="InnoDB行锁"></a>InnoDB行锁</h3><p>InnoDB 行锁是通过对索引数据页上的记录（record）加锁实现的。主要实现算法有 3 种：Record Lock、Gap Lock 和 Next-key Lock。</p>
+<ul>
+<li><p><strong>Record Lock 锁</strong>：单个行记录的锁（锁数据，不锁 Gap）。</p>
+</li>
+<li><p><strong>Gap Lock 锁</strong>：间隙锁，锁定一个范围，不包括记录本身（不锁数据，仅仅锁数据前面的Gap）。</p>
+</li>
+<li><p><strong>Next-key Lock 锁</strong>：同时锁住数据，并且锁住数据前面的 Gap。</p>
+</li>
+</ul>
+<h2 id="排查-InnoDB-锁问题"><a href="#排查-InnoDB-锁问题" class="headerlink" title="排查 InnoDB 锁问题"></a>排查 InnoDB 锁问题</h2><p>排查 InnoDB 锁问题通常有 2 种方法。</p>
+<ul>
+<li><p>打开 innodb_lock_monitor 表，注意使用后记得关闭，否则会影响性能。</p>
+</li>
+<li><p>在 MySQL 5.5 版本之后，可以通过查看 information_schema 库下面的 innodb_locks、innodb_lock_waits、innodb_trx 三个视图排查 InnoDB 的锁问题。</p>
+</li>
+</ul>
+<h2 id="InnoDB加锁行为"><a href="#InnoDB加锁行为" class="headerlink" title="InnoDB加锁行为"></a>InnoDB加锁行为</h2><p>举一些例子分析 InnoDB 不同索引的加锁行为。分析锁时需要跟隔离级别联系起来，我们以 RR 为例，主要是从四个场景分析。</p>
+<ul>
+<li><p>主键 + RR</p>
+</li>
+<li><p>唯一键 + RR</p>
+</li>
+<li><p>非唯一键 + RR</p>
+</li>
+<li><p>无索引 + RR</p>
+</li>
+</ul>
+<h3 id="主键-RR"><a href="#主键-RR" class="headerlink" title="主键 + RR"></a>主键 + RR</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/20210606110015NGgprw.jpg" alt="20210606110015NGgprw"></p>
+<p>假设条件是：</p>
+<ul>
+<li><p>update t1 set name=‘XX’ where id=10。</p>
+</li>
+<li><p>id 为主键索引。</p>
+</li>
+</ul>
+<p>加锁行为：</p>
+<ul>
+<li>仅在 id=10 的主键索引记录上加 X锁。</li>
+</ul>
+<h3 id="唯一键-RR"><a href="#唯一键-RR" class="headerlink" title="唯一键 + RR"></a>唯一键 + RR</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/20210606110216g2IMPt.jpg" alt="20210606110216g2IMPt"></p>
+<p>假设条件是：</p>
+<ul>
+<li><code>update t1 set name=‘XX’ where id=10</code>。</li>
+<li>id 为唯一索引。</li>
+</ul>
+<p>加锁行为：</p>
+<ul>
+<li><p>先在唯一索引 id 上加 id=10 的 X 锁。</p>
+</li>
+<li><p>再在 id=10 的主键索引记录上加 X 锁，若 id=10 记录不存在，那么加间隙锁。</p>
+</li>
+</ul>
+<h3 id="非唯一键-RR"><a href="#非唯一键-RR" class="headerlink" title="非唯一键 + RR"></a>非唯一键 + RR</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/202106061104002xRASq.jpg" alt="202106061104002xRASq"></p>
+<p>假设条件是：</p>
+<ul>
+<li><code>update t1 set name=‘XX’ where id=10</code>。</li>
+<li>id 为非唯一索引。</li>
+</ul>
+<p>加锁行为：</p>
+<ul>
+<li><p>先通过 id=10 在 key(id) 上定位到第一个满足的记录，对该记录加 X 锁，而且要在 (6,c)~(10,b) 之间加上 Gap lock，为了防止幻读。然后在主键索引 name 上加对应记录的X 锁；</p>
+</li>
+<li><p>再通过 id=10 在 key(id) 上定位到第二个满足的记录，对该记录加 X 锁，而且要在(10,b)~(10,d)之间加上 Gap lock，为了防止幻读。然后在主键索引 name 上加对应记录的X 锁；</p>
+</li>
+<li><p>最后直到 id=11 发现没有满足的记录了，此时不需要加 X 锁，但要再加一个 Gap lock： (10,d)~(11,f)。</p>
+</li>
+</ul>
+<h3 id="无索引-RR"><a href="#无索引-RR" class="headerlink" title="无索引 + RR"></a>无索引 + RR</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/20210606110502jmV0GZ.jpg" alt="20210606110502jmV0GZ"></p>
+<p>假设条件是：</p>
+<ul>
+<li><p>update t1 set name=‘XX’ where id=10。</p>
+</li>
+<li><p>id 列无索引。</p>
+</li>
+</ul>
+<p>加锁行为：</p>
+<ul>
+<li>表里所有行和间隙均加 X 锁。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/51457.html" rel="prev" title="理解OAuth 2.0">
+      <i class="fa fa-chevron-left"></i> 理解OAuth 2.0
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1"><span class="nav-number">1.</span> <span class="nav-text">事务</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E7%89%B9%E6%80%A7"><span class="nav-number">1.2.</span> <span class="nav-text">事务特性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E8%87%B4%E6%80%A7"><span class="nav-number">1.2.1.</span> <span class="nav-text">一致性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%AD%90%E6%80%A7"><span class="nav-number">1.2.2.</span> <span class="nav-text">原子性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%81%E4%B9%85%E6%80%A7"><span class="nav-number">1.2.3.</span> <span class="nav-text">持久性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9A%94%E7%A6%BB%E6%80%A7"><span class="nav-number">1.2.4.</span> <span class="nav-text">隔离性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E4%BA%8B%E5%8A%A1%E6%8E%A7%E5%88%B6"><span class="nav-number">2.</span> <span class="nav-text">并发事务控制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6-%E9%94%81"><span class="nav-number">2.1.</span> <span class="nav-text">单版本控制-锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6-MVCC"><span class="nav-number">2.2.</span> <span class="nav-text">多版本控制-MVCC</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MVCC%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">MVCC实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BF%AB%E7%85%A7%E8%AF%BB%E4%B8%8E%E5%BD%93%E5%89%8D%E8%AF%BB"><span class="nav-number">3.1.</span> <span class="nav-text">快照读与当前读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MVCC%E5%A4%9A%E7%89%88%E6%9C%AC%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.2.</span> <span class="nav-text">MVCC多版本实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E4%BA%8B%E5%8A%A1%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">4.</span> <span class="nav-text">并发事务问题及解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E4%BA%8B%E5%8A%A1%E9%97%AE%E9%A2%98"><span class="nav-number">4.1.</span> <span class="nav-text">并发事务问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%84%8F%E8%AF%BB"><span class="nav-number">4.1.1.</span> <span class="nav-text">脏读</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8D%E5%8F%AF%E9%87%8D%E5%A4%8D%E8%AF%BB"><span class="nav-number">4.1.2.</span> <span class="nav-text">不可重复读</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B9%BB%E8%AF%BB"><span class="nav-number">4.1.3.</span> <span class="nav-text">幻读</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">4.2.</span> <span class="nav-text">解决方案</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%94%81"><span class="nav-number">5.</span> <span class="nav-text">锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0-1"><span class="nav-number">5.1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MySQL%E9%94%81%E5%88%86%E7%B1%BB"><span class="nav-number">5.1.1.</span> <span class="nav-text">MySQL锁分类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InnoDB%E4%B8%AD%E7%9A%84%E9%94%81"><span class="nav-number">5.1.2.</span> <span class="nav-text">InnoDB中的锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InnoDB%E8%A1%8C%E9%94%81"><span class="nav-number">5.1.3.</span> <span class="nav-text">InnoDB行锁</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%92%E6%9F%A5-InnoDB-%E9%94%81%E9%97%AE%E9%A2%98"><span class="nav-number">5.2.</span> <span class="nav-text">排查 InnoDB 锁问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#InnoDB%E5%8A%A0%E9%94%81%E8%A1%8C%E4%B8%BA"><span class="nav-number">5.3.</span> <span class="nav-text">InnoDB加锁行为</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E9%94%AE-RR"><span class="nav-number">5.3.1.</span> <span class="nav-text">主键 + RR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%94%AF%E4%B8%80%E9%94%AE-RR"><span class="nav-number">5.3.2.</span> <span class="nav-text">唯一键 + RR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%9E%E5%94%AF%E4%B8%80%E9%94%AE-RR"><span class="nav-number">5.3.3.</span> <span class="nav-text">非唯一键 + RR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0%E7%B4%A2%E5%BC%95-RR"><span class="nav-number">5.3.4.</span> <span class="nav-text">无索引 + RR</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['blockmao'],
+      id          : 'b3d5f2cfc9f7fb5ad50a038ec31edd22',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
