@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="MySQL：体系结构与存储引擎">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/33457.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.pixabay.com/photo/2016/11/14/04/45/elephant-1822636_960_720.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210605184338GB2soY.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210605184944tlcwVX.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210605191047wGKskV.jpg">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/YrezxckhYOy291iaib2osRbSOicYG30MaK983OBiaVnWMViclXrtPyBsnoJe3lT482kZOQIcK7AJXctFctkJk1FrlDw/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/YrezxckhYOy291iaib2osRbSOicYG30MaK9jF2LGe1LemGaHicwnd1xIiaqZTKsWprA0ftuIibLY0cDHVx2sic6BiaMAWQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021060519281625Mlq9.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210605193948Capto_Annotation.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606114220eMXY4I.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202106061140375x9ZQp.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606114637cODYyO.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606115009Wj5Mfj.jpg">
+<meta property="article:published_time" content="2021-06-06T03:58:41.000Z">
+<meta property="article:modified_time" content="2021-06-06T04:02:45.466Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.pixabay.com/photo/2016/11/14/04/45/elephant-1822636_960_720.jpg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/33457.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL：体系结构与存储引擎 | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/33457.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL：体系结构与存储引擎
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-06-06 11:58:41 / 修改时间：12:02:45" itemprop="dateCreated datePublished" datetime="2021-06-06T11:58:41+08:00">2021-06-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://cdn.pixabay.com/photo/2016/11/14/04/45/elephant-1822636_960_720.jpg" alt="象"></p>
+<span id="more"></span>
+
+<h1 id="MySQL体系结构"><a href="#MySQL体系结构" class="headerlink" title="MySQL体系结构"></a>MySQL体系结构</h1><p>MySQL数据库的体系结构，如下图所示</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210605184338GB2soY.jpg" alt="20210605184338GB2soY">MySQL体系结构由Client Connectors层、MySQL Server层及存储引擎层组成。</p>
+<p><strong>Client Connectors层</strong></p>
+<p>负责处理客户端的连接请求，与客户端创建连接。目前 MySQL几乎支持所有的连接类型，例如常见的 JDBC、Python、Go 等。</p>
+<p><strong>MySQL Server层</strong></p>
+<p>MySQL Server 层主要包括Connection Pool、Service &amp; utilities、SQL interface、Parser解析器、Optimizer 查询优化器、Caches 缓存等模块。</p>
+<ol>
+<li><strong>Connection Pool</strong>负责处理和存储数据库与客户端创建的连接，一个线程负责管理一个连接。Connection Pool 包括了用户认证模块，就是用户登录身份的认证和鉴权及安全管理，也就是用户执行操作权限校验。</li>
+<li><strong>Service &amp; utilities</strong>是管理服务&amp;工具集，包括备份恢复、安全管理、集群管理服务和工具。</li>
+<li><strong>SQL interface</strong>负责接收客户端发送的各种 SQL 语句，比如 DML、DDL 和存储过程等。</li>
+<li><strong>Parser解析器</strong>会对 SQL 语句进行语法解析生成解析树。</li>
+<li><strong>Optimizer查询优化器</strong>会根据解析树生成执行计划，并选择合适的索引，然后按照执行计划执行 SQL 语言并与各个存储引擎交互。</li>
+<li><strong>Caches缓存</strong>包括各个存储引擎的缓存部分，比如：InnoDB 存储的 Buffer Pool、MyISAM 存储引擎的 key buffer 等，Caches 中也会缓存一些权限，也包括一些 Session 级别的缓存。</li>
+</ol>
+<p><strong>存储引擎层</strong></p>
+<p>存储引擎包括MyISAM、InnoDB，以及支持归档的Archive和内存的Memory等。MySQL是插件式的存储引擎，只要正确定义与 MySQL Server交互的接口，任何引擎都可以访问MySQL，这也是 MySQL 流行的原因之一。</p>
+<p>最常用的存储引擎是 InnoDB，从MySQL 5.5.5版本开始成为了默认存储引擎。</p>
+<p>存储引擎底部是物理存储层，是文件的物理存储层，包括二进制日志、数据文件、错误日志、慢查询日志、全日志、redo/undo 日志等。</p>
+<h1 id="InnoDB架构"><a href="#InnoDB架构" class="headerlink" title="InnoDB架构"></a>InnoDB架构</h1><p>下图显示了构成 InnoDB 存储引擎架构的内存和磁盘结构。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210605184944tlcwVX.jpg" alt="20210605184944tlcwVX"></p>
+<h2 id="Buffer-Pool"><a href="#Buffer-Pool" class="headerlink" title="Buffer Pool"></a>Buffer Pool</h2><p><strong>缓存表数据与索引数据</strong>，把磁盘上的数据加载到缓冲池，避免每次访问都进行磁盘IO，起到加速访问的作用。</p>
+<p><strong>为啥不把所有数据都放到缓冲池里</strong>？</p>
+<p>抛开数据易失性，访问快速的反面是存储容量小，因此，只能把“最热”的数据放到“最近”的地方，以“最大限度”的降低磁盘访问。</p>
+<h3 id="预读"><a href="#预读" class="headerlink" title="预读"></a>预读</h3><p>磁盘读写，并不是按需读取，而是按页读取，<strong>一次至少读一页数据（一般是4K）</strong>，如果未来要读取的数据就在页中，就能够省去后续的磁盘IO，提高效率。</p>
+<p>数据访问，通常都遵循“集中读写”的原则，使用一些数据，大概率会使用附近的数据，这就是所谓的“局部性原理”，它表明提前加载是有效的，确实能够减少磁盘IO。</p>
+<p><strong>按页(4K)读取，和InnoDB的缓冲池设计有啥关系？</strong></p>
+<p>（1）磁盘访问按页读取能够提高性能，所以缓冲池一般也是按页缓存数据；</p>
+<p>（2）预读机制启示了我们，能把一些“可能要访问”的页提前加入缓冲池，避免未来的磁盘IO操作；</p>
+<h3 id="传统的LRU算法管理缓冲页"><a href="#传统的LRU算法管理缓冲页" class="headerlink" title="传统的LRU算法管理缓冲页"></a>传统的LRU算法管理缓冲页</h3><p>最常见的玩法是，<strong>把入缓冲池的页放到LRU的头部，作为最近访问的元素，从而最晚被淘汰</strong>。这里又分两种情况：</p>
+<p>（1）<strong>页已经在缓冲池里</strong>，那就只做“移至”LRU头部的动作，而没有页被淘汰；</p>
+<p>（2）<strong>页不在缓冲池里</strong>，除了做“放入”LRU头部的动作，还要做“淘汰”LRU尾部页的动作；</p>
+<p>如下图，假如管理缓冲池的LRU长度为10，缓冲了页号为1，3，5…，40，7的页。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210605191047wGKskV.jpg" alt="20210605191047wGKskV"></p>
+<p>假如，接下来要访问的数据在页号为4的页中：</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/YrezxckhYOy291iaib2osRbSOicYG30MaK983OBiaVnWMViclXrtPyBsnoJe3lT482kZOQIcK7AJXctFctkJk1FrlDw/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片"></p>
+<p>（1）页号为4的页，本来就在缓冲池里；</p>
+<p>（2）把页号为4的页，放到LRU的头部即可，没有页被淘汰；</p>
+<p>假如，再接下来要访问的数据在页号为50的页中：</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/YrezxckhYOy291iaib2osRbSOicYG30MaK9jF2LGe1LemGaHicwnd1xIiaqZTKsWprA0ftuIibLY0cDHVx2sic6BiaMAWQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片"></p>
+<p>（1）页号为50的页，原来不在缓冲池里；</p>
+<p>（2）把页号为50的页，放到LRU头部，同时淘汰尾部页号为7的页；</p>
+<p>MySQL InnoDB没有使用传统的LRU管理缓冲页，因为存在以下两个问题：</p>
+<p>（1）预读失效；</p>
+<p>（2）缓冲池污染；</p>
+<h4 id="预读失效"><a href="#预读失效" class="headerlink" title="预读失效"></a>预读失效</h4><p>由于预读(Read-Ahead)，提前把页放入了缓冲池，但最终MySQL并没有从页中读取数据，称为预读失效。</p>
+<p><strong>如何对预读失效进行优化？</strong>要优化预读失效，思路是：</p>
+<p>（1）让预读失败的页，停留在缓冲池LRU里的时间尽可能短；</p>
+<p>（2）让真正被读取的页，才挪到缓冲池LRU的头部；</p>
+<p>以保证，真正被读取的热数据留在缓冲池里的时间尽可能长。</p>
+<h4 id="缓冲池污染"><a href="#缓冲池污染" class="headerlink" title="缓冲池污染"></a>缓冲池污染</h4><p>当某一个SQL语句，要<strong>批量扫描大量数据</strong>时，可能导致把缓冲池的所有页都替换出去，<strong>导致大量热数据被换出</strong>，MySQL性能急剧下降，这种情况叫缓冲池污染。</p>
+<p>例如，有一个数据量较大的用户表，当执行：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> <span class="keyword">user</span> <span class="keyword">where</span> name <span class="keyword">like</span> &quot;%shenjian%&quot;;</span><br></pre></td></tr></table></figure>
+
+<p>虽然结果集可能只有少量数据，但这类like不能命中索引，必须全表扫描，就需要访问大量的页。</p>
+<h3 id="InnoDB-LRU算法"><a href="#InnoDB-LRU算法" class="headerlink" title="InnoDB LRU算法"></a>InnoDB LRU算法</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/2021060519281625Mlq9.jpg" alt="2021060519281625Mlq9"></p>
+<ol>
+<li><p>将LRU分为两个部分：</p>
+<ul>
+<li><p>新生代(new sublist)</p>
+</li>
+<li><p>老生代(old sublist)</p>
+</li>
+</ul>
+</li>
+<li><p>新老生代收尾相连，即：新生代的尾(tail)连接着老生代的头(head)；</p>
+</li>
+<li><p>新页（例如被预读的页）加入缓冲池时，只加入到老生代头部：</p>
+<ul>
+<li><p>如果数据真正被读取（预读成功），才会加入到新生代的头部。</p>
+</li>
+<li><p>如果数据没有被读取，则会比新生代里的“热数据页”更早被淘汰出缓冲池。</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>另外，MySQL缓冲池加入了一个“老生代停留时间窗口”的机制：</p>
+<p>（1）假设T=老生代停留时间窗口；</p>
+<p>（2）插入老生代头部的页，即使立刻被访问，并不会立刻放入新生代头部；</p>
+<p>（3）只有<strong>满足</strong>“被访问”并且“在老生代停留时间”大于T，才会被放入新生代头部；</p>
+<h3 id="相关参数设置"><a href="#相关参数设置" class="headerlink" title="相关参数设置"></a>相关参数设置</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/20210605193948Capto_Annotation.png" alt="20210605193948Capto_Annotation"></p>
+<ul>
+<li><p><code>innodb_buffer_pool_size</code>：配置缓冲池的大小，在内存允许的情况下，DBA往往会建议调大这个参数，越多数据和索引放到内存里，数据库的性能会越好。</p>
+</li>
+<li><p><code>innodb_old_blocks_pct</code>：老生代占整个LRU链长度的比例，默认是37，即整个LRU中新生代与老生代长度比例是63:37。</p>
+</li>
+<li><p><code>innodb_old_blocks_time</code>：老生代停留时间窗口，单位是毫秒，默认是1000，即同时满足“被访问”与“在老生代停留时间超过1秒”两个条件，才会被插入到新生代头部。</p>
+</li>
+</ul>
+<h2 id="写缓冲-change-buffer"><a href="#写缓冲-change-buffer" class="headerlink" title="写缓冲(change buffer)"></a>写缓冲(change buffer)</h2><p>对于读请求，缓冲池能够减少磁盘IO，提升性能。那写请求呢？</p>
+<p><strong>情况一：修改的索引页正好在缓冲池内</strong>。</p>
+<p>（1）直接修改缓冲池中的页，一次内存操作；</p>
+<p>（2）写入redo log，一次磁盘顺序写操作；</p>
+<p><strong>情况二：修改的索引页正好不在缓冲池内。</strong></p>
+<p>（1） 先把需要修改的的索引页，从磁盘加载到缓冲池，一次磁盘随机读操作；<br>（2）修改缓冲池中的页，一次内存操作；<br>（3）写入redo log，一次磁盘顺序写操作；</p>
+<h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>写缓冲是一种<strong>应用在非唯一普通索引页(non-unique secondary index page)不在缓冲池中</strong>，对页进行了写操作，并不会立刻将磁盘页加载到缓冲池，而仅仅记录缓冲变更(buffer changes)，等未来数据被读取时，再将数据合并(merge)恢复到缓冲池中的技术。</p>
+<p>写缓冲的目的是降低写操作的磁盘IO，提升数据库性能。</p>
+<blockquote>
+<p>在MySQL5.5之前，叫插入缓冲(insert buffer)，只针对insert做了优化；现在对delete和update也有效，叫做写缓冲(change buffer)。</p>
+</blockquote>
+<h3 id="InnoDB加入写缓冲优化，上文“情况二”流程会有什么变化？"><a href="#InnoDB加入写缓冲优化，上文“情况二”流程会有什么变化？" class="headerlink" title="InnoDB加入写缓冲优化，上文“情况二”流程会有什么变化？"></a>InnoDB加入写缓冲优化，上文“情况二”流程会有什么变化？</h3><ul>
+<li><strong>写入流程</strong></li>
+</ul>
+<p>（1）在写缓冲中记录这个操作，一次内存操作；</p>
+<p>（2）写入redo log，一次磁盘顺序写操作；</p>
+<ul>
+<li><strong>读取流程</strong></li>
+</ul>
+<p>（1）载入索引页，缓冲池未命中，这次磁盘IO不可避免；<br>（2）从写缓冲读取相关信息；<br>（3）恢复索引页，放到缓冲池LRU里</p>
+<h3 id="为什么写缓冲优化，仅适用于非唯一普通索引页呢？"><a href="#为什么写缓冲优化，仅适用于非唯一普通索引页呢？" class="headerlink" title="为什么写缓冲优化，仅适用于非唯一普通索引页呢？"></a>为什么写缓冲优化，仅适用于非唯一普通索引页呢？</h3><p>如果索引设置了唯一(unique)属性，在进行修改操作时，InnoDB必须进行唯一性检查。也就是说，索引页即使不在缓冲池，磁盘上的页读取无法避免(否则怎么校验是否唯一)，此时就应该直接把相应的页放入缓冲池再进行修改。</p>
+<h3 id="哪些场景会触发刷写缓冲中的数据呢"><a href="#哪些场景会触发刷写缓冲中的数据呢" class="headerlink" title="哪些场景会触发刷写缓冲中的数据呢"></a>哪些场景会触发刷写缓冲中的数据呢</h3><ul>
+<li>数据页被访问</li>
+<li>有一个后台线程，会认为数据库空闲时；</li>
+<li>数据库缓冲池不够用时；</li>
+<li>数据库正常关闭时；</li>
+<li>redo log写满时；</li>
+</ul>
+<h3 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
+<li>数据库大部分是非唯一索引；</li>
+<li>业务是写多读少，或者不是写后立刻读取；</li>
+</ul>
+<h3 id="相关参数设置-1"><a href="#相关参数设置-1" class="headerlink" title="相关参数设置"></a>相关参数设置</h3><ul>
+<li>innodb_change_buffer_max_size：配置写缓冲的大小，占整个缓冲池的比例，默认值是25%，最大值是50%。</li>
+<li>innodb_change_buffering：配置哪些写操作启用写缓冲，可以设置成all/none/inserts/deletes等。</li>
+</ul>
+<h2 id="double-write-buffer"><a href="#double-write-buffer" class="headerlink" title="double write buffer"></a>double write buffer</h2><p>MySQL的buffer一页的大小是16K，文件系统一页的大小是4K，也就是说，MySQL将buffer中一页数据刷入磁盘，要写4个文件系统里的页。</p>
+<p>那么，问题来了，这个操作并非原子，如果执行到一半断电，会不会出现问题呢？会，这就是所谓的“页数据损坏”。</p>
+<p>很容易想到的方法是，能有一个“副本”，对原来的页进行还原，这个存储“副本”的地方，就是Double Write Buffer。Double Write Buffer，但它与传统的buffer又不同，它分为内存和磁盘的两层架构。</p>
+<h3 id="写入流程"><a href="#写入流程" class="headerlink" title="写入流程"></a>写入流程</h3><ol>
+<li>页数据先mem copy到DWB的内存里；</li>
+<li>DWB的内存里，会先刷到DWB的磁盘上；</li>
+<li>DWB的内存里，再刷到数据磁盘存储上；</li>
+</ol>
+<p>DWB要写两次磁盘，会不会导致数据库性能急剧降低呢？</p>
+<ol>
+<li>步骤2属于顺序追加写；</li>
+<li>128页（每页16K）2M的DWB，会分两次刷入磁盘，每次最多64页，即1M的数据，执行也是非常之快的。</li>
+</ol>
+<h3 id="相关参数设置-2"><a href="#相关参数设置-2" class="headerlink" title="相关参数设置"></a>相关参数设置</h3><ul>
+<li>Innodb_dblwr_pages_written：记录写入DWB中页的数量。</li>
+<li>Innodb_dblwr_writes：记录DWB写操作的次数。</li>
+</ul>
+<h1 id="SQL查询语句是如何执行？"><a href="#SQL查询语句是如何执行？" class="headerlink" title="SQL查询语句是如何执行？"></a>SQL查询语句是如何执行？</h1><p><img src="https://gitee.com/niumi/drawing/raw/master/20210606114220eMXY4I.jpg" alt="20210606114220eMXY4I"></p>
+<h2 id="连接器"><a href="#连接器" class="headerlink" title="连接器"></a><strong>连接器</strong></h2><p>当客户端工具与服务器端完成TCP握手后，连接器就要开始认证你的身份，这个时候用的就是你输入的用户名和密码。</p>
+<ul>
+<li>如果用户名或密码不对，你就会收到一个”Access denied for user”的错误，然后客户端 程序结束执行。</li>
+<li>如果用户名密码认证通过，连接器会到权限表里面查出你拥有的权限。之后，这个连接里面的权限判断逻辑，都将依赖于此时读到的权限。</li>
+</ul>
+<p><strong>这就意味着，一个用户成功建立连接后，即使你用管理员账号对这个用户的权限做了修改，也不会影响已经存在连接的权限。修改完成后，只有再新建的连接才会使用新的权限设置。</strong></p>
+<p>连接完成后，如果你没有后续的动作，这个连接就处于空闲状态，可以通过<code>show processlist</code>命令查看。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202106061140375x9ZQp.jpg" alt="202106061140375x9ZQp"></p>
+<p>其中的Command 列显示为“Sleep”的这一行，就表示现在系统里面有一个空闲连接。</p>
+<p>客户端如果太长时间没动静，连接器就会自动将它断开。这个时间是由参数 wait_timeout 控制的，默认值是 8 小时。如果在连接被断开之后，客户端再次发送请求的话，就会收到一个错误提醒：Lost connection to MySQL server during query。这时候如果你要继续，就需要重连，然后再执行请求了。</p>
+<p>建立连接的过程通常是比较复杂的，所以我建议你在使用中要尽量减少建立连接的动作，也就是尽量使用长连接。</p>
+<p>但是全部使用长连接后，你可能会发现，有些时候 MySQL 占用内存涨得特别快，这是因为 MySQL在执行过程中临时使用的内存是管理在连接对象里面的。这些资源会在连接断 开的时候才释放。所以如果长连接累积下来，可能导致内存占用太大，被系统强行杀掉 (OOM)，从现象看就是 MySQL 异常重启了。</p>
+<p><strong>怎么解决这个问题呢?你可以考虑以下两种方案。</strong></p>
+<ol>
+<li> <strong>定期断开长连接</strong>。使用一段时间，或者程序里面判断执行过一个占用内存的大查询后， 断开连接，之后要查询再重连。 </li>
+<li> <strong>如果你用的是 MySQL 5.7 或更新版本，可以在每次执行一个比较大的操作后，通过执行 <code>mysql_reset_connection</code>来重新初始化连接资源</strong>。这个过程不需要重连和重新做权限验 证，但是会将连接恢复到刚刚创建完时的状态。 </li>
+</ol>
+<h2 id="查询缓存"><a href="#查询缓存" class="headerlink" title="查询缓存"></a><strong>查询缓存</strong></h2><p>MySQL 拿到一个查询请求后，会先到查询缓存看看，之前是不是执行过这条语句。之前执行过的语句及其结果可能会以 key-value 对的形式，被直接缓存在内存中。key 是查询的语句，value是查询的结果。如果你的查询能够直接在这个缓存中找到 key，那么这个 value 就会被直接返回给客户端。</p>
+<p><strong>但是大多数情况下我会建议你不要使用查询缓存，为什么呢?因为查询缓存往往弊大于利</strong>。</p>
+<p>查询缓存的失效非常频繁，只要有对一个表的更新，这个表上所有的查询缓存都会被清空。因此很可能你费劲地把结果存起来，还没使用呢，就被一个更新全清空了。</p>
+<p>对于更新压力大的数据库来说，查询缓存的命中率会非常低。除非你的业务就是有一张静态表，很长时间才会更新一次。比如，一个系统配置表，那这张表上的查询才适合使用查询缓存。</p>
+<p>MySQL提供了“按需使用”的方式，你可以将参数<code>query_cache_type</code>设置成 DEMAND，这样对于默认的 SQL 语句都不使用查询缓存。</p>
+<h2 id="分析器"><a href="#分析器" class="headerlink" title="分析器"></a><strong>分析器</strong></h2><p>分析器先会做“词法分析”。你输入的是由多个字符串和空格组成的一条 SQL 语句， MySQL 需要识别出里面的字符串分别是什么，代表什么。</p>
+<p>MySQL 从你输入的”select”这个关键字识别出来，这是一个查询语句。它也要把字符 串“T”识别成“表名 T”，把字符串“ID”识别成“列 ID”。做完了这些识别以后，就要做“语法分析”。根据词法分析的结果，语法分析器会根据语法 规则，判断你输入的这个 SQL 语句是否满足 MySQL 语法。</p>
+<h2 id="优化器"><a href="#优化器" class="headerlink" title="优化器"></a><strong>优化器</strong></h2><p>经过了分析器，MySQL就知道你要做什么了。在开始执行之前，还要先经过优化器的处理。优化器是在表里面有多个索引的时候，<strong>决定使用哪个索引；</strong>或者在一个语句有多表关联 (join)的时候，<strong>决定各个表的连接顺序</strong>。</p>
+<h2 id="执行器"><a href="#执行器" class="headerlink" title="执行器"></a><strong>执行器</strong></h2><p>开始执行的时候，要先判断一下你对这个表 T 有没有执行查询的权限，如果没有，就会返回没有权限的错误。如果有权限，就打开表继续执行。打开表的时候，执行器就会根据表的引擎定义，去使用这个引擎提供的接口。</p>
+<p>假设表T中，ID字段没有索引，执行<code>select * from T where id = 10</code>。执行器的执行流程如下:</p>
+<ol>
+<li><p> 调用 InnoDB 引擎接口取这个表的第一行，判断ID值是不是10，如果不是则跳过，如果是则将这行存在结果集中; </p>
+</li>
+<li><p> 调用引擎接口取“下一行”，重复相同的判断逻辑，直到取到这个表的最后一行。 </p>
+</li>
+<li><p> 执行器将上述遍历过程中所有满足条件的行组成的记录集作为结果集返回给客户端。 </p>
+</li>
+</ol>
+<p>对于有索引的表，执行的逻辑也差不多。第一次调用的是“取满足条件的第一行”这个接口，之后循环取“满足条件的下一行”这个接口，这些接口都是引擎中已经定义好的。</p>
+<p>你会在数据库的慢查询日志中看到一个 <code>rows_examined</code> 的字段，表示这个语句执行过程中 扫描了多少行。这个值就是在执行器每次调用引擎获取数据行的时候累加的。在有些场景下，执行器调用一次，在引擎内部则扫描了多行，因此引擎扫描行数跟 rows_examined 并不是完全相同的。</p>
+<h1 id="SQL更新语句是如何执行？"><a href="#SQL更新语句是如何执行？" class="headerlink" title="SQL更新语句是如何执行？"></a>SQL更新语句是如何执行？</h1><p>与查询流程不一样的是，更新流程还涉及两个重要的日志模块：redo log(重做日志)和 binlog(归档日志)。</p>
+<h2 id="redo-log"><a href="#redo-log" class="headerlink" title="redo log"></a>redo log</h2><p>不知道你还记不记得《孔乙己》这篇文章，酒店掌柜有一个粉板，专门用来记录客人的赊账记录。如果赊账的人不多，那么他可以把顾客名和账目写在板上。但如果赊账的人多了，粉板总会有记不下的时候，这个时候掌柜一定还有一个专门记录赊账的账本。</p>
+<p>如果有人要赊账或者还账的话，掌柜一般有两种做法:</p>
+<ul>
+<li>一种做法是直接把账本翻出来，把这次赊的账加上去或者扣除掉;</li>
+<li>另一种做法是先在粉板上记下这次的账，等打烊以后再把账本翻出来核算</li>
+</ul>
+<p>在生意红火柜台很忙时，掌柜一定会选择后者，因为前者操作实在是太麻烦了。首先，你得找到这个人的赊账总额那条记录。你想想，密密麻麻几十页，掌柜要找到那个名字，可能还得带上老花镜慢慢找，找到之后再拿出算盘计算，最后再将结果写回到账本上。</p>
+<p>这整个过程想想都麻烦。相比之下，还是先在粉板上记一下方便。你想想，如果掌柜没有粉板的帮助，每次记账都得翻账本，效率是不是低得让人难以忍受?</p>
+<p>MySQL有存在这个问题，如果每一次的更新操作都需要写进磁盘，然后磁盘也要找到对应的那条记录，然后再更新，整个过程 IO 成本、查找成本都很高。为了解决这个 问题，MySQL 的设计者就用了类似酒店掌柜粉板的思路来提升更新效率。MySQL使用WAL 技术，WAL 的全称 是 Write-Ahead Logging，它的关键点就是先写日志，再写磁盘，也就是先写粉板，等不忙的时候再写账本。</p>
+<p>具体来说，当有一条记录需要更新的时候，InnoDB 引擎就会先把记录写到 redo log(粉 板)里面，并更新内存，这个时候更新就算完成了。同时，InnoDB 引擎会在适当的时候， 将这个操作记录更新到磁盘里面，而这个更新往往是在系统比较空闲的时候做，这就像打烊以后掌柜做的事。</p>
+<p>InnoDB 的 redo log 是固定大小的，比如可以配置为一组 4 个文件，每个文件的大小是 1GB，那么这块“粉板”总共就可以记录4GB 的操作。从头开始写，写到末尾就 又回到开头循环写，如下面这个图所示。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210606114637cODYyO.jpg" alt="20210606114637cODYyO"></p>
+<ul>
+<li><p>write pos 是当前记录的位置，一边写一边后移，写到第 3 号文件末尾后就回到 0 号文件 开头。checkpoint 是当前要擦除的位置，也是往后推移并且循环的，擦除记录前要把记录 更新到数据文件。</p>
+</li>
+<li><p>write pos 和 checkpoint 之间的是“粉板”上还空着的部分，可以用来记录新的操作。如 果 write pos 追上 checkpoint，表示“粉板”满了，这时候不能再执行新的更新，得停下 来先擦掉一些记录，把 checkpoint 推进一下。</p>
+</li>
+</ul>
+<p>有了 redo log，InnoDB 就可以保证即使数据库发生异常重启，之前提交的记录都不会丢 失，这个能力称为<strong>crash-safe</strong></p>
+<h2 id="binlog"><a href="#binlog" class="headerlink" title="binlog"></a><strong>binlog</strong></h2><p>MySQL 整体来看，其实就有两块:一块是 Server 层，它主要做的是 MySQL 功能层面的事情；还有一块是引擎层，负责存储相关的具体事宜。</p>
+<p>上面我们聊到的粉板 redo log 是 InnoDB 引擎特有的日志，而 Server 层也有自己的日志，称为 binlog(归档日志)。</p>
+<p><strong>为什么会有两份日志呢?</strong></p>
+<p>最开始 MySQL 里并没有 InnoDB 引擎。MySQL 自带的引擎是 MyISAM，但是 MyISAM 没有 crash-safe 的能力，binlog 日志只能用于归档。而 InnoDB 是另一个公司 以插件形式引入 MySQL 的，既然只依靠 binlog 是没有 crash-safe 能力的，所以 InnoDB 使用另外一套日志系统——也就是 redo log 来实现 crash-safe 能力。</p>
+<p>这两种日志有以下三点不同。</p>
+<ol>
+<li><p> redo log 是 InnoDB 引擎特有的；binlog 是 MySQL 的 Server 层实现的，所有引擎都可以使用。 </p>
+</li>
+<li><p> redo log 是物理日志，记录的是“在某个数据页上做了什么修改”；binlog 是逻辑日 志，记录的是这个语句的原始逻辑，比如“给 ID=2 这一行的 c 字段加 1 ”。 </p>
+</li>
+<li><p> redo log 是循环写的，空间固定会用完；binlog 是可以追加写入的。“追加写”是指 binlog 文件写到一定大小后会切换到下一个，并不会覆盖以前的日志。 </p>
+</li>
+</ol>
+<p>有了对这两个日志的概念性理解，我们再来看执行器和 InnoDB 引擎在执行这个简单的 update 语句时的内部流程。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210606115009Wj5Mfj.jpg" alt="20210606115009Wj5Mfj"></p>
+<ol>
+<li><p>执行器先找引擎取 ID=2 这一行。ID 是主键，引擎直接用树搜索找到这一行。如果 ID=2 这一行所在的数据页本来就在内存中，就直接返回给执行器;否则，需要先从磁盘 读入内存，然后再返回。</p>
+</li>
+<li><p>执行器拿到引擎给的行数据，把这个值加上 1，比如原来是 N，现在就是 N+1，得到新的一行数据，再调用引擎接口写入这行新数据。</p>
+</li>
+<li><p>引擎将这行新数据更新到内存中，同时将这个更新操作记录到 redo log 里面，此时redo log处于prepare状态。然后告知执行器执行完成了，随时可以提交事务。</p>
+</li>
+<li><p>执行器生成这个操作的binlog，并把binlog写入磁盘。</p>
+</li>
+<li><p>执行器调用引擎的提交事务接口，引擎把刚刚写入的 redo log 改成提交(commit)状态，更新完成。</p>
+</li>
+</ol>
+<h2 id="两阶段提交"><a href="#两阶段提交" class="headerlink" title="两阶段提交"></a>两阶段提交</h2><p><strong>如何让数据库恢复到指定的某一秒的状态？</strong></p>
+<p>当需要恢复到指定的某一秒时，比如某天下午两点发现中午十二点有一次误删表，需要找回数据，那你可以这么做:</p>
+<ol>
+<li><p>首先，找到最近的一次全量备份，如果你运气好，可能就是昨天晚上的一个备份，从这个备份恢复到临时库;</p>
+</li>
+<li><p>然后，从备份的时间点开始，将备份的 binlog 依次取出来，重放到中午误删表之前的那 个时刻。</p>
+</li>
+</ol>
+<p>这样你的临时库就跟误删之前的线上库一样了，然后你可以把表数据从临时库取出来，按需要恢复到线上库去。</p>
+<p>为什么必须有“两阶段提交”呢？这是为了让两份日志之间的逻辑一致。下面通过反证法来进行解释。</p>
+<p>由于 redo log 和 binlog 是两个独立的逻辑，如果不用两阶段提交，要么就是先写完 redo log 再写 binlog，或者采用反过来的顺序。仍然用前面的 update 语句来做例子。假设当前 ID=2 的行，字段 c 的值是 0，再假设执行 update 语句过程中在写完第一个日志后，第二个日志还没有写完期间发生了 crash，会出 现什么情况呢?</p>
+<ul>
+<li><p><strong>先写 redo log 后写 binlog</strong></p>
+<p>假设在 redo log写完，binlog还没有写完的时候， MySQL 进程异常重启。redo log写完之后，系统即使崩溃，仍然能够把数据恢复回来，恢复后这一行c的值是1。</p>
+<p>但是由于binlog没写完就 crash 了，这时候binlog里面就没有记录这个语句。因此之后备份日志的时候，存起来的binlog里面就没有这条语句。 然后你会发现，如果需要用这个 binlog 来恢复临时库的话，由于这个语句的binlog丢 失，这个临时库就会少了这一次更新，恢复出来的这一行 c 的值就是 0，与原库的值不同。</p>
+</li>
+</ul>
+<ul>
+<li><p><strong>先写 binlog 后写 redo log</strong></p>
+<p>如果在 binlog 写完之后 crash，由于redo log还没写， 崩溃恢复以后这个事务无效，所以这一行 c 的值是 0。但是binlog 里面已经记录了“把 c 从 0 改成 1”这个日志。所以，在之后用 binlog 来恢复的时候就多了一个事务出来， 恢复出来的这一行 c 的值就是 1，与原库的值不同。</p>
+</li>
+</ul>
+<p>可以看到，如果不使用“两阶段提交”，那么数据库的状态就有可能和用它的日志恢复出来的库的状态不一致。其实不是的，不只是误操作后需要用这个过程来恢复数据。当你需要扩容的时候，也就是需要再多搭建一些备库来增加系统的读能力的时候，现在常见的做法也是用全量备份加上应用 binlog 来实现的，这个“不一致”就会导致你的线上出现主从数据库不一致的情况。</p>
+<p>简单说，redo log和binlog都可以用于表示事务的提交状态，而两阶段提交就是让这两 个状态保持逻辑上的一致。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/12078.html" rel="prev" title="MySQL：事务与锁机制">
+      <i class="fa fa-chevron-left"></i> MySQL：事务与锁机制
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/10608.html" rel="next" title="微服务事务一致性解决方案">
+      微服务事务一致性解决方案 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">MySQL体系结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#InnoDB%E6%9E%B6%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">InnoDB架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Buffer-Pool"><span class="nav-number">2.1.</span> <span class="nav-text">Buffer Pool</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%84%E8%AF%BB"><span class="nav-number">2.1.1.</span> <span class="nav-text">预读</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%A0%E7%BB%9F%E7%9A%84LRU%E7%AE%97%E6%B3%95%E7%AE%A1%E7%90%86%E7%BC%93%E5%86%B2%E9%A1%B5"><span class="nav-number">2.1.2.</span> <span class="nav-text">传统的LRU算法管理缓冲页</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%A2%84%E8%AF%BB%E5%A4%B1%E6%95%88"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">预读失效</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%93%E5%86%B2%E6%B1%A0%E6%B1%A1%E6%9F%93"><span class="nav-number">2.1.2.2.</span> <span class="nav-text">缓冲池污染</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InnoDB-LRU%E7%AE%97%E6%B3%95"><span class="nav-number">2.1.3.</span> <span class="nav-text">InnoDB LRU算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E5%8F%82%E6%95%B0%E8%AE%BE%E7%BD%AE"><span class="nav-number">2.1.4.</span> <span class="nav-text">相关参数设置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E7%BC%93%E5%86%B2-change-buffer"><span class="nav-number">2.2.</span> <span class="nav-text">写缓冲(change buffer)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">2.2.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InnoDB%E5%8A%A0%E5%85%A5%E5%86%99%E7%BC%93%E5%86%B2%E4%BC%98%E5%8C%96%EF%BC%8C%E4%B8%8A%E6%96%87%E2%80%9C%E6%83%85%E5%86%B5%E4%BA%8C%E2%80%9D%E6%B5%81%E7%A8%8B%E4%BC%9A%E6%9C%89%E4%BB%80%E4%B9%88%E5%8F%98%E5%8C%96%EF%BC%9F"><span class="nav-number">2.2.2.</span> <span class="nav-text">InnoDB加入写缓冲优化，上文“情况二”流程会有什么变化？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%86%99%E7%BC%93%E5%86%B2%E4%BC%98%E5%8C%96%EF%BC%8C%E4%BB%85%E9%80%82%E7%94%A8%E4%BA%8E%E9%9D%9E%E5%94%AF%E4%B8%80%E6%99%AE%E9%80%9A%E7%B4%A2%E5%BC%95%E9%A1%B5%E5%91%A2%EF%BC%9F"><span class="nav-number">2.2.3.</span> <span class="nav-text">为什么写缓冲优化，仅适用于非唯一普通索引页呢？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%93%AA%E4%BA%9B%E5%9C%BA%E6%99%AF%E4%BC%9A%E8%A7%A6%E5%8F%91%E5%88%B7%E5%86%99%E7%BC%93%E5%86%B2%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E5%91%A2"><span class="nav-number">2.2.4.</span> <span class="nav-text">哪些场景会触发刷写缓冲中的数据呢</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">2.2.5.</span> <span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E5%8F%82%E6%95%B0%E8%AE%BE%E7%BD%AE-1"><span class="nav-number">2.2.6.</span> <span class="nav-text">相关参数设置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#double-write-buffer"><span class="nav-number">2.3.</span> <span class="nav-text">double write buffer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%99%E5%85%A5%E6%B5%81%E7%A8%8B"><span class="nav-number">2.3.1.</span> <span class="nav-text">写入流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E5%8F%82%E6%95%B0%E8%AE%BE%E7%BD%AE-2"><span class="nav-number">2.3.2.</span> <span class="nav-text">相关参数设置</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SQL%E6%9F%A5%E8%AF%A2%E8%AF%AD%E5%8F%A5%E6%98%AF%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">SQL查询语句是如何执行？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E5%99%A8"><span class="nav-number">3.1.</span> <span class="nav-text">连接器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2%E7%BC%93%E5%AD%98"><span class="nav-number">3.2.</span> <span class="nav-text">查询缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E5%99%A8"><span class="nav-number">3.3.</span> <span class="nav-text">分析器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%98%E5%8C%96%E5%99%A8"><span class="nav-number">3.4.</span> <span class="nav-text">优化器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E5%99%A8"><span class="nav-number">3.5.</span> <span class="nav-text">执行器</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SQL%E6%9B%B4%E6%96%B0%E8%AF%AD%E5%8F%A5%E6%98%AF%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%EF%BC%9F"><span class="nav-number">4.</span> <span class="nav-text">SQL更新语句是如何执行？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#redo-log"><span class="nav-number">4.1.</span> <span class="nav-text">redo log</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#binlog"><span class="nav-number">4.2.</span> <span class="nav-text">binlog</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4"><span class="nav-number">4.3.</span> <span class="nav-text">两阶段提交</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">71</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['blockmao'],
+      id          : '845cfa4be3bfe97f34b7620e13a612b4',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
