@@ -21,18 +21,18 @@
   </script>
 
   <meta property="og:type" content="article">
-<meta property="og:title" content="Spring：XML schema扩展机制">
-<meta property="og:url" content="http://blog.blockmao.cn/posts/4074.html">
+<meta property="og:title" content="Spring：XML配置扩展">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/45222.html">
 <meta property="og:site_name" content="牛觅博客">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210412211912woman-1128523_960_720.jpg">
-<meta property="article:published_time" content="2021-04-12T13:17:45.000Z">
-<meta property="article:modified_time" content="2021-04-15T09:42:36.687Z">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210618175149xpmasN.jpg">
+<meta property="article:published_time" content="2021-06-18T09:49:39.000Z">
+<meta property="article:modified_time" content="2021-06-18T09:57:46.394Z">
 <meta property="article:author" content="牛觅">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210412211912woman-1128523_960_720.jpg">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210618175149xpmasN.jpg">
 
-<link rel="canonical" href="http://blog.blockmao.cn/posts/4074.html">
+<link rel="canonical" href="http://blog.blockmao.cn/posts/45222.html">
 
 
 <script id="page-configurations">
@@ -45,7 +45,7 @@
   };
 </script>
 
-  <title>Spring：XML schema扩展机制 | 牛觅博客</title>
+  <title>Spring：XML配置扩展 | 牛觅博客</title>
   
 
 
@@ -169,7 +169,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/4074.html">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/45222.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -182,7 +182,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Spring：XML schema扩展机制
+          Spring：XML配置扩展
         </h1>
 
         <div class="post-meta">
@@ -191,16 +191,10 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2021-04-12 21:17:45" itemprop="dateCreated datePublished" datetime="2021-04-12T21:17:45+08:00">2021-04-12</time>
+              <time title="创建时间：2021-06-18 17:49:39 / 修改时间：17:57:46" itemprop="dateCreated datePublished" datetime="2021-06-18T17:49:39+08:00">2021-06-18</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-04-15 17:42:36" itemprop="dateModified" datetime="2021-04-15T17:42:36+08:00">2021-04-15</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -229,45 +223,40 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210412211912woman-1128523_960_720.jpg" alt="性感"></p>
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210618175149xpmasN.jpg" alt="20210618175149xpmasN"></p>
 <span id="more"></span>
 
 <blockquote>
-<p><strong>原文地址</strong>：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/8639e5e9fba6">https://www.jianshu.com/p/8639e5e9fba6</a></p>
+<p>原文地址：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/8639e5e9fba6">https://www.jianshu.com/p/8639e5e9fba6</a></p>
 </blockquote>
-<p>从Spring 2.0版本开始，Spring提供了XML Schema可扩展机制，用于定义和配置Bean。完成XML自定义扩展，需要下面几个步骤：</p>
+<h1 id="Step"><a href="#Step" class="headerlink" title="Step"></a>Step</h1><p>从Spring 2.0版本开始，Spring提供了XML Schema可扩展机制，用于定义和配置Bean。完成XML自定义扩展，需要下面几个步骤：</p>
 <ol>
 <li>创建一个 XML Schema 文件，描述自定义的合法构建模块，也就是xsd文件。</li>
-<li>自定义个处理器类，并实现<code>NamespaceHandler</code>接口。</li>
+<li>自定义处理器类，并实现<code>NamespaceHandler</code>接口。</li>
 <li>自定义一个或多个解析器，实现<code>BeanDefinitionParser</code>接口(最关键的部分)。</li>
 <li>注册上面的组件到Spring IOC容器中。</li>
 </ol>
-<p>按照上面的步骤，实现如下可扩展XML元素：</p>
+<h1 id="Coding"><a href="#Coding" class="headerlink" title="Coding"></a>Coding</h1><p>按照上面的步骤，实现如下可扩展XML元素：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">myns:dateformat</span> <span class="attr">id</span>=<span class="string">&quot;dateFormat&quot;</span> <span class="attr">pattern</span>=<span class="string">&quot;yyyy-MM-dd HH:mm&quot;</span> <span class="attr">lenient</span>=<span class="string">&quot;true&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
-
 <p>等价于</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;dateFormat&quot;</span> <span class="attr">class</span>=<span class="string">&quot;java.text.SimpleDateFormat&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">value</span>=<span class="string">&quot;yyyy-HH-dd HH:mm&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;lenient&quot;</span> <span class="attr">value</span>=<span class="string">&quot;true&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
 
 
-<h2 id="自定义-XML-Schema-文件"><a href="#自定义-XML-Schema-文件" class="headerlink" title="自定义 XML Schema 文件"></a>自定义 XML Schema 文件</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- myns.xsd (inside package org&#x2F;springframework&#x2F;samples&#x2F;xml) --&gt;</span><br><span class="line">&lt;?xml version&#x3D;&quot;1.0&quot; encoding&#x3D;&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;xsd:schema xmlns&#x3D;&quot;http:&#x2F;&#x2F;www.mycompany.com&#x2F;schema&#x2F;myns&quot;</span><br><span class="line">        xmlns:xsd&#x3D;&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2001&#x2F;XMLSchema&quot;</span><br><span class="line">        xmlns:beans&#x3D;&quot;http:&#x2F;&#x2F;www.springframework.org&#x2F;schema&#x2F;beans&quot;</span><br><span class="line">        targetNamespace&#x3D;&quot;http:&#x2F;&#x2F;www.mycompany.com&#x2F;schema&#x2F;myns&quot;</span><br><span class="line">        elementFormDefault&#x3D;&quot;qualified&quot;</span><br><span class="line">        attributeFormDefault&#x3D;&quot;unqualified&quot;&gt;</span><br><span class="line"></span><br><span class="line">    &lt;xsd:import namespace&#x3D;&quot;http:&#x2F;&#x2F;www.springframework.org&#x2F;schema&#x2F;beans&quot;&#x2F;&gt;</span><br><span class="line"></span><br><span class="line">    &lt;xsd:element name&#x3D;&quot;dateformat&quot;&gt;</span><br><span class="line">        &lt;xsd:complexType&gt;</span><br><span class="line">            &lt;xsd:complexContent&gt;</span><br><span class="line">                &lt;xsd:extension base&#x3D;&quot;beans:identifiedType&quot;&gt;</span><br><span class="line">                    &lt;xsd:attribute name&#x3D;&quot;lenient&quot; type&#x3D;&quot;xsd:boolean&quot;&#x2F;&gt;</span><br><span class="line">                    &lt;xsd:attribute name&#x3D;&quot;pattern&quot; type&#x3D;&quot;xsd:string&quot; use&#x3D;&quot;required&quot;&#x2F;&gt;</span><br><span class="line">                &lt;&#x2F;xsd:extension&gt;</span><br><span class="line">            &lt;&#x2F;xsd:complexContent&gt;</span><br><span class="line">        &lt;&#x2F;xsd:complexType&gt;</span><br><span class="line">    &lt;&#x2F;xsd:element&gt;</span><br><span class="line">&lt;&#x2F;xsd:schema&gt;</span><br></pre></td></tr></table></figure>
+<h2 id="创建XML-Schema-文件"><a href="#创建XML-Schema-文件" class="headerlink" title="创建XML Schema 文件"></a>创建XML Schema 文件</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- myns.xsd (inside package org/springframework/samples/xml) --&gt;</span></span><br><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:schema</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://www.mycompany.com/schema/myns&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">xmlns:xsd</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">xmlns:beans</span>=<span class="string">&quot;http://www.springframework.org/schema/beans&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">targetNamespace</span>=<span class="string">&quot;http://www.mycompany.com/schema/myns&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">elementFormDefault</span>=<span class="string">&quot;qualified&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">attributeFormDefault</span>=<span class="string">&quot;unqualified&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:import</span> <span class="attr">namespace</span>=<span class="string">&quot;http://www.springframework.org/schema/beans&quot;</span>/&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;dateformat&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">xsd:complexType</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">xsd:complexContent</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">xsd:extension</span> <span class="attr">base</span>=<span class="string">&quot;beans:identifiedType&quot;</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">xsd:attribute</span> <span class="attr">name</span>=<span class="string">&quot;lenient&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:boolean&quot;</span>/&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">xsd:attribute</span> <span class="attr">name</span>=<span class="string">&quot;pattern&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span> <span class="attr">use</span>=<span class="string">&quot;required&quot;</span>/&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">xsd:extension</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">xsd:complexContent</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">xsd:complexType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:schema</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
 
 
-<h2 id="自定义NamespaceHandler"><a href="#自定义NamespaceHandler" class="headerlink" title="自定义NamespaceHandler"></a>自定义NamespaceHandler</h2><p><code>NamespacespaceHandler</code>用于解析配置文件时遇到的特定命名空间的所有元素。在我们的例中，<code>NamespaceHandler</code>应该处理<code>&lt;myns:dateformat&gt;</code>元素的解析。</p>
+<h2 id="自定义NamespaceHandler"><a href="#自定义NamespaceHandler" class="headerlink" title="自定义NamespaceHandler"></a>自定义NamespaceHandler</h2><p><code>NamespacespaceHandler</code>用于解析配置文件时遇到的特定命名空间的所有元素。在我们的例子中，<code>NamespaceHandler</code>应该处理<code>myns：dateformat</code>元素的解析。</p>
 <p><code>NamespaceHandler</code>提供如下三个方法:</p>
 <ul>
 <li><code>init()</code>: NamespaceHandler被使用之前调用，完成NamespaceHandler的初始化。</li>
 <li><code>BeanDefinition parse(Element, ParserContext)</code>: 当遇到顶层元素时被调用。</li>
 <li><code>BeanDefinition decorate(Node,BeanDefinitionHandler,ParserContext)</code>: 当遇到一个属性或者嵌套元素的时候调用。</li>
 </ul>
-<p>Spring提供了一个默认的实现类<code>NamespaceHandlerSupport</code>,我们只需要在init的时候注册每个元素的解析器即可。</p>
+<p>Spring提供了一个默认的实现类<code>NamespaceHandlerSupport</code>，只需要在init的时候注册每个元素的解析器即可。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DateformatNamespaceHandler</span> <span class="keyword">extends</span> <span class="title">NamespaceHandlerSupport</span> </span>&#123; </span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> </span>&#123; </span><br><span class="line">        registerBeanDefinitionParser(<span class="string">&quot;dateformat&quot;</span>, <span class="keyword">new</span> DeteformatDefinitionParser()); </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>这里实际用到了代理委托的概念，<code>NamespaceHandlerSupport</code>可以注册任意个<code>BeanDefinitionParser</code>，</p>
-<p><code>NamespaceHandlerSupport</code>负责所有自定义元素的编排，而解析XML的工作委托给各个<code>BeanDefinitionParser</code>负责。</p>
+<p>这里实际用到了代理委托的概念，<code>NamespaceHandlerSupport</code>可以注册任意个<code>BeanDefinitionParser</code>。<code>NamespaceHandlerSupport</code>负责所有自定义元素的编排，而解析XML的工作委托给各个<code>BeanDefinitionParser</code>负责。</p>
 <h2 id="自定义BeanDefinitionParser"><a href="#自定义BeanDefinitionParser" class="headerlink" title="自定义BeanDefinitionParser"></a>自定义BeanDefinitionParser</h2><p>如果<code>NamespapceHandler</code>遇到元素类型（如：<code>dateformat</code>）已经有对应注册的parser，则<code>DateformatDefinitionParser</code>会被调用，解析相应的属性设置到Bean中。BeanDefinitionParser负责解析一个顶级元素。</p>
 <p>Spring提供了<code>AbstractSingleBeanDefinitionParser</code>来处理繁重的解析工作，只需要实现两个方法:</p>
 <ul>
@@ -279,17 +268,13 @@
 
 
 <h2 id="注册handler和schema"><a href="#注册handler和schema" class="headerlink" title="注册handler和schema"></a>注册handler和schema</h2><p>为了让Spring在解析xml的时候能够感知到我们的自定义元素，我们需要把<code>NamespaceHandler</code>和<code>xsd文件</code>放到2个指定的配置文件中，这2个文件都位于<code>META-INF</code>目录中</p>
-<p>1、<code>&#39;META-INF/spring.handlers&#39;</code>：包含XML Schema URI到命名空间处理程序类的映射。因此，对于我们的示例，我们需要编写以下内容：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http\:&#x2F;&#x2F;www.mycompany.com&#x2F;schema&#x2F;myns&#x3D;org.springframework.samples.xml.DateformatNamespaceHandler</span><br></pre></td></tr></table></figure>
-
-
-
-<p>2、<code>META-INF/spring.schemas</code>：包含XML Schema xsd到类路径资源的映射。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http\:&#x2F;&#x2F;www.mycompany.com&#x2F;schema&#x2F;myns&#x2F;myns.xsd&#x3D;org&#x2F;springframework&#x2F;samples&#x2F;xml&#x2F;myns.xsd</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="在Spring-XML配置中使用自定义扩展"><a href="#在Spring-XML配置中使用自定义扩展" class="headerlink" title="在Spring XML配置中使用自定义扩展"></a>在Spring XML配置中使用自定义扩展</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://www.springframework.org/schema/beans&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:myns</span>=<span class="string">&quot;http://www.mycompany.com/schema/myns&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;</span></span></span><br><span class="line"><span class="tag"><span class="string">        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">        http://www.mycompany.com/schema/myns http://www.mycompany.com/schema/myns/myns.xsd&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">&lt;!-- as a top-level bean --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">myns:dateformat</span> <span class="attr">id</span>=<span class="string">&quot;defaultDateFormat&quot;</span> <span class="attr">pattern</span>=<span class="string">&quot;yyyy-MM-dd HH:mm&quot;</span> <span class="attr">lenient</span>=<span class="string">&quot;true&quot;</span>/&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;jobDetailTemplate&quot;</span> <span class="attr">abstract</span>=<span class="string">&quot;true&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;dateFormat&quot;</span>&gt;</span></span><br><span class="line">            <span class="comment">&lt;!-- as an inner bean --&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">myns:dateformat</span> <span class="attr">pattern</span>=<span class="string">&quot;HH:mm MM-dd-yyyy&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><p><code>&#39;META-INF/spring.handlers&#39;</code>：包含XML Schema URI到命名空间处理程序类的映射。因此，对于我们的示例，我们需要编写以下内容：</p>
+  <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http\://www.mycompany.com/schema/myns=org.springframework.samples.xml.DateformatNamespaceHandler</span><br></pre></td></tr></table></figure></li>
+<li><p><code>META-INF/spring.schemas</code>：包含XML Schema xsd到类路径资源的映射。</p>
+  <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http\://www.mycompany.com/schema/myns/myns.xsd=org/springframework/samples/xml/myns.xsd</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="Spring-XML配置中使用自定义扩展"><a href="#Spring-XML配置中使用自定义扩展" class="headerlink" title="Spring XML配置中使用自定义扩展"></a>Spring XML配置中使用自定义扩展</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://www.springframework.org/schema/beans&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:myns</span>=<span class="string">&quot;http://www.mycompany.com/schema/myns&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;</span></span></span><br><span class="line"><span class="tag"><span class="string">        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">        http://www.mycompany.com/schema/myns http://www.mycompany.com/schema/myns/myns.xsd&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">&lt;!-- as a top-level bean --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">myns:dateformat</span> <span class="attr">id</span>=<span class="string">&quot;defaultDateFormat&quot;</span> <span class="attr">pattern</span>=<span class="string">&quot;yyyy-MM-dd HH:mm&quot;</span> <span class="attr">lenient</span>=<span class="string">&quot;true&quot;</span>/&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;jobDetailTemplate&quot;</span> <span class="attr">abstract</span>=<span class="string">&quot;true&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;dateFormat&quot;</span>&gt;</span></span><br><span class="line">            <span class="comment">&lt;!-- as an inner bean --&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">myns:dateformat</span> <span class="attr">pattern</span>=<span class="string">&quot;HH:mm MM-dd-yyyy&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
 
     </div>
@@ -306,13 +291,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/posts/25919.html" rel="prev" title="Dubbo：接口调用过程">
-      <i class="fa fa-chevron-left"></i> Dubbo：接口调用过程
+    <a href="/posts/10608.html" rel="prev" title="微服务事务一致性解决方案">
+      <i class="fa fa-chevron-left"></i> 微服务事务一致性解决方案
     </a></div>
-      <div class="post-nav-item">
-    <a href="/posts/42138.html" rel="next" title="Class.forName和ClassLoader的区别">
-      Class.forName和ClassLoader的区别 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -372,7 +354,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89-XML-Schema-%E6%96%87%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">自定义 XML Schema 文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89NamespaceHandler"><span class="nav-number">2.</span> <span class="nav-text">自定义NamespaceHandler</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89BeanDefinitionParser"><span class="nav-number">3.</span> <span class="nav-text">自定义BeanDefinitionParser</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E5%86%8Chandler%E5%92%8Cschema"><span class="nav-number">4.</span> <span class="nav-text">注册handler和schema</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8Spring-XML%E9%85%8D%E7%BD%AE%E4%B8%AD%E4%BD%BF%E7%94%A8%E8%87%AA%E5%AE%9A%E4%B9%89%E6%89%A9%E5%B1%95"><span class="nav-number">5.</span> <span class="nav-text">在Spring XML配置中使用自定义扩展</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Step"><span class="nav-number">1.</span> <span class="nav-text">Step</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Coding"><span class="nav-number">2.</span> <span class="nav-text">Coding</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAXML-Schema-%E6%96%87%E4%BB%B6"><span class="nav-number">2.1.</span> <span class="nav-text">创建XML Schema 文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89NamespaceHandler"><span class="nav-number">2.2.</span> <span class="nav-text">自定义NamespaceHandler</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89BeanDefinitionParser"><span class="nav-number">2.3.</span> <span class="nav-text">自定义BeanDefinitionParser</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E5%86%8Chandler%E5%92%8Cschema"><span class="nav-number">2.4.</span> <span class="nav-text">注册handler和schema</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-XML%E9%85%8D%E7%BD%AE%E4%B8%AD%E4%BD%BF%E7%94%A8%E8%87%AA%E5%AE%9A%E4%B9%89%E6%89%A9%E5%B1%95"><span class="nav-number">2.5.</span> <span class="nav-text">Spring XML配置中使用自定义扩展</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -519,7 +501,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       repo        : 'blockmao.github.io',
       owner       : 'blockmao',
       admin       : ['blockmao'],
-      id          : '138e2d0f395bfde5bc595c7dcb5ffc74',
+      id          : '686c7feae6e81f9161e1350e18452b24',
         language: 'zh-CN',
       distractionFreeMode: true
     });
