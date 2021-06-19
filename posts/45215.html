@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="零拷贝">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/45215.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210619205023vz3f2o.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210619211045SSoeFe.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210619211517AlprCv.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210619212016ieRHQD.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210619212541y7show.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210619213243qeFckV.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210619213506rcq3a0.jpg">
+<meta property="article:published_time" content="2021-06-19T14:06:18.000Z">
+<meta property="article:modified_time" content="2021-06-19T14:06:18.468Z">
+<meta property="article:author" content="牛觅">
+<meta property="article:tag" content="零拷贝">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210619205023vz3f2o.jpg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/45215.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>零拷贝 | 牛觅博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/45215.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          零拷贝
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-06-19 22:06:18" itemprop="dateCreated datePublished" datetime="2021-06-19T22:06:18+08:00">2021-06-19</time>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210619205023vz3f2o.jpg" alt="20210619205023vz3f2o"></p>
+<span id="more"></span>
+
+<p>原文地址：<a target="_blank" rel="noopener" href="https://www.programmersought.com/article/72346565091/">https://www.programmersought.com/article/72346565091/</a></p>
+<p>零拷贝（Zero Copy）是一个耳熟能详的名词，很多高性能网络框架如Netty，Kafka，RocketMQ都将零拷贝作为其特点。那么究竟什么是零拷贝？</p>
+<h1 id="Zero-copy"><a href="#Zero-copy" class="headerlink" title="Zero copy"></a>Zero copy</h1><p>维基百科对零拷贝的定义如下：</p>
+<blockquote>
+<p>“Zero-copy” describes computer operations in which the CPU does not perform the task of copying data from one memory area to another. This is frequently used to save CPU cycles and memory bandwidth when transmitting a file over a network.</p>
+</blockquote>
+<p>“零拷贝”描述了计算机操作，其中 CPU 不执行将数据从一个内存区域复制到另一个内存区域的任务。这通常用于在通过网络传输文件时节省 CPU 周期和内存带宽。</p>
+<h1 id="Zero-copy-in-Linux-system"><a href="#Zero-copy-in-Linux-system" class="headerlink" title="Zero copy in Linux system"></a>Zero copy in Linux system</h1><h3 id="术语"><a href="#术语" class="headerlink" title="术语"></a>术语</h3><ul>
+<li><p><strong>内核空间</strong></p>
+<p>计算机内存分为用户空间和内核空间。内核空间运行OS内核代码，可以访问所有内存、机器指令和硬件资源，拥有最高权限。</p>
+</li>
+<li><p><strong>用户空间</strong></p>
+<p>内核外部的所有空间，用于正常的用户进程操作。用户空间的进程不能访问内核空间，只能通过内核系统调用(系统调用)公开的接口访问内核的一小部分。如果用户进程请求执行系统调用，则需要向内核发送系统中断(软件中断)，内核会调度相应的中断处理程序来处理请求。</p>
+</li>
+<li><p><strong>DMA</strong></p>
+<p>直接内存访问(DMA)是为了响应CPU与硬盘之间的速度大小不匹配，它允许某些硬件子系统独立于CPU主存进行访问。</p>
+<p>如果没有DMA、CPU执行IO操作的整个过程被阻塞，无法执行其他工作，这将导致计算机陷入挂起。如果有DMA干预，IO过程就变成这样了：CPU启动DMA传输过程中，可以执行其他操作；DMA控制器（DMAC）传输完成后，会给CPU发送一个中断信号，然后CPU就可以对传输的数据进行处理了。</p>
+</li>
+</ul>
+<h3 id="Traditional-network-transmission"><a href="#Traditional-network-transmission" class="headerlink" title="Traditional network transmission"></a>Traditional network transmission</h3><p>网络IO的一个常见场景是从硬盘读取文件，通过网卡发送到网络。下面是一个简单的伪代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// read data from hard disk</span></span><br><span class="line">File.read(fileDesc, buf, len);</span><br><span class="line"><span class="comment">// Send data to the network</span></span><br><span class="line">Socket.write(socket, buf, len);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在代码层面，这是一个非常简单的操作，但在系统层面，让我们看看幕后发生了什么：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210619211045SSoeFe.jpg" alt="20210619211045SSoeFe"></p>
+<ol>
+<li>User initiated  <code>read()</code>  System call (<code>syscall</code>), request hard disk data. At this point, it will happen once <strong>Context switch</strong>(context switch)。</li>
+<li><code>DMA</code>  Read the file from the hard disk. At this time, a copy is generated:<strong>hard disk</strong>–&gt;<strong>DMA buffer</strong>。</li>
+<li><code>DMA</code> Copy data to<strong>User space</strong>，<code>read()</code>  The call returns. At this time, it happened once <strong>Context switch</strong> And a data copy: <strong>DMA buffer</strong>–&gt;<strong>User space</strong>。</li>
+<li>User initiated  <code>write()</code>  System call, request to send data. This happens once <strong>Context switch</strong> And a data copy: <strong>User space</strong>–&gt;<strong>DMA buffer</strong>。</li>
+<li><code>DMA</code> Copy the data to the network card for network transmission. The fourth data copy occurs at this time:<strong>DMA buffer</strong>–&gt;<strong>Socket buffer</strong></li>
+<li><code>write()</code> The call returns and happens again <strong>Context switch</strong>。</li>
+</ol>
+<p>数据流如下：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210619211517AlprCv.jpg" alt="20210619211517AlprCv"></p>
+<p>可以发现，涉及4次上下文切换和4次数据拷贝。对于简单的网络文件发送，有很多不必要的开销。</p>
+<h3 id="sendfile-transmission"><a href="#sendfile-transmission" class="headerlink" title="sendfile transmission"></a><code>sendfile</code> transmission</h3><p>对于上面的场景，可以发现从<strong>DMA缓冲区到用户空间</strong>和从用户空间到套接字缓冲区两次CPU复制是完全没有必要的，零拷贝由此诞生。针对这种情况，Linux内核提供了<code>sendfile</code>系统调用。</p>
+<p>如果使用<code>sendfile()</code>执行上述请求，系统流程可以简化如下：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210619212016ieRHQD.jpg" alt="20210619212016ieRHQD"></p>
+<p><code>sendfile()</code>系统调用，可以在DMA中实现数据的内部复制，而不需要将数据复制到用户空间。因此，<strong>上下文切换次数</strong>减少到2次，<strong>数据拷贝次数</strong>减少到3次。</p>
+<p>Here is a question: <strong>why<code>DMA</code>There will be a copy inside (this copy needs<code>CPU</code>participate)</strong>?</p>
+<p>This is because the early network cards required the data to be sent to be <strong>continuous</strong> in physical space, so there was<code>Socket Buffer</code>. But if the network card itself supports <code>scatter-gather</code>, that is, it can gather and send data from discontinuous memory addresses, then it can be further optimized.</p>
+<h3 id="Network-card-support-scatter-gather-of-sendfile-transmission"><a href="#Network-card-support-scatter-gather-of-sendfile-transmission" class="headerlink" title="Network card support scatter-gather of sendfile transmission"></a>Network card support <code>scatter-gather</code> of <code>sendfile</code> transmission</h3><p>in<code>Linux</code>This has been optimized after kernel version 2.4. If the computer network card supports the collection operation,<code>sendfile()</code>Operation can be omitted<code>Socket Buffer</code>The data is copied, instead, the descriptors of the data location and length are directly passed to<code>Socket Buffer</code>：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210619212541y7show.jpg" alt="20210619212541y7show"></p>
+<p>在网卡的支持下，上下文切换次数为2次，数据复制次数也减少到2次。两次数据复制是必须的，即数据在内存中复制已经完全避免了。</p>
+<p>对于从硬盘向网络发送文件的场景，如果网卡支持采集操作，那么<code>sendfile()</code>系统调用，真正意义上的零拷贝。</p>
+<h3 id="Memory-mapping-mmap"><a href="#Memory-mapping-mmap" class="headerlink" title="Memory mapping (mmap)"></a>Memory mapping (mmap)</h3><p>在“通过互联网发送文件”的情况下，使用<code>sendfile()</code>系统调用可以极大地提高性能(根据测试，吞吐量可以达到传统方法的三倍)。但有一个缺点是，它只支持“读-&gt;发送”的“连续操作”，所以，<code>sendfile()</code>一般用来处理一些静态的网络资源，如果要对数据进行额外的操作，它是无能为力的。内存映射（Memory mapping）为此提供了一种解决方案。</p>
+<p>mmap是一种内存映射文件的方法。它可以将文件映射到进程的地址空间，实现文件磁盘地址和进程虚拟地址空间中虚拟地址的对应。这样，用户进程就可以使用指针对这块内存进行读写操作，内核空间对这块内存的修改直接反映在用户空间中。</p>
+<p>简而言之，mmap实现了用户空间和内核空间的数据共享。可以猜到，如果使用<code>mmap</code> 系统调用，上述场景的步骤如下：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210619213243qeFckV.jpg" alt="20210619213243qeFckV"></p>
+<p>数据流如下：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210619213506rcq3a0.jpg" alt="20210619213506rcq3a0"></p>
+<p>**与传统方式相比，mmap它保存了一份数据拷贝，这也可以从广义上称为零拷贝(Zero Copy)**。同时，它还允许用户自定义数据操作，这与发送文件相比，其优势在于。</p>
+<h1 id="Zero-copy-in-JDK-NIO"><a href="#Zero-copy-in-JDK-NIO" class="headerlink" title="Zero copy in JDK NIO"></a>Zero copy in JDK NIO</h1><p>从1.4版开始，JDK引入了NIO，提供了正确的Zero Copy支持。由于JVM运行在上述操作系统上，其功能只是对系统底层API的封装，如果操作系统不支持Zero Copy(mmap/sendfile)，那么JVM就无能为力了。JDK正确的Zero Copy Package，主要体现在FileChannel这个类上。</p>
+<h2 id="map"><a href="#map" class="headerlink" title="map()"></a><code>map()</code></h2><p><code>map()</code>方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">FileChannel</span></span></span><br><span class="line"><span class="class">    <span class="keyword">extends</span> <span class="title">AbstractInterruptibleChannel</span></span></span><br><span class="line"><span class="class">    <span class="keyword">implements</span> <span class="title">SeekableByteChannel</span>, <span class="title">GatheringByteChannel</span>, <span class="title">ScatteringByteChannel</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> MappedByteBuffer <span class="title">map</span><span class="params">(MapMode mode, <span class="keyword">long</span> position, <span class="keyword">long</span> size)</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>map()</code>方法描述如下：</p>
+<blockquote>
+<p>将此通道文件的一个区域直接映射到内存中。对于大多数操作系统来说，将文件映射到内存比通过通常的读写方法读取或写入数十KB的数据更昂贵。<strong>从性能的角度来看，通常只值得将相对较大的文件映射到内存中</strong>。</p>
+</blockquote>
+<p>map()方法返回<code>MappdByteBuffer</code>，<code>DirectByteBuffer</code>就是它的子类别。它引用一个独立于JVM内存的块，它位于GC之外，由该机制控制，<strong>您需要自己管理创建和销毁操作</strong>。</p>
+<h2 id="transferTo"><a href="#transferTo" class="headerlink" title="transferTo()"></a><code>transferTo()</code></h2><p><code>transferTo()</code>方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">FileChannel</span></span></span><br><span class="line"><span class="class">    <span class="keyword">extends</span> <span class="title">AbstractInterruptibleChannel</span></span></span><br><span class="line"><span class="class">    <span class="keyword">implements</span> <span class="title">SeekableByteChannel</span>, <span class="title">GatheringByteChannel</span>, <span class="title">ScatteringByteChannel</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">long</span> <span class="title">transferTo</span><span class="params">(<span class="keyword">long</span> position, <span class="keyword">long</span> count, WritableByteChannel target)</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>transferTo()</code>方法描述如下：</p>
+<blockquote>
+<p>将字节从此通道的文件传输到给定的可写字节通道时，此方法可能比从此通道读取并写入目标通道的简单循环高效得多。</p>
+<p>许多操作系统可以直接将字节从文件系统缓存传输到目标通道，而无需实际复制它们。</p>
+</blockquote>
+<p>请注意，由于<code>sendfile()</code>只适用于套接字缓冲区发送数据，因此通过Zero Copy技术提高性能只能用于通过网络发送数据的场景。</p>
+<p>那是什么意思？<strong>如果您只是使用Transfer To()将数据从硬盘上的一个文件写入到另一个文件，则不会产生任何性能提升效果。</strong></p>
+<h1 id="Zero-copy-in-Netty"><a href="#Zero-copy-in-Netty" class="headerlink" title="Zero copy in Netty"></a>Zero copy in Netty</h1><p>// todo </p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%9B%B6%E6%8B%B7%E8%B4%9D/" rel="tag"># 零拷贝</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/45222.html" rel="prev" title="Spring：XML配置扩展">
+      <i class="fa fa-chevron-left"></i> Spring：XML配置扩展
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Zero-copy"><span class="nav-number">1.</span> <span class="nav-text">Zero copy</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Zero-copy-in-Linux-system"><span class="nav-number">2.</span> <span class="nav-text">Zero copy in Linux system</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AF%E8%AF%AD"><span class="nav-number">2.0.1.</span> <span class="nav-text">术语</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Traditional-network-transmission"><span class="nav-number">2.0.2.</span> <span class="nav-text">Traditional network transmission</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sendfile-transmission"><span class="nav-number">2.0.3.</span> <span class="nav-text">sendfile transmission</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Network-card-support-scatter-gather-of-sendfile-transmission"><span class="nav-number">2.0.4.</span> <span class="nav-text">Network card support scatter-gather of sendfile transmission</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Memory-mapping-mmap"><span class="nav-number">2.0.5.</span> <span class="nav-text">Memory mapping (mmap)</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Zero-copy-in-JDK-NIO"><span class="nav-number">3.</span> <span class="nav-text">Zero copy in JDK NIO</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#map"><span class="nav-number">3.1.</span> <span class="nav-text">map()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#transferTo"><span class="nav-number">3.2.</span> <span class="nav-text">transferTo()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Zero-copy-in-Netty"><span class="nav-number">4.</span> <span class="nav-text">Zero copy in Netty</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">72</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['blockmao'],
+      id          : '7668aba9b442a05303d282b4e9d9aaec',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
