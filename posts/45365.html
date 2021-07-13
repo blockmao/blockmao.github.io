@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210418093837mountains-100367_960_720.jpg">
 <meta property="article:published_time" content="2021-04-18T02:16:36.000Z">
-<meta property="article:modified_time" content="2021-05-17T12:34:46.408Z">
+<meta property="article:modified_time" content="2021-06-20T14:00:31.937Z">
 <meta property="article:author" content="牛觅">
 <meta property="article:tag" content="行为型模式">
 <meta name="twitter:card" content="summary">
@@ -200,7 +200,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-05-17 20:34:46" itemprop="dateModified" datetime="2021-05-17T20:34:46+08:00">2021-05-17</time>
+                <time title="修改时间：2021-06-20 22:00:31" itemprop="dateModified" datetime="2021-06-20T22:00:31+08:00">2021-06-20</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -237,7 +237,7 @@
 <blockquote>
 <p>Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.</p>
 </blockquote>
-<p>翻译成中文就是：定义一族算法类，将每个算法分别封装起来，让它们可以互相替换。策略模式可以使算法的变化独立于使用它们的客户端。</p>
+<p>翻译成中文就是：<strong>定义一族算法类，将每个算法分别封装起来，让它们可以互相替换。策略模式可以使算法的变化独立于使用它们的客户端</strong>。</p>
 <p>策略模式用来解耦策略的定义、创建、使用。实际上，一个完整的策略模式就是由这三个部分组成的。</p>
 <h3 id="策略的定义"><a href="#策略的定义" class="headerlink" title="策略的定义"></a>策略的定义</h3><p>策略类的定义比较简单，包含一个策略接口和一组实现这个接口的策略类。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Strategy</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">algorithmInterface</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteStrategyA</span> <span class="keyword">implements</span> <span class="title">Strategy</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span>  <span class="title">algorithmInterface</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//具体的算法...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteStrategyB</span> <span class="keyword">implements</span> <span class="title">Strategy</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span>  <span class="title">algorithmInterface</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//具体的算法...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -257,7 +257,7 @@
 
 
 
-<h2 id="如何利用策略模式避免分支判断？"><a href="#如何利用策略模式避免分支判断？" class="headerlink" title="如何利用策略模式避免分支判断？"></a>如何利用策略模式避免分支判断？</h2><p>实际上，能够移除分支判断逻辑的模式不仅仅有策略模式，状态模式也可以。对于使用哪种模式，具体还要看应用场景来定。 策略模式适用于根据不同类型的动态，决定使用哪种策略这样一种应用场景。</p>
+<h2 id="如何利用策略模式避免分支判断？"><a href="#如何利用策略模式避免分支判断？" class="headerlink" title="如何利用策略模式避免分支判断？"></a>如何利用策略模式避免分支判断？</h2><p>实际上，能够移除分支判断逻辑的模式不仅仅有策略模式，状态模式也可以。对于使用哪种模式，具体还要看应用场景来定。 <strong>策略模式适用于根据不同类型的动态决定使用哪种策略这样一种应用场景</strong>。</p>
 <p>先通过一个例子来看下，if-else 或 switch-case 分支判断逻辑是如何产生的。具体的代码如下所示：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OrderService</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">discount</span><span class="params">(Order order)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">double</span> discount = <span class="number">0.0</span>;</span><br><span class="line">    OrderType type = order.getType();</span><br><span class="line">    <span class="keyword">if</span> (type.equals(OrderType.NORMAL)) &#123; <span class="comment">// 普通订单</span></span><br><span class="line">      <span class="comment">//...省略折扣计算算法代码</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (type.equals(OrderType.GROUPON)) &#123; <span class="comment">// 团购订单</span></span><br><span class="line">      <span class="comment">//...省略折扣计算算法代码</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (type.equals(OrderType.PROMOTION)) &#123; <span class="comment">// 促销订单</span></span><br><span class="line">      <span class="comment">//...省略折扣计算算法代码</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> discount;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -287,6 +287,9 @@
 
 
 <p>可变的部分隔离到了策略工厂类和 Sorter 类中的静态代码段中，当要添加一个新的排序算法时，我们只需要修改策略工厂类和 Sort 类中的静态代码段，其他代码都不需要修改，这样就将代码改动最小化、集中化了。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>一提到 if-else 分支判断，有人就觉得它是烂代码。如果 if-else 分支判断不复杂、代码不多，这并没有任何问题，毕竟 if-else  分支判断几乎是所有编程语言都会提供的语法，存在即有理由。遵循 KISS 原则，怎么简单怎么来，就是最好的设计。非得用策略模式，搞出 n  多类，反倒是一种过度设计。</p>
+<p> 一提到策略模式，有人就觉得，它的作用是避免 if-else  分支判断逻辑。实际上，这种认识是很片面的。<strong>策略模式主要的作用还是解耦策略的定义、创建和使用，控制代码的复杂度，让每个部分都不至于过于复杂、代码量过多</strong>。除此之外，对于复杂代码来说，策略模式还能让其满足开闭原则，添加新策略的时候，最小化、集中化代码改动，减少引入 bug 的风险。 </p>
+<p>实际上，设计原则和思想比设计模式更加普适和重要。掌握了代码的设计原则和思想，我们能更清楚的了解，为什么要用某种设计模式，就能更恰到好处地应用设计模式。</p>
 
     </div>
 
@@ -371,7 +374,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">策略模式的原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.</span> <span class="nav-text">策略的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E7%9A%84%E5%88%9B%E5%BB%BA"><span class="nav-number">1.2.</span> <span class="nav-text">策略的创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">1.3.</span> <span class="nav-text">策略的使用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%E9%81%BF%E5%85%8D%E5%88%86%E6%94%AF%E5%88%A4%E6%96%AD%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">如何利用策略模式避免分支判断？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E6%A1%88%E4%BE%8B"><span class="nav-number">3.</span> <span class="nav-text">应用案例</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">策略模式的原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.</span> <span class="nav-text">策略的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E7%9A%84%E5%88%9B%E5%BB%BA"><span class="nav-number">1.2.</span> <span class="nav-text">策略的创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">1.3.</span> <span class="nav-text">策略的使用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%E9%81%BF%E5%85%8D%E5%88%86%E6%94%AF%E5%88%A4%E6%96%AD%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">如何利用策略模式避免分支判断？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E6%A1%88%E4%BE%8B"><span class="nav-number">3.</span> <span class="nav-text">应用案例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
