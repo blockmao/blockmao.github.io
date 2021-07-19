@@ -21,11 +21,13 @@
   </script>
 
   <meta property="og:type" content="article">
-<meta property="og:title" content="Netty：基础架构与入门">
+<meta property="og:title" content="Netty：基础与入门">
 <meta property="og:url" content="http://blog.blockmao.cn/posts/37855.html">
 <meta property="og:site_name" content="牛觅博客">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210421100022women-1209678_960_720.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210719130327EYAdEQ.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210719130722neGPb7.jpg">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210421100426CgqCHl-NO7eATPMMAAH8t8KvehQ985.png">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210421101119Ciqc1F-NO9KAUOtaAAE1S5uRlDE275.png">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210421192216Ciqc1F-NO9yAeCsoAAHf2YCqjsQ005.png">
@@ -42,7 +44,7 @@
 <meta property="og:image" content="https://s0.lgstatic.com/i/image/M00/65/32/Ciqc1F-aW9qADWwSAAndrBdsXyc104.png">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210421231229Ciqc1F-dLz2AMj8yAALx2oNWK94344.png">
 <meta property="article:published_time" content="2021-04-21T01:54:19.000Z">
-<meta property="article:modified_time" content="2021-04-23T13:00:10.303Z">
+<meta property="article:modified_time" content="2021-07-19T05:37:14.124Z">
 <meta property="article:author" content="牛觅">
 <meta property="article:tag" content="Netty">
 <meta name="twitter:card" content="summary">
@@ -61,7 +63,7 @@
   };
 </script>
 
-  <title>Netty：基础架构与入门 | 牛觅博客</title>
+  <title>Netty：基础与入门 | 牛觅博客</title>
   
 
 
@@ -198,7 +200,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Netty：基础架构与入门
+          Netty：基础与入门
         </h1>
 
         <div class="post-meta">
@@ -215,8 +217,17 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-04-23 21:00:10" itemprop="dateModified" datetime="2021-04-23T21:00:10+08:00">2021-04-23</time>
+                <time title="修改时间：2021-07-19 13:37:14" itemprop="dateModified" datetime="2021-07-19T13:37:14+08:00">2021-07-19</time>
               </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Netty/" itemprop="url" rel="index"><span itemprop="name">Netty</span></a>
+                </span>
+            </span>
 
           
             <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
@@ -239,7 +250,49 @@
         <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421100022women-1209678_960_720.jpg" alt="团队"></p>
 <span id="more"></span>
 
-<h1 id="为什么选择-Netty？"><a href="#为什么选择-Netty？" class="headerlink" title="为什么选择 Netty？"></a>为什么选择 Netty？</h1><h2 id="高性能，低延迟"><a href="#高性能，低延迟" class="headerlink" title="高性能，低延迟"></a>高性能，低延迟</h2><h2 id="完美弥补-Java-NIO-的缺陷"><a href="#完美弥补-Java-NIO-的缺陷" class="headerlink" title="完美弥补 Java NIO 的缺陷"></a>完美弥补 Java NIO 的缺陷</h2><h2 id="更低的资源消耗"><a href="#更低的资源消耗" class="headerlink" title="更低的资源消耗"></a>更低的资源消耗</h2><h1 id="Netty-整体架构脉络"><a href="#Netty-整体架构脉络" class="headerlink" title="Netty 整体架构脉络"></a>Netty 整体架构脉络</h1><h2 id="Netty-整体结构"><a href="#Netty-整体结构" class="headerlink" title="Netty 整体结构"></a>Netty 整体结构</h2><p>Netty 是一个设计非常用心的网络基础组件，Netty 官网给出了有关 Netty 的整体功能模块结构如下：</p>
+<h1 id="为什么选择-Netty？"><a href="#为什么选择-Netty？" class="headerlink" title="为什么选择 Netty？"></a>为什么选择 Netty？</h1><p>Netty 是一款<strong>用于高效开发网络应用的 NIO 网络框架</strong>，它大大简化了网络应用的开发过程。</p>
+<p>既然 Netty 是网络应用框架，那我们永远绕不开以下几个核心关注点：</p>
+<ul>
+<li><strong>I/O 模型、线程模型和事件处理机制</strong>；</li>
+<li><strong>易用性 API 接口</strong>；</li>
+<li><strong>对数据协议、序列化的支持</strong>。</li>
+</ul>
+<p>之所以会最终选择 Netty，是因为 Netty 围绕这些核心要点可以做到尽善尽美，其健壮性、性能、可扩展性在同领域的框架中都首屈一指。</p>
+<h2 id="高性能，低延迟"><a href="#高性能，低延迟" class="headerlink" title="高性能，低延迟"></a>高性能，低延迟</h2><p>I/O 请求可以分为两个阶段，分别为<strong>调用阶段</strong>和<strong>执行阶段</strong>。</p>
+<ul>
+<li><p>第一个阶段为I/O 调用阶段，即用户进程向内核发起系统调用。</p>
+</li>
+<li><p>第二个阶段为I/O 执行阶段。此时，内核等待 I/O 请求处理完成返回。该阶段分为两个过程：首先等待数据就绪，并写入内核缓冲区；随后将内核缓冲区数据拷贝至用户态缓冲区。</p>
+</li>
+</ul>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210719130327EYAdEQ.jpg" alt="20210719130327EYAdEQ"></p>
+<p>Netty 的 I/O 模型是基于非阻塞 I/O 实现的，底层依赖的是 JDK NIO 框架的多路复用器 Selector。一个多路复用器 Selector 可以同时轮询多个 Channel，采用 epoll 模式后，只需要一个线程负责 Selector 的轮询，就可以接入成千上万的客户端。</p>
+<p>在 I/O 多路复用的场景下，当有数据处于就绪状态后，需要一个<strong>事件分发器</strong>（Event Dispather），它负责将读写事件分发给对应的<strong>读写事件处理器</strong>（Event Handler）。</p>
+<p>事件分发器有两种设计模式：<strong>Reactor</strong> 和 <strong>Proactor</strong>，Reactor 采用同步 I/O， Proactor 采用异步 I/O。</p>
+<p><strong>Reactor 实现相对简单，适合处理耗时短的场景，对于耗时长的 I/O 操作容易造成阻塞</strong>。Proactor 性能更高，但是实现逻辑非常复杂，目前主流的事件驱动模型还是依赖 select 或 epoll 来实现。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210719130722neGPb7.jpg" alt="20210719130722neGPb7"></p>
+<p>上图所描述的便是 Netty 所采用的<strong>主从 Reactor 多线程模型</strong>，所有的 I/O 事件都注册到一个 I/O 多路复用器上，当有 I/O 事件准备就绪后，I/O 多路复用器会将该 I/O 事件通过事件分发器分发到对应的事件处理器中。<strong>该线程模型避免了同步问题以及多线程切换带来的资源开销，真正做到高性能、低延迟</strong>。</p>
+<h2 id="完美弥补-Java-NIO-的缺陷"><a href="#完美弥补-Java-NIO-的缺陷" class="headerlink" title="完美弥补 Java NIO 的缺陷"></a>完美弥补 Java NIO 的缺陷</h2><p>在 JDK 1.4 投入使用之前，只有 BIO 一种模式。开发过程相对简单。新来一个连接就会创建一个新的线程处理。随着请求并发度的提升，BIO 很快遇到了性能瓶颈。JDK 1.4 以后开始引入了 NIO 技术，支持 select 和 poll；JDK 1.5 支持了 epoll；JDK 1.7 发布了 NIO2，支持 AIO 模型。Java 在网络领域取得了长足的进步。</p>
+<p> <strong>Netty 相比 JDK NIO 有哪些突出的优势？</strong></p>
+<ul>
+<li><p><strong>易用性</strong></p>
+<p>使用 JDK NIO 编程需要了解很多复杂的概念，比如 Channels、Selectors、Sockets、Buffers 等，编码复杂程度令人发指。相反，Netty 在 NIO 基础上进行了更高层次的封装，屏蔽了 NIO 的复杂性；Netty 封装了更加人性化的 API，统一的 API（阻塞/非阻塞） 大大降低了开发者的上手难度；与此同时，Netty 提供了很多开箱即用的工具，例如常用的行解码器、长度域解码器等，而这些在 JDK NIO 中都需要你自己实现。</p>
+</li>
+<li><p><strong>稳定性</strong></p>
+<p>Netty 更加可靠稳定，修复和完善了 JDK NIO 较多已知问题，例如臭名昭著的 select 空转导致 CPU 消耗 100%，TCP 断线重连，keep-alive 检测等问题。</p>
+</li>
+<li><p><strong>可扩展性</strong> </p>
+<p>Netty 的可扩展性在很多地方都有体现，这里我主要列举其中的两点：一个是<strong>可定制化的线程模型</strong>，用户可以通过启动的配置参数选择 Reactor 线程模型；另一个是<strong>可扩展的事件驱动模型</strong>，将框架层和业务层的关注点分离。大部分情况下，开发者只需要关注 ChannelHandler 的业务逻辑实现。</p>
+</li>
+</ul>
+<h2 id="更低的资源消耗"><a href="#更低的资源消耗" class="headerlink" title="更低的资源消耗"></a>更低的资源消耗</h2><p>作为网络通信框架，需要处理海量的网络数据，那么必然面临有大量的网络对象需要创建和销毁的问题，对于 JVM GC 并不友好。为了降低 JVM 垃圾回收的压力，Netty 主要采用了两种优化手段：</p>
+<ul>
+<li><p><strong>对象池复用技术</strong>。 Netty 通过复用对象，避免频繁创建和销毁带来的开销。</p>
+</li>
+<li><p><strong>零拷贝技术</strong>。 除了操作系统级别的零拷贝技术外，Netty 提供了更多面向用户态的零拷贝技术，例如 Netty 在 I/O 读写时直接使用 DirectBuffer，从而避免了数据在堆内存和堆外内存之间的拷贝</p>
+</li>
+</ul>
+<h1 id="Netty-整体结构"><a href="#Netty-整体结构" class="headerlink" title="Netty 整体结构"></a>Netty 整体结构</h1><p>Netty 是一个设计非常用心的网络基础组件，Netty 官网给出了有关 Netty 的整体功能模块结构如下：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421100426CgqCHl-NO7eATPMMAAH8t8KvehQ985.png" alt="Drawing 0.png"></p>
 <ol>
 <li><p><strong>Core 核心层</strong></p>
@@ -250,35 +303,30 @@
 <p>Netty 丰富的协议支持降低了用户的开发成本，基于 Netty 我们可以快速开发 HTTP、WebSocket 等服务。</p>
 </li>
 <li><p><strong>Transport Service 传输服务层</strong></p>
-<p>传输服务层提供了网络传输能力的定义和实现方法。它支持 Socket、HTTP 隧道、虚拟机管道等传输方式。Netty 对 TCP、UDP 等数据传输做了抽象和封装，用户可以更聚焦在业务逻辑实现上，而不必关系底层数据传输的细节。</p>
+<p>传输服务层提供了网络传输能力的定义和实现方法。它支持 Socket、HTTP 隧道、虚拟机管道等传输方式。</p>
+<p>Netty 对 TCP、UDP 等数据传输做了抽象和封装，用户可以更聚焦在业务逻辑实现上，而不必关系底层数据传输的细节。</p>
 </li>
 </ol>
-<h2 id="Netty-逻辑架构"><a href="#Netty-逻辑架构" class="headerlink" title="Netty 逻辑架构"></a>Netty 逻辑架构</h2><p>Netty 的逻辑处理架构为典型网络分层架构设计，共分为网络通信层、事件调度层、服务编排层，每一层各司其职。如下图所示：</p>
+<h1 id="Netty-逻辑架构"><a href="#Netty-逻辑架构" class="headerlink" title="Netty 逻辑架构"></a>Netty 逻辑架构</h1><p>Netty 的逻辑处理架构为典型网络分层架构设计，共分为<strong>网络通信层</strong>、<strong>事件调度层</strong>、<strong>服务编排层</strong>，每一层各司其职。如下图所示：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421101119Ciqc1F-NO9KAUOtaAAE1S5uRlDE275.png" alt="Drawing 1.png"></p>
-<h3 id="网络通信层"><a href="#网络通信层" class="headerlink" title="网络通信层"></a>网络通信层</h3><p>网络通信层的职责是执行网络 I/O 的操作。它支持多种网络协议和 I/O 模型的连接操作。当网络数据读取到内核缓冲区后，会触发各种网络事件，这些网络事件会分发给事件调度层进行处理。</p>
+<h2 id="网络通信层"><a href="#网络通信层" class="headerlink" title="网络通信层"></a>网络通信层</h2><p>网络通信层的职责是<strong>执行网络 I/O 的操作</strong>。它支持多种网络协议和 I/O 模型的连接操作。当网络数据读取到内核缓冲区后，会触发各种网络事件，这些网络事件会分发给事件调度层进行处理。</p>
 <p>网络通信层的核心组件包含BootStrap、ServerBootStrap、Channel三个组件。</p>
-<h4 id="BootStrap-amp-ServerBootStrap"><a href="#BootStrap-amp-ServerBootStrap" class="headerlink" title="BootStrap &amp; ServerBootStrap"></a>BootStrap &amp; ServerBootStrap</h4><p>Bootstrap 是“引导”的意思，它主要负责整个 Netty 程序的启动、初始化、服务器连接等过程，它相当于一条主线，串联了 Netty 的其他核心组件。</p>
+<h3 id="BootStrap-amp-ServerBootStrap"><a href="#BootStrap-amp-ServerBootStrap" class="headerlink" title="BootStrap &amp; ServerBootStrap"></a>BootStrap &amp; ServerBootStrap</h3><p><strong>Bootstrap 是“引导”的意思，它主要负责整个 Netty 程序的启动、初始化、服务器连接等过程</strong>，它相当于一条主线，串联了 Netty 的其他核心组件。</p>
 <p>Netty 中的引导器共分为两种类型：一个为用于客户端引导的 Bootstrap，另一个为用于服务端引导的 ServerBootStrap，它们都继承自抽象类 AbstractBootstrap。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421192216Ciqc1F-NO9yAeCsoAAHf2YCqjsQ005.png" alt="Drawing 2.png"></p>
-<p>Bootstrap 和 ServerBootStrap 十分相似，两者非常重要的区别在于 Bootstrap 可用于连接远端服务器，只绑定一个 EventLoopGroup。而 ServerBootStrap 则用于服务端启动绑定本地端口，会绑定两个 EventLoopGroup，这两个 EventLoopGroup 通常称为 Boss 和 Worker。</p>
+<p><strong>Bootstrap 和 ServerBootStrap 十分相似，两者非常重要的区别在于 Bootstrap 可用于连接远端服务器，只绑定一个 EventLoopGroup。而 ServerBootStrap 则用于服务端启动绑定本地端口，会绑定两个 EventLoopGroup，这两个 EventLoopGroup 通常称为 Boss 和 Worker</strong>。</p>
 <p>ServerBootStrap 中的 Boss 和 Worker 是什么角色呢？它们之间又是什么关系？</p>
 <p>Boss 和 Worker 可以理解为“老板”和“员工”的关系。每个服务器中都会有一个 Boss，也会有一群做事情的 Worker。Boss 会不停地接收新的连接，然后将连接分配给一个个 Worker 处理连接。</p>
-<h4 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h4><p>Channel 的字面意思是“通道”，它是网络通信的载体。Channel提供了基本的 API 用于网络 I/O 操作，如 register、bind、connect、read、write、flush 等。Netty实现的 Channel 是以 JDK NIO Channel 为基础的，相比较于 JDK NIO，Netty 的 Channel 提供了更高层次的抽象，同时屏蔽了底层 Socket 的复杂性，赋予了 Channel 更加强大的功能，你在使用 Netty 时基本不需要再与 Java Socket 类直接打交道。</p>
-<p>AbstractChannel 是整个家族的基类，派生出 AbstractNioChannel、AbstractOioChannel、AbstractEpollChannel 等子类，每一种都代表了不同的 I/O 模型和协议类型。常用的 Channel 实现类有：</p>
+<h3 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h3><p><strong>Channel 的字面意思是“通道”，它是网络通信的载体</strong>。Channel提供了基本的 API 用于网络 I/O 操作，如 register、bind、connect、read、write、flush 等。Netty实现的 Channel 是以 JDK NIO Channel 为基础的，相比较于 JDK NIO，Netty 的 Channel 提供了更高层次的抽象，同时屏蔽了底层 Socket 的复杂性，赋予了 Channel 更加强大的功能，你在使用 Netty 时基本不需要再与 Java Socket 类直接打交道。</p>
+<p>AbstractChannel是整个家族的基类，派生出 AbstractNioChannel、AbstractOioChannel、AbstractEpollChannel 等子类，每一种都代表了不同的 I/O 模型和协议类型。常用的 Channel 实现类有：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421192425Ciqc1F-NO_CABg8ZAAW1jtSV2JU753.png" alt="Drawing 3.png"></p>
 <ul>
-<li><p>NioServerSocketChannel 异步 TCP 服务端。</p>
-</li>
-<li><p>NioSocketChannel 异步 TCP 客户端。</p>
-</li>
-<li><p>OioServerSocketChannel 同步 TCP 服务端。</p>
-</li>
-<li><p>OioSocketChannel 同步 TCP 客户端。</p>
-</li>
-<li><p>NioDatagramChannel 异步 UDP 连接。</p>
-</li>
-<li><p>OioDatagramChannel 同步 UDP 连接。</p>
-</li>
+<li>NioServerSocketChannel 异步 TCP 服务端。</li>
+<li>NioSocketChannel 异步 TCP 客户端。</li>
+<li>OioServerSocketChannel 同步 TCP 服务端。</li>
+<li>OioSocketChannel 同步 TCP 客户端。</li>
+<li>NioDatagramChannel 异步 UDP 连接。</li>
+<li>OioDatagramChannel 同步 UDP 连接。</li>
 </ul>
 <p>随着状态的变化，Channel 处于不同的生命周期，每一种状态都会绑定相应的事件回调。 Channel 最常见的状态所对应的事件回调如下表所示：</p>
 <table>
@@ -313,9 +361,9 @@
 <td align="center">Channel 读取数据完成</td>
 </tr>
 </tbody></table>
-<h3 id="事件调度层"><a href="#事件调度层" class="headerlink" title="事件调度层"></a>事件调度层</h3><p>事件调度层的职责是通过 Reactor 线程模型对各类事件进行聚合处理，通过 Selector 主循环线程集成多种事件（ I/O 事件、信号事件、定时事件等），实际的业务处理逻辑是交由服务编排层中相关的 Handler 完成。</p>
+<h2 id="事件调度层"><a href="#事件调度层" class="headerlink" title="事件调度层"></a>事件调度层</h2><p>事件调度层的职责是通过 Reactor 线程模型对各类事件进行聚合处理，通过 Selector 主循环线程集成多种事件（ I/O 事件、信号事件、定时事件等），实际的业务处理逻辑是交由服务编排层中相关的 Handler 完成。</p>
 <p>事件调度层的核心组件包括 EventLoopGroup、EventLoop。</p>
-<h4 id="EventLoopGroup-amp-EventLoop"><a href="#EventLoopGroup-amp-EventLoop" class="headerlink" title="EventLoopGroup &amp; EventLoop"></a>EventLoopGroup &amp; EventLoop</h4><p>EventLoopGroup 本质是一个线程池，主要负责接收 I/O 请求，并分配线程执行处理请求。在下图中，我为你讲述了 EventLoopGroups、EventLoop 与 Channel 的关系。</p>
+<h3 id="EventLoopGroup-amp-EventLoop"><a href="#EventLoopGroup-amp-EventLoop" class="headerlink" title="EventLoopGroup &amp; EventLoop"></a>EventLoopGroup &amp; EventLoop</h3><p>EventLoopGroup 本质是一个线程池，主要负责接收 I/O 请求，并分配线程执行处理请求。在下图中，我为你讲述了 EventLoopGroups、EventLoop 与 Channel 的关系。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421193433CgqCHl-NPG6APzDfAAbX5ACAFh8001.png" alt="Drawing 4.png"></p>
 <ol>
 <li><p>一个 EventLoopGroup 往往包含一个或者多个 EventLoop。EventLoop 用于处理 Channel 生命周期内的所有 I/O 事件，如 accept、connect、read、write 等 I/O 事件。</p>
@@ -327,9 +375,10 @@
 </ol>
 <p>Netty 提供了<code>EventLoopGroup</code> 的多种实现，如下图所示：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421193624Ciqc1F-NPHWAH8ExAAkQr2tQ9xM350.png" alt="Drawing 5.png"></p>
-<p>EventLoop 则是 EventLoopGroup 的子接口，所以也可以把 EventLoop 理解为 EventLoopGroup，但是它只包含一个 EventLoop 。</p>
-<p>EventLoopGroup 的实现类是 NioEventLoopGroup，NioEventLoopGroup 也是 Netty 中最被推荐使用的线程模型。NioEventLoopGroup 继承于 MultithreadEventLoopGroup，是基于 NIO 模型开发的，可以把 NioEventLoopGroup 理解为一个线程池，每个线程负责处理多个 Channel，而同一个 Channel 只会对应一个线程。</p>
-<p>EventLoopGroup 是 Netty 的核心处理引擎，那么 EventLoopGroup 和 Reactor 线程模型到底是什么关系呢？</p>
+<p><strong>EventLoop 则是 EventLoopGroup 的子接口，所以也可以把 EventLoop 理解为 EventLoopGroup，但是它只包含一个 EventLoop</strong> 。</p>
+<p>EventLoopGroup 的实现类是 NioEventLoopGroup，NioEventLoopGroup 也是 Netty 中最被推荐使用的线程模型。</p>
+<p>NioEventLoopGroup 继承于 MultithreadEventLoopGroup，是基于 NIO 模型开发的，可以把 NioEventLoopGroup 理解为一个线程池，每个线程负责处理多个 Channel，而同一个 Channel 只会对应一个线程。</p>
+<p><strong>EventLoopGroup 是 Netty 的核心处理引擎，那么 EventLoopGroup 和 Reactor 线程模型到底是什么关系呢？</strong></p>
 <p>其实 EventLoopGroup 是 Netty Reactor 线程模型的具体实现方式，Netty 通过创建不同的 EventLoopGroup 参数配置，就可以支持 Reactor 的三种线程模型：</p>
 <ul>
 <li><p>单线程模型：EventLoopGroup 只包含一个 EventLoop，Boss 和 Worker 使用同一个EventLoopGroup；</p>
@@ -339,23 +388,26 @@
 <li><p>主从多线程模型：EventLoopGroup 包含多个 EventLoop，Boss 是主 Reactor，Worker 是从 Reactor，它们分别使用不同的 EventLoopGroup，主 Reactor 负责新的网络连接 Channel 创建，然后把 Channel 注册到从 Reactor。</p>
 </li>
 </ul>
-<h3 id="服务编排层"><a href="#服务编排层" class="headerlink" title="服务编排层"></a>服务编排层</h3><p>服务编排层的职责是负责组装各类服务，它是 Netty 的核心处理链，用以实现网络事件的动态编排和有序传播。</p>
+<h2 id="服务编排层"><a href="#服务编排层" class="headerlink" title="服务编排层"></a>服务编排层</h2><p>服务编排层的职责是负责组装各类服务，它<strong>是 Netty 的核心处理链，用以实现网络事件的动态编排和有序传播</strong>。</p>
 <p>服务编排层的核心组件包括 ChannelPipeline、ChannelHandler、ChannelHandlerContext。</p>
-<h4 id="ChannelPipeline"><a href="#ChannelPipeline" class="headerlink" title="ChannelPipeline"></a>ChannelPipeline</h4><p>ChannelPipeline 是 Netty 的核心编排组件，负责组装各种 ChannelHandler，实际数据的编解码以及加工处理操作都是由 ChannelHandler 完成的。</p>
+<h3 id="ChannelPipeline"><a href="#ChannelPipeline" class="headerlink" title="ChannelPipeline"></a>ChannelPipeline</h3><p>ChannelPipeline 是 Netty 的核心编排组件，负责组装各种 ChannelHandler，实际数据的编解码以及加工处理操作都是由 ChannelHandler 完成的。</p>
 <p>ChannelPipeline 是线程安全的，因为每一个新的 Channel 都会对应绑定一个新的 ChannelPipeline。一个 ChannelPipeline 关联一个 EventLoop，一个 EventLoop 仅会绑定一个线程。</p>
-<p>ChannelPipeline 可以理解为ChannelHandler 的实例列表——内部通过双向链表将不同的 ChannelHandler 链接在一起。当 I/O 读写事件触发时，ChannelPipeline 会依次调用 ChannelHandler 列表对 Channel 的数据进行拦截和处理。</p>
+<p>ChannelPipeline 可以理解为ChannelHandler 的实例列表——内部通过双向链表将不同的 ChannelHandler 链接在一起。</p>
+<p>当 I/O 读写事件触发时，ChannelPipeline 会依次调用 ChannelHandler 列表对 Channel 的数据进行拦截和处理。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421194920CgqCHl-NPJ-AHaUvAA7mpp9SCqY582.png" alt="Drawing 6.png"></p>
 <p>ChannelPipeline 中包含入站 <code>ChannelInboundHandler</code> 和出站 <code>ChannelOutboundHandler</code> 两种处理器，我们结合客户端和服务端的数据收发流程来理解 Netty 的这两个概念。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421195049CgqCHl-NPKaASxvgAAFHMPYQFhM940.png" alt="Drawing 7.png"></p>
 <p>客户端和服务端都有各自的 ChannelPipeline。以客户端为例，数据从客户端发向服务端，该过程称为出站，反之则称为入站。数据入站会由一系列 InBoundHandler 处理，然后再以相反方向的 OutBoundHandler 处理后完成出站。</p>
-<p>经常使用的编码 Encoder 是出站操作，解码 Decoder 是入站操作。服务端接收到客户端数据后，需要先经过 Decoder 入站处理后，再通过 Encoder 出站通知客户端。所以客户端和服务端一次完整的请求应答过程可以分为三个步骤：客户端出站（请求数据）、服务端入站（解析数据并执行业务逻辑）、服务端出站（响应结果）。</p>
-<h4 id="ChannelHandler-amp-ChannelHandlerContext"><a href="#ChannelHandler-amp-ChannelHandlerContext" class="headerlink" title="ChannelHandler &amp; ChannelHandlerContext"></a>ChannelHandler &amp; ChannelHandlerContext</h4><p>数据的编解码工作以及其他转换工作实际都是通过 ChannelHandler 处理的。站在开发者的角度，最需要关注的就是 ChannelHandler，我们很少会直接操作 Channel，都是通过 ChannelHandler 间接完成。</p>
+<p>经常使用的编码 Encoder 是出站操作，解码 Decoder 是入站操作。服务端接收到客户端数据后，需要先经过 Decoder入站处理后，再通过 Encoder 出站通知客户端。</p>
+<p>所以客户端和服务端一次完整的请求应答过程可以分为三个步骤：客户端出站（请求数据）、服务端入站（解析数据并执行业务逻辑）、服务端出站（响应结果）。</p>
+<h3 id="ChannelHandler-amp-ChannelHandlerContext"><a href="#ChannelHandler-amp-ChannelHandlerContext" class="headerlink" title="ChannelHandler &amp; ChannelHandlerContext"></a>ChannelHandler &amp; ChannelHandlerContext</h3><p>数据的编解码工作以及其他转换工作实际都是通过 ChannelHandler处理的。站在开发者的角度，最需要关注的就是 ChannelHandler，我们很少会直接操作 Channel，都是通过 ChannelHandler 间接完成。</p>
 <p> Channel 与 ChannelPipeline 的关系如下图所示：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421195519CgqCHl-NPK-ADq0pAABb1k5Zwu8681.png" alt="Drawing 8.png"></p>
 <p>每创建一个 Channel 都会绑定一个新的 ChannelPipeline，ChannelPipeline 中每加入一个 ChannelHandler 都会绑定一个 ChannelHandlerContext。</p>
-<p>ChannelHandlerContext 用于保存 ChannelHandler 上下文，通过 ChannelHandlerContext 我们可以知道 ChannelPipeline 和 ChannelHandler 的关联关系。ChannelHandlerContext 可以实现 ChannelHandler 之间的交互，ChannelHandlerContext 包含了 ChannelHandler 生命周期的所有事件，如 connect、bind、read、flush、write、close 等。</p>
+<p>ChannelHandlerContext 用于保存 ChannelHandler 上下文，通过 ChannelHandlerContext 我们可以知道 ChannelPipeline 和 ChannelHandler 的关联关系。</p>
+<p>ChannelHandlerContext 可以实现 ChannelHandler 之间的交互，ChannelHandlerContext 包含了 ChannelHandler 生命周期的所有事件，如 connect、bind、read、flush、write、close 等。</p>
 <p>此外，你可以试想这样一个场景，如果每个 ChannelHandler 都有一些通用的逻辑需要实现，没有 ChannelHandlerContext 这层模型抽象，你是不是需要写很多相同的代码呢？</p>
-<h2 id="组件关系梳理"><a href="#组件关系梳理" class="headerlink" title="组件关系梳理"></a>组件关系梳理</h2><p>当你了解每个 Netty 核心组件的概念后。你会好奇这些组件之间如何协作？结合客户端和服务端的交互流程，为你完整地梳理一遍 Netty 内部逻辑的流转。</p>
+<h1 id="组件关系梳理"><a href="#组件关系梳理" class="headerlink" title="组件关系梳理"></a>组件关系梳理</h1><p>当你了解每个 Netty 核心组件的概念后。你会好奇这些组件之间如何协作？结合客户端和服务端的交互流程，为你完整地梳理一遍 Netty 内部逻辑的流转。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421101259Ciqc1F-NPLeAPdjRAADyud16HmQ759.png" alt="Drawing 9.png"></p>
 <ul>
 <li><p>服务端启动初始化时有 Boss EventLoopGroup 和 Worker EventLoopGroup 两个组件，其中 Boss 负责监听网络连接事件。当有新的网络连接事件到达时，则将 Channel 注册到 Worker EventLoopGroup。</p>
@@ -378,13 +430,13 @@
 <li>终端或浏览器发起 HTTP 请求。</li>
 </ol>
 <h2 id="引导器实践指南"><a href="#引导器实践指南" class="headerlink" title="引导器实践指南"></a>引导器实践指南</h2><h3 id="配置线程池"><a href="#配置线程池" class="headerlink" title="配置线程池"></a>配置线程池</h3><p>Netty 是采用 Reactor 模型进行开发的，可以非常容易切换三种 Reactor 模式：<strong>单线程模式</strong>、<strong>多线程模式</strong>、<strong>主从多线程模式</strong>。</p>
-<h4 id="单线程模式"><a href="#单线程模式" class="headerlink" title="单线程模式"></a><strong>单线程模式</strong></h4><p>Reactor 单线程模型所有 I/O 操作都由一个线程完成，所以只需要启动一个 EventLoopGroup 即可。s</p>
+<h4 id="单线程模式"><a href="#单线程模式" class="headerlink" title="单线程模式"></a><strong>单线程模式</strong></h4><p>Reactor 单线程模型所有 I/O 操作都由一个线程完成，所以只需要启动一个 EventLoopGroup 即可。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">EventLoopGroup group = <span class="keyword">new</span> NioEventLoopGroup(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">ServerBootstrap b = <span class="keyword">new</span> ServerBootstrap();</span><br><span class="line"></span><br><span class="line">b.group(group)</span><br></pre></td></tr></table></figure>
 
 <h4 id="多线程模式"><a href="#多线程模式" class="headerlink" title="多线程模式"></a><strong>多线程模式</strong></h4><p>Reactor 单线程模型有非常严重的性能瓶颈，因此 Reactor 多线程模型出现了。在 Netty 中使用 Reactor 多线程模型与单线程模型非常相似，区别是 NioEventLoopGroup 可以不需要任何参数，它默认会启动 2 倍 CPU 核数的线程。当然，你也可以自己手动设置固定的线程数。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">EventLoopGroup group = <span class="keyword">new</span> NioEventLoopGroup();</span><br><span class="line"></span><br><span class="line">ServerBootstrap b = <span class="keyword">new</span> ServerBootstrap();</span><br><span class="line"></span><br><span class="line">b.group(group)</span><br></pre></td></tr></table></figure>
 
-<h4 id="主从多线程模式"><a href="#主从多线程模式" class="headerlink" title="主从多线程模式"></a><strong>主从多线程模式</strong></h4><p>在大多数场景下，我们采用的都是<strong>主从多线程 Reactor 模型</strong>。Boss 是主 Reactor，Worker 是从 Reactor。它们分别使用不同的 NioEventLoopGroup，主 Reactor 负责处理 Accept，然后把 Channel 注册到从 Reactor 上，从 Reactor 主要负责 Channel 生命周期内的所有 I/O 事件。s</p>
+<h4 id="主从多线程模式"><a href="#主从多线程模式" class="headerlink" title="主从多线程模式"></a><strong>主从多线程模式</strong></h4><p>在大多数场景下，我们采用的都是<strong>主从多线程 Reactor 模型</strong>。Boss 是主 Reactor，Worker 是从 Reactor。它们分别使用不同的 NioEventLoopGroup，主 Reactor 负责处理 Accept，然后把 Channel 注册到从 Reactor 上，<strong>从 Reactor</strong> 主要负责 Channel 生命周期内的所有 I/O 事件。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">EventLoopGroup bossGroup = <span class="keyword">new</span> NioEventLoopGroup();</span><br><span class="line">EventLoopGroup workerGroup = <span class="keyword">new</span> NioEventLoopGroup();</span><br><span class="line">ServerBootstrap b = <span class="keyword">new</span> ServerBootstrap();</span><br><span class="line">b.group(bossGroup, workerGroup)</span><br></pre></td></tr></table></figure>
 
 <p>从上述三种 Reactor 线程模型的配置方法可以看出：Netty 线程模型的可定制化程度很高。它只需要简单配置不同的参数，便可启用不同的 Reactor 线程模型，而且无需变更其他的代码，很大程度上降低了用户开发和调试的成本。</p>
@@ -392,11 +444,15 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">b.channel(NioServerSocketChannel.class);</span><br></pre></td></tr></table></figure>
 
 <p>当然，Netty 提供了多种类型的 Channel 实现类，你可以按需切换，例如 OioServerSocketChannel、EpollServerSocketChannel 等。</p>
-<h4 id="注册-ChannelHandler"><a href="#注册-ChannelHandler" class="headerlink" title="注册 ChannelHandler"></a>注册 ChannelHandler</h4><p>在 Netty 中可以通过 ChannelPipeline 去注册多个 ChannelHandler，每个 ChannelHandler 各司其职，这样就可以实现最大化的代码复用，充分体现了 Netty 设计的优雅之处。那么如何通过引导器添加多个 ChannelHandler 呢？其实很简单，我们看下 HTTP 服务器代码示例：</p>
+<h4 id="注册-ChannelHandler"><a href="#注册-ChannelHandler" class="headerlink" title="注册 ChannelHandler"></a>注册 ChannelHandler</h4><p>在 Netty 中可以通过 ChannelPipeline 去注册多个 ChannelHandler，每个 ChannelHandler 各司其职，这样就可以实现最大化的代码复用，充分体现了 Netty 设计的优雅之处。</p>
+<p>那么如何通过引导器添加多个 ChannelHandler 呢？其实很简单，我们看下 HTTP 服务器代码示例：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">b.childHandler(<span class="keyword">new</span> ChannelInitializer&lt;SocketChannel&gt;() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        ch.pipeline()</span><br><span class="line"></span><br><span class="line">                .addLast(<span class="string">&quot;codec&quot;</span>, <span class="keyword">new</span> HttpServerCodec())</span><br><span class="line"></span><br><span class="line">                .addLast(<span class="string">&quot;compressor&quot;</span>, <span class="keyword">new</span> HttpContentCompressor())</span><br><span class="line"></span><br><span class="line">                .addLast(<span class="string">&quot;aggregator&quot;</span>, <span class="keyword">new</span> HttpObjectAggregator(<span class="number">65536</span>)) </span><br><span class="line"></span><br><span class="line">                .addLast(<span class="string">&quot;handler&quot;</span>, <span class="keyword">new</span> HttpServerHandler());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
 
+
+
 <p>ServerBootstrap 的 childHandler() 方法需要注册一个 ChannelHandler。<strong>ChannelInitializer</strong>是实现了 ChannelHandler<strong>接口的匿名类</strong>，通过实例化 ChannelInitializer 作为 ServerBootstrap 的参数。</p>
-<p>Channel 初始化时都会绑定一个 Pipeline，它主要用于服务编排。Pipeline 管理了多个 ChannelHandler。I/O 事件依次在 ChannelHandler 中传播，ChannelHandler 负责业务逻辑处理。上述 HTTP 服务器示例中使用链式的方式加载了多个 ChannelHandler，包含<strong>HTTP 编解码处理器、HTTPContent 压缩处理器、HTTP 消息聚合处理器、自定义业务逻辑处理器</strong>。</p>
+<p>Channel 初始化时都会绑定一个 Pipeline，Pipeline 管理了多个 ChannelHandler，它主要用于服务编排。I/O 事件依次在 ChannelHandler 中传播，ChannelHandler 负责业务逻辑处理。</p>
+<p>上述 HTTP 服务器示例中使用链式的方式加载了多个 ChannelHandler，包含<strong>HTTP 编解码处理器、HTTPContent 压缩处理器、HTTP 消息聚合处理器、自定义业务逻辑处理器</strong>。</p>
 <p>常用的参数设置如下：</p>
 <table>
 <thead>
@@ -434,11 +490,13 @@
 <td>建立连接的超时时间</td>
 </tr>
 </tbody></table>
-<h4 id="设置-Channel-参数"><a href="#设置-Channel-参数" class="headerlink" title="设置 Channel 参数"></a>设置 Channel 参数</h4><p>Netty 提供了十分便捷的方法，用于设置 Channel 参数。关于 Channel 的参数数量非常多，如果每个参数都需要自己设置，那会非常繁琐。幸运的是 Netty 提供了默认参数设置，实际场景下默认参数已经满足我们的需求，我们仅需要修改自己关系的参数即可。</p>
+<h4 id="设置-Channel-参数"><a href="#设置-Channel-参数" class="headerlink" title="设置 Channel 参数"></a>设置 Channel 参数</h4><p>Netty 提供了十分便捷的方法，用于设置 Channel 参数。关于 Channel 的参数数量非常多，如果每个参数都需要自己设置，那会非常繁琐。幸运的是 Netty 提供了默认参数设置，实际场景下默认参数已经满足我们的需求，我们仅需要修改自己关心的参数即可。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">b.option(ChannelOption.SO_KEEPALIVE, <span class="keyword">true</span>);</span><br></pre></td></tr></table></figure>
 
+
+
 <p>ServerBootstrap 设置 Channel 属性有<strong>option</strong>和<strong>childOption</strong>两个方法，option 主要负责设置 Boss 线程组，而 childOption 对应的是 Worker 线程组。</p>
-<h3 id="端口绑定"><a href="#端口绑定" class="headerlink" title="端口绑定"></a>端口绑定</h3><p>在完成上述 Netty 的配置之后，bind() 方法会真正触发启动，sync() 方法则会阻塞，直至整个启动过程完成。</p>
+<h4 id="端口绑定"><a href="#端口绑定" class="headerlink" title="端口绑定"></a>端口绑定</h4><p>在完成上述 Netty 的配置之后，bind() 方法会真正触发启动，sync() 方法则会阻塞，直至整个启动过程完成。</p>
 <h1 id="EventLoop实现原理"><a href="#EventLoop实现原理" class="headerlink" title="EventLoop实现原理"></a>EventLoop实现原理</h1><h2 id="EventLoop是什么"><a href="#EventLoop是什么" class="headerlink" title="EventLoop是什么"></a>EventLoop是什么</h2><p>EventLoop这个概念其实并不是Netty独有的，它是一种<strong>事件等待和处理的程序模型</strong>，可以解决多线程资源消耗高的问题。</p>
 <p>EventLoop通用的运行模式如下图所示：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210421222559image-20210421222559181.png" alt="image-20210421222559181"></p>
@@ -601,7 +659,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89%E6%8B%A9-Netty%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">为什么选择 Netty？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AB%98%E6%80%A7%E8%83%BD%EF%BC%8C%E4%BD%8E%E5%BB%B6%E8%BF%9F"><span class="nav-number">1.1.</span> <span class="nav-text">高性能，低延迟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E7%BE%8E%E5%BC%A5%E8%A1%A5-Java-NIO-%E7%9A%84%E7%BC%BA%E9%99%B7"><span class="nav-number">1.2.</span> <span class="nav-text">完美弥补 Java NIO 的缺陷</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E4%BD%8E%E7%9A%84%E8%B5%84%E6%BA%90%E6%B6%88%E8%80%97"><span class="nav-number">1.3.</span> <span class="nav-text">更低的资源消耗</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Netty-%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84%E8%84%89%E7%BB%9C"><span class="nav-number">2.</span> <span class="nav-text">Netty 整体架构脉络</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Netty-%E6%95%B4%E4%BD%93%E7%BB%93%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">Netty 整体结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Netty-%E9%80%BB%E8%BE%91%E6%9E%B6%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">Netty 逻辑架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%E5%B1%82"><span class="nav-number">2.2.1.</span> <span class="nav-text">网络通信层</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#BootStrap-amp-ServerBootStrap"><span class="nav-number">2.2.1.1.</span> <span class="nav-text">BootStrap &amp; ServerBootStrap</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Channel"><span class="nav-number">2.2.1.2.</span> <span class="nav-text">Channel</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E8%B0%83%E5%BA%A6%E5%B1%82"><span class="nav-number">2.2.2.</span> <span class="nav-text">事件调度层</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#EventLoopGroup-amp-EventLoop"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">EventLoopGroup &amp; EventLoop</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%BC%96%E6%8E%92%E5%B1%82"><span class="nav-number">2.2.3.</span> <span class="nav-text">服务编排层</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ChannelPipeline"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">ChannelPipeline</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ChannelHandler-amp-ChannelHandlerContext"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">ChannelHandler &amp; ChannelHandlerContext</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%84%E4%BB%B6%E5%85%B3%E7%B3%BB%E6%A2%B3%E7%90%86"><span class="nav-number">2.3.</span> <span class="nav-text">组件关系梳理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%95%E5%AF%BC%E5%99%A8"><span class="nav-number">3.</span> <span class="nav-text">引导器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E5%AF%BC%E5%99%A8%E5%AE%9E%E8%B7%B5%E6%8C%87%E5%8D%97"><span class="nav-number">3.1.</span> <span class="nav-text">引导器实践指南</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%B1%A0"><span class="nav-number">3.1.1.</span> <span class="nav-text">配置线程池</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%95%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.1.1.1.</span> <span class="nav-text">单线程模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.1.1.2.</span> <span class="nav-text">多线程模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E4%BB%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.1.1.3.</span> <span class="nav-text">主从多线程模式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Channel-%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">3.1.2.</span> <span class="nav-text">Channel 初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE-Channel-%E7%B1%BB%E5%9E%8B"><span class="nav-number">3.1.2.1.</span> <span class="nav-text">设置 Channel 类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C-ChannelHandler"><span class="nav-number">3.1.2.2.</span> <span class="nav-text">注册 ChannelHandler</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE-Channel-%E5%8F%82%E6%95%B0"><span class="nav-number">3.1.2.3.</span> <span class="nav-text">设置 Channel 参数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AB%AF%E5%8F%A3%E7%BB%91%E5%AE%9A"><span class="nav-number">3.1.3.</span> <span class="nav-text">端口绑定</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#EventLoop%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">4.</span> <span class="nav-text">EventLoop实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#EventLoop%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">4.1.</span> <span class="nav-text">EventLoop是什么</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Netty%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0EventLoop"><span class="nav-number">4.1.1.</span> <span class="nav-text">Netty如何实现EventLoop</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86%E6%9C%BA%E5%88%B6"><span class="nav-number">4.1.2.</span> <span class="nav-text">事件处理机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%9C%BA%E5%88%B6"><span class="nav-number">4.1.3.</span> <span class="nav-text">任务处理机制</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EventLoop-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">4.2.</span> <span class="nav-text">EventLoop 最佳实践</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ChannelPipeline-%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">5.</span> <span class="nav-text">ChannelPipeline 实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ChannelPipeline-%E5%86%85%E9%83%A8%E7%BB%93%E6%9E%84"><span class="nav-number">5.0.1.</span> <span class="nav-text">ChannelPipeline 内部结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ChannelHandler%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1"><span class="nav-number">5.1.</span> <span class="nav-text">ChannelHandler接口设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E4%BC%A0%E6%92%AD%E6%9C%BA%E5%88%B6"><span class="nav-number">5.2.</span> <span class="nav-text">异常传播机制</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89%E6%8B%A9-Netty%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">为什么选择 Netty？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AB%98%E6%80%A7%E8%83%BD%EF%BC%8C%E4%BD%8E%E5%BB%B6%E8%BF%9F"><span class="nav-number">1.1.</span> <span class="nav-text">高性能，低延迟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E7%BE%8E%E5%BC%A5%E8%A1%A5-Java-NIO-%E7%9A%84%E7%BC%BA%E9%99%B7"><span class="nav-number">1.2.</span> <span class="nav-text">完美弥补 Java NIO 的缺陷</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E4%BD%8E%E7%9A%84%E8%B5%84%E6%BA%90%E6%B6%88%E8%80%97"><span class="nav-number">1.3.</span> <span class="nav-text">更低的资源消耗</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Netty-%E6%95%B4%E4%BD%93%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">Netty 整体结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Netty-%E9%80%BB%E8%BE%91%E6%9E%B6%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">Netty 逻辑架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%E5%B1%82"><span class="nav-number">3.1.</span> <span class="nav-text">网络通信层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#BootStrap-amp-ServerBootStrap"><span class="nav-number">3.1.1.</span> <span class="nav-text">BootStrap &amp; ServerBootStrap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Channel"><span class="nav-number">3.1.2.</span> <span class="nav-text">Channel</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E8%B0%83%E5%BA%A6%E5%B1%82"><span class="nav-number">3.2.</span> <span class="nav-text">事件调度层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#EventLoopGroup-amp-EventLoop"><span class="nav-number">3.2.1.</span> <span class="nav-text">EventLoopGroup &amp; EventLoop</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%BC%96%E6%8E%92%E5%B1%82"><span class="nav-number">3.3.</span> <span class="nav-text">服务编排层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ChannelPipeline"><span class="nav-number">3.3.1.</span> <span class="nav-text">ChannelPipeline</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ChannelHandler-amp-ChannelHandlerContext"><span class="nav-number">3.3.2.</span> <span class="nav-text">ChannelHandler &amp; ChannelHandlerContext</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%84%E4%BB%B6%E5%85%B3%E7%B3%BB%E6%A2%B3%E7%90%86"><span class="nav-number">4.</span> <span class="nav-text">组件关系梳理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%95%E5%AF%BC%E5%99%A8"><span class="nav-number">5.</span> <span class="nav-text">引导器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E5%AF%BC%E5%99%A8%E5%AE%9E%E8%B7%B5%E6%8C%87%E5%8D%97"><span class="nav-number">5.1.</span> <span class="nav-text">引导器实践指南</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%B1%A0"><span class="nav-number">5.1.1.</span> <span class="nav-text">配置线程池</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%95%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">5.1.1.1.</span> <span class="nav-text">单线程模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">5.1.1.2.</span> <span class="nav-text">多线程模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E4%BB%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">5.1.1.3.</span> <span class="nav-text">主从多线程模式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Channel-%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">5.1.2.</span> <span class="nav-text">Channel 初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE-Channel-%E7%B1%BB%E5%9E%8B"><span class="nav-number">5.1.2.1.</span> <span class="nav-text">设置 Channel 类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C-ChannelHandler"><span class="nav-number">5.1.2.2.</span> <span class="nav-text">注册 ChannelHandler</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE-Channel-%E5%8F%82%E6%95%B0"><span class="nav-number">5.1.2.3.</span> <span class="nav-text">设置 Channel 参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AB%AF%E5%8F%A3%E7%BB%91%E5%AE%9A"><span class="nav-number">5.1.2.4.</span> <span class="nav-text">端口绑定</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#EventLoop%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">6.</span> <span class="nav-text">EventLoop实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#EventLoop%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">6.1.</span> <span class="nav-text">EventLoop是什么</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Netty%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0EventLoop"><span class="nav-number">6.1.1.</span> <span class="nav-text">Netty如何实现EventLoop</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86%E6%9C%BA%E5%88%B6"><span class="nav-number">6.1.2.</span> <span class="nav-text">事件处理机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%9C%BA%E5%88%B6"><span class="nav-number">6.1.3.</span> <span class="nav-text">任务处理机制</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EventLoop-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">6.2.</span> <span class="nav-text">EventLoop 最佳实践</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ChannelPipeline-%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">7.</span> <span class="nav-text">ChannelPipeline 实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ChannelPipeline-%E5%86%85%E9%83%A8%E7%BB%93%E6%9E%84"><span class="nav-number">7.0.1.</span> <span class="nav-text">ChannelPipeline 内部结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ChannelHandler%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1"><span class="nav-number">7.1.</span> <span class="nav-text">ChannelHandler接口设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E4%BC%A0%E6%92%AD%E6%9C%BA%E5%88%B6"><span class="nav-number">7.2.</span> <span class="nav-text">异常传播机制</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -617,7 +675,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">72</span>
+          <span class="site-state-item-count">73</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -630,7 +688,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
