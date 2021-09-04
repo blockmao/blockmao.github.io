@@ -1,137 +1,408 @@
-<!doctype html>
-<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>HBase：基础篇 - 牛觅博客</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="牛觅博客"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="牛觅博客"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content=""><meta property="og:type" content="blog"><meta property="og:title" content="HBase：基础篇"><meta property="og:url" content="http://blog.blockmao.cn/posts/33835.html"><meta property="og:site_name" content="牛觅博客"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041112574420210411125741qJMsaL.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041112571779aa1b93b1de4ba9935dd57bbe45383a~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257173a745337dfa24cfc8e79ab735f5a3577~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257178e158db0c6d04580b0d80f4bea373f11~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717f5ac97be11da47d29d2cf5cf166f51bc~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717287e460fb7224d9783acf6f2402b27ba~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717cb975e7f94ae4a58bf86b9b111719d18~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717f2e823dbc70f4027b7a191dc69884a9e~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257170e3a0f7dd97f4a91a9fe6fe69e358860~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125718862d92702896437c84fe3e0161e477ad~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125718cf6f75a09e0f4272ae3ee08adaf4b1c8~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125718eb3c6a6a76894625bd7c7f8e6a49d696~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125719b3a3f2402c2a4e58a6d7d622d425e2f7~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257196350c5805f8b483bbd5cbf4e48ba24ce~tplv-k3u1fbpfcp-zoom-1.image"><meta property="article:published_time" content="2021-04-11T04:15:39.000Z"><meta property="article:modified_time" content="2021-05-25T04:03:02.208Z"><meta property="article:author" content="牛觅"><meta property="twitter:card" content="summary"><meta property="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/2021041112574420210411125741qJMsaL.jpg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://blog.blockmao.cn/posts/33835.html"},"headline":"HBase：基础篇","image":["https://gitee.com/niumi/drawing/raw/master/2021041112574420210411125741qJMsaL.jpg"],"datePublished":"2021-04-11T04:15:39.000Z","dateModified":"2021-05-25T04:03:02.208Z","author":{"@type":"Person","name":"牛觅"},"publisher":{"@type":"Organization","name":"牛觅博客","logo":{"@type":"ImageObject","url":"http://blog.blockmao.cn/img/logo.svg"}},"description":""}</script><link rel="canonical" href="http://blog.blockmao.cn/posts/33835.html"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.2/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css"><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script><!--!--><!--!--><meta name="generator" content="Hexo 5.4.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="牛觅博客" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-8-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-04-11T04:15:39.000Z" title="2021/4/11下午12:15:39">2021-04-11</time></span><span class="level-item">Updated&nbsp;<time dateTime="2021-05-25T04:03:02.208Z" title="2021/5/25下午12:03:02">2021-05-25</time></span><span class="level-item"><a class="link-muted" href="/categories/Hbase/">Hbase</a></span><span class="level-item">32 minutes read (About 4762 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">HBase：基础篇</h1><div class="content"><p><img src="https://gitee.com/niumi/drawing/raw/master/2021041112574420210411125741qJMsaL.jpg" alt="20210411125741qJMsaL"></p>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="HBase：基础篇">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/33835.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041112574420210411125741qJMsaL.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041112571779aa1b93b1de4ba9935dd57bbe45383a~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257173a745337dfa24cfc8e79ab735f5a3577~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257178e158db0c6d04580b0d80f4bea373f11~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717f5ac97be11da47d29d2cf5cf166f51bc~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717287e460fb7224d9783acf6f2402b27ba~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717cb975e7f94ae4a58bf86b9b111719d18~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125717f2e823dbc70f4027b7a191dc69884a9e~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257170e3a0f7dd97f4a91a9fe6fe69e358860~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125718862d92702896437c84fe3e0161e477ad~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125718cf6f75a09e0f4272ae3ee08adaf4b1c8~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125718eb3c6a6a76894625bd7c7f8e6a49d696~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411125719b3a3f2402c2a4e58a6d7d622d425e2f7~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111257196350c5805f8b483bbd5cbf4e48ba24ce~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="article:published_time" content="2021-04-11T04:15:39.000Z">
+<meta property="article:modified_time" content="2021-05-25T04:03:02.208Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/2021041112574420210411125741qJMsaL.jpg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/33835.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>HBase：基础篇 | 牛觅博客</title>
+  
+
+
+  <script data-pjax>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/33835.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HBase：基础篇
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-11 12:15:39" itemprop="dateCreated datePublished" datetime="2021-04-11T12:15:39+08:00">2021-04-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-05-25 12:03:02" itemprop="dateModified" datetime="2021-05-25T12:03:02+08:00">2021-05-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Hbase/" itemprop="url" rel="index"><span itemprop="name">Hbase</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/2021041112574420210411125741qJMsaL.jpg" alt="20210411125741qJMsaL"></p>
 <span id="more"></span>
 
 
 
-<h2 id="HBase-概述"><a href="#HBase-概述" class="headerlink" title="HBase 概述"></a>HBase 概述</h2><p><strong>HBase（Hadoop Database）是一个高可靠、高性能、面向列、可伸缩的KV分布式数据库</strong>，利用HBase技术可在廉价PC上搭建起大规模结构化存储集群。</p>
-<p>HBase参考Google的BigTable建模，使用类似GFS的HDFS作为底层文件存储系统，在其上可以运行MapReduce批量处理数据，使用ZooKeeper作为协同服务组件。</p>
-<h3 id="发展历史"><a href="#发展历史" class="headerlink" title="发展历史"></a>发展历史</h3><p>google“三篇论文”——GFS、MapReduce、BigTable。</p>
+<h2 id="HBase- 概述"><a href="#HBase- 概述" class="headerlink" title="HBase 概述"></a>HBase 概述</h2><p><strong>HBase（Hadoop Database）是一个高可靠、高性能、面向列、可伸缩的 KV 分布式数据库</strong>，利用 HBase 技术可在廉价 PC 上搭建起大规模结构化存储集群。</p>
+<p>HBase 参考 Google 的 BigTable 建模，使用类似 GFS 的 HDFS 作为底层文件存储系统，在其上可以运行 MapReduce 批量处理数据，使用 ZooKeeper 作为协同服务组件。</p>
+<h3 id="发展历史"><a href="# 发展历史" class="headerlink" title="发展历史"></a>发展历史</h3><p>google“三篇论文”——GFS、MapReduce、BigTable。</p>
 <ul>
 <li><p>GFS: （The Google File System）：揭示了如何在大量廉价机器基础上存储海量数据。</p>
 </li>
 <li><p>MapReduce（Simplef iedData Processing on Large Clusters）：论文论述了如何在大量廉价机器的基础上稳定地实现超大规模的并行数据处理。</p>
 </li>
-<li><p>BigTable: A Distributed StorageSystem for Structured Data 》，用于解决Google内部海量结构化数据的存储以及高效读写问题。</p>
+<li><p>BigTable: A Distributed StorageSystem for Structured Data 》，用于解决 Google 内部海量结构化数据的存储以及高效读写问题。</p>
 </li>
 </ul>
-<p>Apache HBase最初是Powerset公司为了处理自然语言搜索产生的海量数据而开展的项目，由Chad Walters和Jim Kellerman两人发起，经过两年的发展之后被Apache基金会收录为顶级项目，同时成为非常活跃、影响重大的项目。</p>
+<p>Apache HBase 最初是 Powerset 公司为了处理自然语言搜索产生的海量数据而开展的项目，由 Chad Walters 和 Jim Kellerman 两人发起，经过两年的发展之后被 Apache 基金会收录为顶级项目，同时成为非常活跃、影响重大的项目。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/2021041112571779aa1b93b1de4ba9935dd57bbe45383a~tplv-k3u1fbpfcp-zoom-1.image"></p>
-<p>2015年2月社区发布了1.0.0版本，规范了Hbase的版本号，此后的版本号都统一遵循semanticversioning语义，如下图：</p>
+<p>2015 年 2 月社区发布了 1.0.0 版本，规范了 Hbase 的版本号，此后的版本号都统一遵循 semanticversioning 语义，如下图：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/202104111257173a745337dfa24cfc8e79ab735f5a3577~tplv-k3u1fbpfcp-zoom-1.image"></p>
-<p>可以理解为MAJOR、MINOR相同的情况下，PATCH版本越大，系统越可靠。</p>
-<h3 id="Hbase优缺点"><a href="#Hbase优缺点" class="headerlink" title="Hbase优缺点"></a>Hbase优缺点</h3><h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h4><ul>
-<li><p><strong>容量巨大</strong>：HBase的单表可以支持千亿行、百万列的数据规模，数据容量可以达到TB甚至PB级别。传统的关系型数据库，如Oracle和MySQL等，如果单表记录条数超过亿行，读写性能都会急剧下降，在HBase中并不会出现这样的问题。</p>
+<p>可以理解为 MAJOR、MINOR 相同的情况下，PATCH 版本越大，系统越可靠。</p>
+<h3 id="Hbase 优缺点"><a href="#Hbase 优缺点" class="headerlink" title="Hbase 优缺点"></a>Hbase 优缺点 </h3><h4 id="优点"><a href="# 优点" class="headerlink" title="优点"></a> 优点</h4><ul>
+<li><p><strong>容量巨大</strong>：HBase 的单表可以支持千亿行、百万列的数据规模，数据容量可以达到 TB 甚至 PB 级别。传统的关系型数据库，如 Oracle 和 MySQL 等，如果单表记录条数超过亿行，读写性能都会急剧下降，在 HBase 中并不会出现这样的问题。</p>
 </li>
-<li><p><strong>良好的可扩展性</strong>：HBase集群可以非常方便地实现集群容量扩展，主要包括数据存储节点扩展以及读写服务节点扩展。HBase底层数据存储依赖于HDFS系统，HDFS可以通过简单地增加DataNode实现扩展，HBase读写服务节点也一样，可以通过简单的增加RegionServer节点实现计算层的扩展。</p>
+<li><p><strong>良好的可扩展性</strong>：HBase 集群可以非常方便地实现集群容量扩展，主要包括数据存储节点扩展以及读写服务节点扩展。HBase 底层数据存储依赖于 HDFS 系统，HDFS 可以通过简单地增加 DataNode 实现扩展，HBase 读写服务节点也一样，可以通过简单的增加 RegionServer 节点实现计算层的扩展。</p>
 </li>
-<li><p><strong>稀疏性</strong>：HBase支持大量稀疏存储，即允许大量列值为空，并不占用任何存储空间。这与传统数据库不同，传统数据库对于空值的处理要占用一定的存储空间，这会造成一定程度的存储空间浪费。因此可以使用HBase存储多至上百万列的数据，即使表中存在大量的空值，也不需要任何额外空间。</p>
+<li><p><strong>稀疏性</strong>：HBase 支持大量稀疏存储，即允许大量列值为空，并不占用任何存储空间。这与传统数据库不同，传统数据库对于空值的处理要占用一定的存储空间，这会造成一定程度的存储空间浪费。因此可以使用 HBase 存储多至上百万列的数据，即使表中存在大量的空值，也不需要任何额外空间。</p>
 </li>
-<li><p><strong>高性能</strong>：HBase目前主要擅长于OLTP场景，数据写操作性能强劲，对于随机单点读以及小范围的扫描读，其性能也能够得到保证。对于大范围的扫描读可以使用MapReduce提供的API，以便实现更高效的并行扫描。</p>
+<li><p><strong>高性能</strong>：HBase 目前主要擅长于 OLTP 场景，数据写操作性能强劲，对于随机单点读以及小范围的扫描读，其性能也能够得到保证。对于大范围的扫描读可以使用 MapReduce 提供的 API，以便实现更高效的并行扫描。</p>
 </li>
-<li><p><strong>多版本</strong>：HBase支持多版本特性，即一个KV可以同时保留多个版本，用户可以根据需要选择最新版本或者某个历史版本。</p>
+<li><p><strong>多版本</strong>：HBase 支持多版本特性，即一个 KV 可以同时保留多个版本，用户可以根据需要选择最新版本或者某个历史版本。</p>
 </li>
-<li><p><strong>Hadoop原生支持</strong>：HBase是Hadoop生态中的核心成员之一，很多生态组件都可以与其直接对接。</p>
-</li>
-</ul>
-<h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h4><ul>
-<li><p><strong>HBase本身不支持很复杂的聚合运算（如Join、GroupBy等）</strong>。如果业务中需要使用聚合运算，可以在HBase之上架设Phoenix组件或者Spark组件，前者主要应用于小规模聚合的OLTP场景，后者应用于大规模聚合的OLAP场景。</p>
-</li>
-<li><p><strong>HBase本身并没有实现二级索引功能，所以不支持二级索引查找</strong>。好在针对HBase实现的第三方二级索引方案非常丰富，比如目前比较普遍的使用Phoenix提供的二级索引功能。</p>
-</li>
-<li><p><strong>HBase原生不支持全局跨行事务，只支持单行事务模型</strong>。同样，可以使用Phoenix提供的全局事务模型组件来弥补HBase的这个缺陷。</p>
+<li><p><strong>Hadoop 原生支持</strong>：HBase 是 Hadoop 生态中的核心成员之一，很多生态组件都可以与其直接对接。</p>
 </li>
 </ul>
-<h3 id="数据模型"><a href="#数据模型" class="headerlink" title="数据模型"></a>数据模型</h3><h4 id="逻辑视图"><a href="#逻辑视图" class="headerlink" title="逻辑视图"></a>逻辑视图</h4><p>在具体了解逻辑视图之前有必要先看看HBase中的基本概念。</p>
+<h4 id="缺点"><a href="# 缺点" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li><p><strong>HBase 本身不支持很复杂的聚合运算（如 Join、GroupBy 等）</strong>。如果业务中需要使用聚合运算，可以在 HBase 之上架设 Phoenix 组件或者 Spark 组件，前者主要应用于小规模聚合的 OLTP 场景，后者应用于大规模聚合的 OLAP 场景。</p>
+</li>
+<li><p><strong>HBase 本身并没有实现二级索引功能，所以不支持二级索引查找</strong>。好在针对 HBase 实现的第三方二级索引方案非常丰富，比如目前比较普遍的使用 Phoenix 提供的二级索引功能。</p>
+</li>
+<li><p><strong>HBase 原生不支持全局跨行事务，只支持单行事务模型</strong>。同样，可以使用 Phoenix 提供的全局事务模型组件来弥补 HBase 的这个缺陷。</p>
+</li>
+</ul>
+<h3 id="数据模型"><a href="# 数据模型" class="headerlink" title="数据模型"></a>数据模型 </h3><h4 id="逻辑视图"><a href="# 逻辑视图" class="headerlink" title="逻辑视图"></a> 逻辑视图 </h4><p> 在具体了解逻辑视图之前有必要先看看 HBase 中的基本概念。</p>
 <ul>
 <li><p><strong>table</strong>：一个表包含多行数据。</p>
 </li>
 <li><p><strong>RowKey</strong>：表中每条记录的主键；</p>
 </li>
-<li><p><strong>Column Family</strong>：列族，将表进行横向切割，后面简称CF；</p>
+<li><p><strong>Column Family</strong>：列族，将表进行横向切割，后面简称 CF；</p>
 </li>
 <li><p><strong>Column</strong>：属于某一个列族，可动态添加列；</p>
 </li>
-<li><p><strong>Version Number</strong>：类型为Long，默认值是系统时间戳，可由用户自定义；</p>
+<li><p><strong>Version Number</strong>：类型为 Long，默认值是系统时间戳，可由用户自定义；</p>
 </li>
 <li><p><strong>Value</strong>：真实的数据。</p>
 </li>
 <li><p><strong>Region</strong>：一段数据的集合；</p>
 </li>
 </ul>
-<p><img src="https://gitee.com/niumi/drawing/raw/master/202104111257178e158db0c6d04580b0d80f4bea373f11~tplv-k3u1fbpfcp-zoom-1.image" alt="HBase逻辑视图"></p>
-<h4 id="物理视图"><a href="#物理视图" class="headerlink" title="物理视图"></a>物理视图</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125717f5ac97be11da47d29d2cf5cf166f51bc~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202104111257178e158db0c6d04580b0d80f4bea373f11~tplv-k3u1fbpfcp-zoom-1.image" alt="HBase 逻辑视图"></p>
+<h4 id="物理视图"><a href="# 物理视图" class="headerlink" title="物理视图"></a>物理视图</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125717f5ac97be11da47d29d2cf5cf166f51bc~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125717287e460fb7224d9783acf6f2402b27ba~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
-<h2 id="HBase-原理"><a href="#HBase-原理" class="headerlink" title="HBase 原理"></a>HBase 原理</h2><h3 id="LSM"><a href="#LSM" class="headerlink" title="LSM"></a>LSM</h3><p>TTDO</p>
-<h3 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125717cb975e7f94ae4a58bf86b9b111719d18~tplv-k3u1fbpfcp-zoom-1.image"></p>
-<h4 id="HBase客户端"><a href="#HBase客户端" class="headerlink" title="HBase客户端"></a>HBase客户端</h4><ol>
-<li>HBase客户端（Client）提供了Shell命令行接口、原生Java API编程接口、Thrift/REST API编程接口以及MapReduce编程接口</li>
-<li>HBase客户端支持所有常见的DML操作以及DDL操作，即数据的增删改查和表的日常维护等。其中Thrift/REST API主要用于支持非Java的上层业务需求，MapReduce接口主要用于批量数据导入以及批量数据读取。</li>
+<h2 id="HBase- 原理"><a href="#HBase- 原理" class="headerlink" title="HBase 原理"></a>HBase 原理</h2><h3 id="LSM"><a href="#LSM" class="headerlink" title="LSM"></a>LSM</h3><p>TTDO</p>
+<h3 id="整体架构"><a href="# 整体架构" class="headerlink" title="整体架构"></a>整体架构</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125717cb975e7f94ae4a58bf86b9b111719d18~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<h4 id="HBase 客户端"><a href="#HBase 客户端" class="headerlink" title="HBase 客户端"></a>HBase 客户端</h4><ol>
+<li>HBase 客户端（Client）提供了 Shell 命令行接口、原生 Java API 编程接口、Thrift/REST API 编程接口以及 MapReduce 编程接口</li>
+<li>HBase 客户端支持所有常见的 DML 操作以及 DDL 操作，即数据的增删改查和表的日常维护等。其中 Thrift/REST API 主要用于支持非 Java 的上层业务需求，MapReduce 接口主要用于批量数据导入以及批量数据读取。</li>
 </ol>
 <blockquote>
-<p>HBase客户端访问数据行之前，首先需要通过元数据表定位目标数据所在RegionServer，之后才会发送请求到该RegionServer。同时这些元数据会被缓存在客户端本地，以方便之后的请求访问。如果集群RegionServer发生宕机或者执行了负载均衡等，从而导致数据分片发生迁移，客户端需要重新请求最新的元数据并缓存在本地。</p>
+<p>HBase 客户端访问数据行之前，首先需要通过元数据表定位目标数据所在 RegionServer，之后才会发送请求到该 RegionServer。同时这些元数据会被缓存在客户端本地，以方便之后的请求访问。如果集群 RegionServer 发生宕机或者执行了负载均衡等，从而导致数据分片发生迁移，客户端需要重新请求最新的元数据并缓存在本地。</p>
 </blockquote>
 <h4 id="ZooKeeper"><a href="#ZooKeeper" class="headerlink" title="ZooKeeper"></a>ZooKeeper</h4><ol>
-<li><p>实现Master高可用：通常情况下系统中只有一个Master工作，一旦ActiveMaster由于异常宕机，ZooKeeper会检测到该宕机事件，并通过一定机制选举出新的Master，保证系统正常运转。</p>
+<li><p>实现 Master 高可用：通常情况下系统中只有一个 Master 工作，一旦 ActiveMaster 由于异常宕机，ZooKeeper 会检测到该宕机事件，并通过一定机制选举出新的 Master，保证系统正常运转。</p>
 </li>
-<li><p>管理系统核心元数据：比如，管理当前系统中正常工作的RegionServer集合，保存系统元数据表hbase:meta所在的RegionServer地址等。</p>
+<li><p>管理系统核心元数据：比如，管理当前系统中正常工作的 RegionServer 集合，保存系统元数据表 hbase:meta 所在的 RegionServer 地址等。</p>
 </li>
-<li><p>参与RegionServer宕机恢复：ZooKeeper通过心跳可以感知到RegionServer是否宕机，并在宕机后通知Master进行宕机处理。</p>
+<li><p>参与 RegionServer 宕机恢复：ZooKeeper 通过心跳可以感知到 RegionServer 是否宕机，并在宕机后通知 Master 进行宕机处理。</p>
 </li>
-<li><p>实现分布式表锁：HBase中对一张表进行各种管理操作（比如alter操作）需要先加表锁，防止其他用户对同一张表进行管理操作，造成表状态不一致。和其他RDBMS表不同，HBase中的表通常都是分布式存储，ZooKeeper可以通过特定机制实现分布式表锁。</p>
+<li><p>实现分布式表锁：HBase 中对一张表进行各种管理操作（比如 alter 操作）需要先加表锁，防止其他用户对同一张表进行管理操作，造成表状态不一致。和其他 RDBMS 表不同，HBase 中的表通常都是分布式存储，ZooKeeper 可以通过特定机制实现分布式表锁。</p>
 </li>
 </ol>
 <h4 id="Master"><a href="#Master" class="headerlink" title="Master"></a>Master</h4><ol>
-<li>处理用户的各种管理请求，包括建表、修改表、权限操作、切分表、合并数据分片以及Compaction等。</li>
-<li>管理集群中所有RegionServer，包括RegionServer中Region的负载均衡、RegionServer的宕机恢复以及Region的迁移等。</li>
-<li>清理过期日志以及文件，Master会每隔一段时间检查HDFS中HLog是否过期、HFile是否已经被删除，并在过期之后将其删除。</li>
+<li>处理用户的各种管理请求，包括建表、修改表、权限操作、切分表、合并数据分片以及 Compaction 等。</li>
+<li>管理集群中所有 RegionServer，包括 RegionServer 中 Region 的负载均衡、RegionServer 的宕机恢复以及 Region 的迁移等。</li>
+<li>清理过期日志以及文件，Master 会每隔一段时间检查 HDFS 中 HLog 是否过期、HFile 是否已经被删除，并在过期之后将其删除。</li>
 </ol>
-<h4 id="RegionServer"><a href="#RegionServer" class="headerlink" title="RegionServer"></a>RegionServer</h4><p>  RegionServer主要用来响应用户的IO请求，是HBase中最核心的模块，由WAL(HLog)、BlockCache以及多个Region构成。</p>
+<h4 id="RegionServer"><a href="#RegionServer" class="headerlink" title="RegionServer"></a>RegionServer</h4><p>  RegionServer 主要用来响应用户的 IO 请求，是 HBase 中最核心的模块，由 WAL(HLog)、BlockCache 以及多个 Region 构成。</p>
 <ul>
-<li><p><strong>WAL(HLog</strong>)：HLog在HBase中有两个核心作用——其一，用于实现数据的高可靠性，HBase数据随机写入时，并非直接写入HFile数据文件，而是先写入缓存，再异步刷新落盘。为了防止缓存数据丢失，数据写入缓存之前需要首先顺序写入HLog，这样，即使缓存数据丢失，仍然可以通过HLog日志恢复；其二，用于实现HBase集群间主从复制，通过回放主集群推送过来的HLog日志实现主从复制。</p>
+<li><p><strong>WAL(HLog</strong>)：HLog 在 HBase 中有两个核心作用——其一，用于实现数据的高可靠性，HBase 数据随机写入时，并非直接写入 HFile 数据文件，而是先写入缓存，再异步刷新落盘。为了防止缓存数据丢失，数据写入缓存之前需要首先顺序写入 HLog，这样，即使缓存数据丢失，仍然可以通过 HLog 日志恢复；其二，用于实现 HBase 集群间主从复制，通过回放主集群推送过来的 HLog 日志实现主从复制。</p>
 </li>
-<li><p><strong>BlockCache</strong>：HBase系统中的读缓存。客户端从磁盘读取数据之后通常会将数据缓存到系统内存中，后续访问同一行数据可以直接从内存中获取而不需要访问磁盘。</p>
+<li><p><strong>BlockCache</strong>：HBase 系统中的读缓存。客户端从磁盘读取数据之后通常会将数据缓存到系统内存中，后续访问同一行数据可以直接从内存中获取而不需要访问磁盘。</p>
 </li>
-<li><p><strong>Region</strong>：数据表的一个分片，当数据表大小超过一定阈值就会“水平切分”，分裂为两个Region。Region是集群负载均衡的基本单位。通常一张表的Region会分布在整个集群的多台RegionServer上，一个RegionServer上会管理多个Region，当然，这些Region一般来自不同的数据表。</p>
+<li><p><strong>Region</strong>：数据表的一个分片，当数据表大小超过一定阈值就会“水平切分”，分裂为两个 Region。Region 是集群负载均衡的基本单位。通常一张表的 Region 会分布在整个集群的多台 RegionServer 上，一个 RegionServer 上会管理多个 Region，当然，这些 Region 一般来自不同的数据表。</p>
 </li>
-<li><p><strong>Store</strong>：一个Region由一个或者多个Store构成，Store的个数取决于表中列簇（columnfamily）的个数，多少个列簇就有多少个Store。HBase中，每个列簇的数据都集中存放在一起形成一个存储单元Store，因此建议将具有相同IO特性的数据设置在同一个列簇中。</p>
+<li><p><strong>Store</strong>：一个 Region 由一个或者多个 Store 构成，Store 的个数取决于表中列簇（columnfamily）的个数，多少个列簇就有多少个 Store。HBase 中，每个列簇的数据都集中存放在一起形成一个存储单元 Store，因此建议将具有相同 IO 特性的数据设置在同一个列簇中。</p>
 </li>
-<li><p><strong>MemStore &amp; HFile</strong>：MemStore称为写缓存，用户写入数据时首先会写到MemStore，当MemStore写满之后（缓存数据超过阈值，默认128M）系统会异步地将数据f lush成一个HFile文件。显然，随着数据不断写入，HFile文件会越来越多，当HFile文件数超过一定阈值之后系统将会执行Compact操作，将这些小文件通过一定策略合并成一个或多个大文件。</p>
+<li><p><strong>MemStore &amp; HFile</strong>：MemStore 称为写缓存，用户写入数据时首先会写到 MemStore，当 MemStore 写满之后（缓存数据超过阈值，默认 128M）系统会异步地将数据 f lush 成一个 HFile 文件。显然，随着数据不断写入，HFile 文件会越来越多，当 HFile 文件数超过一定阈值之后系统将会执行 Compact 操作，将这些小文件通过一定策略合并成一个或多个大文件。</p>
 </li>
 </ul>
-<h4 id="HDFS"><a href="#HDFS" class="headerlink" title="HDFS"></a>HDFS</h4><p>HBase底层依赖HDFS组件存储实际数据，包括用户数据文件、HLog日志文件等最终都会写入HDFS落盘。HDFS是Hadoop生态圈内最成熟的组件之一，数据默认三副本存储策略可以有效保证数据的高可靠性。HBase内部封装了一个名为DFSClient的HDFS客户端组件，负责对HDFS的实际数据进行读写访问。</p>
-<h3 id="HBase-读写流程"><a href="#HBase-读写流程" class="headerlink" title="HBase 读写流程"></a>HBase 读写流程</h3><h4 id="HBase-Region查找"><a href="#HBase-Region查找" class="headerlink" title="HBase Region查找"></a>HBase Region查找</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125717f2e823dbc70f4027b7a191dc69884a9e~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<h4 id="HDFS"><a href="#HDFS" class="headerlink" title="HDFS"></a>HDFS</h4><p>HBase 底层依赖 HDFS 组件存储实际数据，包括用户数据文件、HLog 日志文件等最终都会写入 HDFS 落盘。HDFS 是 Hadoop 生态圈内最成熟的组件之一，数据默认三副本存储策略可以有效保证数据的高可靠性。HBase 内部封装了一个名为 DFSClient 的 HDFS 客户端组件，负责对 HDFS 的实际数据进行读写访问。</p>
+<h3 id="HBase- 读写流程"><a href="#HBase- 读写流程" class="headerlink" title="HBase 读写流程"></a>HBase 读写流程</h3><h4 id="HBase-Region 查找"><a href="#HBase-Region 查找" class="headerlink" title="HBase Region 查找"></a>HBase Region 查找</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125717f2e823dbc70f4027b7a191dc69884a9e~tplv-k3u1fbpfcp-zoom-1.image"></p>
 <ul>
-<li><p>客户端根据写入的表以及rowkey在<strong>元数据缓存</strong>中查找，如果能够查找出该rowkey所在的RegionServer以及Region，就可以直接发送写入请求（携带Region信息）到目标RegionServer。</p>
+<li><p>客户端根据写入的表以及 rowkey 在 <strong> 元数据缓存 </strong> 中查找，如果能够查找出该 rowkey 所在的 RegionServer 以及 Region，就可以直接发送写入请求（携带 Region 信息）到目标 RegionServer。</p>
 </li>
-<li><p>如果客户端缓存中没有查到对应的rowkey信息，需要首先到ZooKeeper上/hbase-root/meta-region-server节点查找Hbase元数据表所在的RegionServer。向<code>hbase:meta</code>所在的RegionServer发送查询请求，在元数据表中查找rowkey所在的RegionServer以及Region信息。客户端接收到返回结果之后会将结果缓存到本地，以备下次使用。</p>
+<li><p>如果客户端缓存中没有查到对应的 rowkey 信息，需要首先到 ZooKeeper 上 /hbase-root/meta-region-server 节点查找 Hbase 元数据表所在的 RegionServer。向 <code>hbase:meta</code> 所在的 RegionServer 发送查询请求，在元数据表中查找 rowkey 所在的 RegionServer 以及 Region 信息。客户端接收到返回结果之后会将结果缓存到本地，以备下次使用。</p>
 </li>
-<li><p>客户端根据rowkey相关元数据信息将写入请求发送给目标RegionServer，Region Server接收到请求之后会解析出具体的Region信息，查到对应的Region对象，并将数据写入目标Region的MemStore中。</p>
+<li><p>客户端根据 rowkey 相关元数据信息将写入请求发送给目标 RegionServer，Region Server 接收到请求之后会解析出具体的 Region 信息，查到对应的 Region 对象，并将数据写入目标 Region 的 MemStore 中。</p>
 </li>
 </ul>
-<h4 id="写流程"><a href="#写流程" class="headerlink" title="写流程"></a>写流程</h4><p>  <img src="https://gitee.com/niumi/drawing/raw/master/202104111257170e3a0f7dd97f4a91a9fe6fe69e358860~tplv-k3u1fbpfcp-zoom-1.image"></p>
-<p>1）<strong>客户端处理阶段</strong>：客户端将用户的写入请求进行预处理，并根据集群元数据定位写入数据所在的RegionServer，将请求发送给对应的RegionServer。</p>
-<p>2）<strong>Region写入阶段</strong>：RegionServer接收到写入请求之后将数据解析出来，首先写入WAL，再写入对应Region列簇的MemStore。</p>
-<p>3）<strong>MemStore Flush阶段</strong>：当Region中MemStore容量超过一定阈值，系统会异步执行flush操作，将内存中的数据写入文件，形成HFile。</p>
-<h4 id="读流程"><a href="#读流程" class="headerlink" title="读流程"></a>读流程</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125718862d92702896437c84fe3e0161e477ad~tplv-k3u1fbpfcp-zoom-1.image"></p>
-<p>和写流程相比，HBase读数据的流程更加复杂。主要基于两个方面的原因：</p>
+<h4 id="写流程"><a href="# 写流程" class="headerlink" title="写流程"></a>写流程</h4><p>  <img src="https://gitee.com/niumi/drawing/raw/master/202104111257170e3a0f7dd97f4a91a9fe6fe69e358860~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<p>1）<strong>客户端处理阶段</strong>：客户端将用户的写入请求进行预处理，并根据集群元数据定位写入数据所在的 RegionServer，将请求发送给对应的 RegionServer。</p>
+<p>2）<strong>Region 写入阶段</strong>：RegionServer 接收到写入请求之后将数据解析出来，首先写入 WAL，再写入对应 Region 列簇的 MemStore。</p>
+<p>3）<strong>MemStore Flush 阶段</strong>：当 Region 中 MemStore 容量超过一定阈值，系统会异步执行 flush 操作，将内存中的数据写入文件，形成 HFile。</p>
+<h4 id="读流程"><a href="# 读流程" class="headerlink" title="读流程"></a>读流程</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125718862d92702896437c84fe3e0161e477ad~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<p>和写流程相比，HBase 读数据的流程更加复杂。主要基于两个方面的原因：</p>
 <ul>
-<li><p>HBase一次范围查询可能会涉及多个Region、多块缓存甚至多个数据存储文件；</p>
+<li><p>HBase 一次范围查询可能会涉及多个 Region、多块缓存甚至多个数据存储文件；</p>
 </li>
-<li><p>HBase中更新操作以及删除操作的实现都很简单，更新操作并没有更新原有数据，而是使用时间戳属性实现了多版本；删除操作也并没有真正删除原有数据，只是插入了一条标记为”deleted”标签的数据，而真正的数据删除发生在系统异步执行Major Compact的时候。</p>
+<li><p>HBase 中更新操作以及删除操作的实现都很简单，更新操作并没有更新原有数据，而是使用时间戳属性实现了多版本；删除操作也并没有真正删除原有数据，只是插入了一条标记为”deleted”标签的数据，而真正的数据删除发生在系统异步执行 Major Compact 的时候。</p>
 </li>
 </ul>
 <p>很显然，这种实现思路大大简化了数据更新、删除流程，但是对于数据读取来说却意味着套上了层层枷锁：读取过程需要根据版本进行过滤，对已经标记删除的数据也要进行过滤。</p>
 <h3 id="HBase-Compaction"><a href="#HBase-Compaction" class="headerlink" title="HBase Compaction"></a>HBase Compaction</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125718cf6f75a09e0f4272ae3ee08adaf4b1c8~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
-<p>HBase根据合并规模将Compaction分为两类：Minor Compaction和MajorCompaction。</p>
+<p>HBase 根据合并规模将 Compaction 分为两类：Minor Compaction 和 MajorCompaction。</p>
 <ul>
-<li><p>Minor Compaction是指选取部分小的、相邻的HFile，将它们合并成一个更大的HFile。</p>
+<li><p>Minor Compaction 是指选取部分小的、相邻的 HFile，将它们合并成一个更大的 HFile。</p>
 </li>
-<li><p>Major Compaction是指将一个Store中所有的HFile合并成一个HFile，这个过程还会完全清理三类无意义数据：被删除的数据、TTL过期数据、版本号超过设定版本号的数据。</p>
+<li><p>Major Compaction 是指将一个 Store 中所有的 HFile 合并成一个 HFile，这个过程还会完全清理三类无意义数据：被删除的数据、TTL 过期数据、版本号超过设定版本号的数据。</p>
 </li>
 </ul>
-<p>一般情况下，Major Compaction持续时间会比较长，整个过程会消耗大量系统资源，对上层业务有比较大的影响。<strong>因此线上部分数据量较大的业务通常推荐关闭自动触发Major Compaction功能，改为在业务低峰期手动触发（或设置策略自动在低峰期触发）</strong>。</p>
-<p>Compaction核心作用如下：</p>
+<p>一般情况下，Major Compaction 持续时间会比较长，整个过程会消耗大量系统资源，对上层业务有比较大的影响。<strong>因此线上部分数据量较大的业务通常推荐关闭自动触发 Major Compaction 功能，改为在业务低峰期手动触发（或设置策略自动在低峰期触发）</strong>。</p>
+<p>Compaction 核心作用如下：</p>
 <ol>
 <li><p>合并小文件，减少文件数，稳定随机读延迟。</p>
 </li>
@@ -140,84 +411,344 @@
 <li><p>清除无效数据，减少数据存储量。</p>
 </li>
 </ol>
-<p>HBase中触发Compaction的时机有很多，最常见的时机有如下三种：MemStoreFlush、后台线程周期性检查以及手动触发。</p>
-<h2 id="HBase热点问题"><a href="#HBase热点问题" class="headerlink" title="HBase热点问题"></a>HBase热点问题</h2><p>热点是指发生在大量的Client直接访问集群的一个或极少数个节点（访问可能是读，写或者其他操作）。 大量访问会使热点Region所在的单个机器超出自身承受能力，引起性能下降甚至Region不可用，也会影响同一个RegionServer上的其他Region。</p>
+<p>HBase 中触发 Compaction 的时机有很多，最常见的时机有如下三种：MemStoreFlush、后台线程周期性检查以及手动触发。</p>
+<h2 id="HBase 热点问题"><a href="#HBase 热点问题" class="headerlink" title="HBase 热点问题"></a>HBase 热点问题 </h2><p> 热点是指发生在大量的 Client 直接访问集群的一个或极少数个节点（访问可能是读，写或者其他操作）。 大量访问会使热点 Region 所在的单个机器超出自身承受能力，引起性能下降甚至 Region 不可用，也会影响同一个 RegionServer 上的其他 Region。</p>
 <p><strong>产生原因</strong></p>
 <ol>
-<li>HBase创建表默认只有一个分区</li>
-<li>RowKey设计不合理</li>
+<li>HBase 创建表默认只有一个分区</li>
+<li>RowKey 设计不合理</li>
 </ol>
 <p><strong>解决方案</strong></p>
 <ol>
-<li>HBase创建表时指定分区</li>
-<li>合理设计RowKey</li>
+<li>HBase 创建表时指定分区</li>
+<li>合理设计 RowKey</li>
 </ol>
-<h3 id="预分区"><a href="#预分区" class="headerlink" title="预分区"></a>预分区</h3><p>默认情况下，在创建 HBase 表的时候会自动创建一个 region 分区，当导入数据的时候，所有的 HBase 客户端都向这一个 region 写数据，直到这个 region 足够大了才进行切分。还有一种是可以加快批量写入速度的方法，就是通过预先创建一些空的 regions，这样当数据写入 HBase 时，会按照 region 分区情况，在集群内做数据的负载均衡。</p>
-<h3 id="RowKey设计"><a href="#RowKey设计" class="headerlink" title="RowKey设计"></a>RowKey设计</h3><h4 id="设计原则"><a href="#设计原则" class="headerlink" title="设计原则"></a>设计原则</h4><ol>
-<li><h5 id="唯一性"><a href="#唯一性" class="headerlink" title="唯一性"></a>唯一性</h5><p> 必须在设计上保证其唯一性。RowKey是按照字典顺序排序存储的，因此，设计RowKey 的时候，要充分利用这个排序的特点，将经常读取的数据存储到一块，将最近可能会被访问 的数据放到一块。</p>
+<h3 id="预分区"><a href="# 预分区" class="headerlink" title="预分区"></a>预分区 </h3><p> 默认情况下，在创建 HBase 表的时候会自动创建一个 region 分区，当导入数据的时候，所有的 HBase 客户端都向这一个 region 写数据，直到这个 region 足够大了才进行切分。还有一种是可以加快批量写入速度的方法，就是通过预先创建一些空的 regions，这样当数据写入 HBase 时，会按照 region 分区情况，在集群内做数据的负载均衡。</p>
+<h3 id="RowKey 设计"><a href="#RowKey 设计" class="headerlink" title="RowKey 设计"></a>RowKey 设计 </h3><h4 id="设计原则"><a href="# 设计原则" class="headerlink" title="设计原则"></a> 设计原则</h4><ol>
+<li><h5 id="唯一性"><a href="# 唯一性" class="headerlink" title="唯一性"></a>唯一性</h5><p> 必须在设计上保证其唯一性。RowKey 是按照字典顺序排序存储的，因此，设计 RowKey 的时候，要充分利用这个排序的特点，将经常读取的数据存储到一块，将最近可能会被访问 的数据放到一块。</p>
 </li>
-<li><h5 id="长度原则"><a href="#长度原则" class="headerlink" title="长度原则"></a>长度原则</h5><p> RowKey 是一个二进制码流，RowKey的长度被很多开发者建议说设计在10~100 个字节，不过建议是越短越好，不要超过16个字节。</p>
+<li><h5 id="长度原则"><a href="# 长度原则" class="headerlink" title="长度原则"></a>长度原则</h5><p> RowKey 是一个二进制码流，RowKey 的长度被很多开发者建议说设计在 10~100 个字节，不过建议是越短越好，不要超过 16 个字节。</p>
 <p> 原因如下:</p>
 <ul>
-<li><p>数据的持久化文件HFile中是按照KeyValue存储的，如果RowKey过长比如100 个字节，1000万列数据光RowKey就要占用100*1000 万=10亿个字节，将近1G数据，这会极大影响HFile的存储效率;</p>
+<li><p>数据的持久化文件 HFile 中是按照 KeyValue 存储的，如果 RowKey 过长比如 100 个字节，1000 万列数据光 RowKey 就要占用 100*1000 万 =10 亿个字节，将近 1G 数据，这会极大影响 HFile 的存储效率;</p>
 </li>
-<li><p>MemStore将缓存部分数据到内存，如果RowKey字段过长内存的有效利用率会降低， 系统将无法缓存更多的数据，这会降低检索效率。因此RowKey的字节长度越短越好。</p>
+<li><p>MemStore 将缓存部分数据到内存，如果 RowKey 字段过长内存的有效利用率会降低， 系统将无法缓存更多的数据，这会降低检索效率。因此 RowKey 的字节长度越短越好。</p>
 </li>
 <li><p>目前操作系统是都是 64 位系统，内存 8 字节对齐。控制在 16 个字节，8 字节的整数倍利用操作系统的最佳特性。</p>
 </li>
 </ul>
 </li>
-<li><h5 id="散列原则"><a href="#散列原则" class="headerlink" title="散列原则"></a>散列原则</h5><p> 如果RowKey按照时间戳的方式递增，不要将时间放在二进制码的前面，建议将RowKey的高位作为散列字段，由程序随机生成，低位放时间字段，这样将提高数据均衡分布在每个RegionServer，以实现负载均衡的几率。如果没有散列字段，首字段直接是时间信息，所有的数据都会集中在一个RegionServer上，这样在数据检索的时候负载会集中在个别的RegionServer上，造成热点问题，会降低查询效率。</p>
-<h4 id="散列常见设计方法"><a href="#散列常见设计方法" class="headerlink" title="散列常见设计方法"></a>散列常见设计方法</h4></li>
+<li><h5 id="散列原则"><a href="# 散列原则" class="headerlink" title="散列原则"></a>散列原则</h5><p> 如果 RowKey 按照时间戳的方式递增，不要将时间放在二进制码的前面，建议将 RowKey 的高位作为散列字段，由程序随机生成，低位放时间字段，这样将提高数据均衡分布在每个 RegionServer，以实现负载均衡的几率。如果没有散列字段，首字段直接是时间信息，所有的数据都会集中在一个 RegionServer 上，这样在数据检索的时候负载会集中在个别的 RegionServer 上，造成热点问题，会降低查询效率。</p>
+<h4 id="散列常见设计方法"><a href="# 散列常见设计方法" class="headerlink" title="散列常见设计方法"></a>散列常见设计方法</h4></li>
 </ol>
 <h5 id="Salting（加盐）"><a href="#Salting（加盐）" class="headerlink" title="Salting（加盐）"></a>Salting（加盐）</h5><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125718eb3c6a6a76894625bd7c7f8e6a49d696~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
 <h5 id="Hashing（哈希）"><a href="#Hashing（哈希）" class="headerlink" title="Hashing（哈希）"></a>Hashing（哈希）</h5><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411125719b3a3f2402c2a4e58a6d7d622d425e2f7~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
 <h5 id="Reversing（反转）"><a href="#Reversing（反转）" class="headerlink" title="Reversing（反转）"></a>Reversing（反转）</h5><p><img src="https://gitee.com/niumi/drawing/raw/master/202104111257196350c5805f8b483bbd5cbf4e48ba24ce~tplv-k3u1fbpfcp-zoom-1.image" alt="image.png"></p>
 <blockquote>
-<p>反转可以使得RowKey中经常改变的部分（最没有意义的部分）放在前面，这样可以有效的随机rowkey，但是牺牲RowKey的有序性。反转RowKey的例子以手机号为RowKey，可以将手机号反转后的字符串作为RowKey，这样的就避免了以手机号那样比较固定开头导致热点问题。</p>
+<p>反转可以使得 RowKey 中经常改变的部分（最没有意义的部分）放在前面，这样可以有效的随机 rowkey，但是牺牲 RowKey 的有序性。反转 RowKey 的例子以手机号为 RowKey，可以将手机号反转后的字符串作为 RowKey，这样的就避免了以手机号那样比较固定开头导致热点问题。</p>
 </blockquote>
-</div><div class="article-licensing box"><div class="licensing-title"><p>HBase：基础篇</p><p><a href="http://blog.blockmao.cn/posts/33835.html">http://blog.blockmao.cn/posts/33835.html</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>牛觅</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2021-04-11</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2021-05-25</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="notification is-danger">You need to set <code>install_url</code> to use ShareThis. Please set it in <code>_config.yml</code>.</div></article></div><div class="card"><div class="card-content"><h3 class="menu-label has-text-centered">Like this article? Support the author with</h3><div class="buttons is-centered"><a class="button donate" href="/" target="_blank" rel="noopener" data-type="afdian"><span class="icon is-small"><i class="fas fa-charging-station"></i></span><span>Afdian.net</span></a><a class="button donate" data-type="alipay"><span class="icon is-small"><i class="fab fa-alipay"></i></span><span>Alipay</span><span class="qrcode"><img src="/" alt="Alipay"></span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="buymeacoffee"><span class="icon is-small"><i class="fas fa-coffee"></i></span><span>Buy me a coffee</span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="patreon"><span class="icon is-small"><i class="fab fa-patreon"></i></span><span>Patreon</span></a><div class="notification is-danger">You forgot to set the <code>business</code> or <code>currency_code</code> for Paypal. Please set it in <code>_config.yml</code>.</div><a class="button donate" data-type="wechat"><span class="icon is-small"><i class="fab fa-weixin"></i></span><span>Wechat</span><span class="qrcode"><img src="/" alt="Wechat"></span></a></div></div></div><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/posts/10314.html"><i class="level-item fas fa-chevron-left"></i><span class="level-item">Hbase：分布式集群环境搭建</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/posts/32223.html"><span class="level-item">Netty：编解码</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-4-widescreen  order-1"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar" src="/img/avatar.png" alt="牛觅"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">牛觅</p><p class="is-size-6 is-block">Your title</p><p class="is-size-6 is-flex justify-content-center"><i class="fas fa-map-marker-alt mr-1"></i><span>中国-杭州</span></p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">77</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">19</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">18</p></a></div></div></nav><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com/ppoffice"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Facebook" href="https://facebook.com"><i class="fab fa-facebook"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Dribbble" href="https://dribbble.com"><i class="fab fa-dribbble"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="RSS" href="/"><i class="fas fa-rss"></i></a></div></div></div><!--!--><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://hexo.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Hexo</span></span><span class="level-right"><span class="level-item tag">hexo.io</span></span></a></li><li><a class="level is-mobile" href="https://bulma.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Bulma</span></span><span class="level-right"><span class="level-item tag">bulma.io</span></span></a></li></ul></div></div></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/DDD/"><span class="level-start"><span class="level-item">DDD</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Dubbo/"><span class="level-start"><span class="level-item">Dubbo</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/Git/"><span class="level-start"><span class="level-item">Git</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Hbase/"><span class="level-start"><span class="level-item">Hbase</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/JVM/"><span class="level-start"><span class="level-item">JVM</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/JavaSE/"><span class="level-start"><span class="level-item">JavaSE</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/"><span class="level-start"><span class="level-item">Java并发编程</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/MySQL/"><span class="level-start"><span class="level-item">MySQL</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Mybatis/"><span class="level-start"><span class="level-item">Mybatis</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Netty/"><span class="level-start"><span class="level-item">Netty</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/Spring/"><span class="level-start"><span class="level-item">Spring</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/SpringCloud/"><span class="level-start"><span class="level-item">SpringCloud</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/"><span class="level-start"><span class="level-item">分布式</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84/"><span class="level-start"><span class="level-item">微服务架构</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"><span class="level-start"><span class="level-item">数据结构与算法</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E6%97%A5%E5%BF%97/"><span class="level-start"><span class="level-item">日志</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"><span class="level-start"><span class="level-item">计算机网络</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%BE%E8%AE%A1/"><span class="level-start"><span class="level-item">设计</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"><span class="level-start"><span class="level-item">设计模式</span></span><span class="level-end"><span class="level-item tag">21</span></span></a></li></ul></div></div></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">Recents</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-08-09T10:36:51.000Z">2021-08-09</time></p><p class="title"><a href="/posts/22384.html">MySQL：索引</a></p><p class="categories"><a href="/categories/MySQL/">MySQL</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-08-07T03:38:43.000Z">2021-08-07</time></p><p class="title"><a href="/posts/60776.html">Java Agent</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-21T12:58:45.000Z">2021-07-21</time></p><p class="title"><a href="/posts/51998.html">Java类加载：classloader的原理及应用</a></p><p class="categories"><a href="/categories/JVM/">JVM</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-19T05:47:30.000Z">2021-07-19</time></p><p class="title"><a href="/posts/19955.html">Netty：ByteBuf与内存管理</a></p><p class="categories"><a href="/categories/Netty/">Netty</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-16T03:00:08.000Z">2021-07-16</time></p><p class="title"><a href="/posts/7199.html">微服务安全架构：基于OAuth 2.0/JWT的微服务参考架构</a></p></div></article></div></div><div class="card widget" data-type="archives"><div class="card-content"><div class="menu"><h3 class="menu-label">Archives</h3><ul class="menu-list"><li><a class="level is-mobile" href="/archives/2021/08/"><span class="level-start"><span class="level-item">August 2021</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/07/"><span class="level-start"><span class="level-item">July 2021</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/06/"><span class="level-start"><span class="level-item">June 2021</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/05/"><span class="level-start"><span class="level-item">May 2021</span></span><span class="level-end"><span class="level-item tag">13</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/04/"><span class="level-start"><span class="level-item">April 2021</span></span><span class="level-end"><span class="level-item tag">51</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/03/"><span class="level-start"><span class="level-item">March 2021</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div><div class="card widget" data-type="tags"><div class="card-content"><div class="menu"><h3 class="menu-label">Tags</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/JVM/"><span class="tag">JVM</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Java-8/"><span class="tag">Java 8</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Mybatis/"><span class="tag">Mybatis</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Netty/"><span class="tag">Netty</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/OAuth2/"><span class="tag">OAuth2</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/TODO/"><span class="tag">TODO</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"><span class="tag">分布式</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/"><span class="tag">分布式事务</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%BC%93%E5%AD%98/"><span class="tag">分布式缓存</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%9B%E5%BB%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">创建型模式</span><span class="tag">4</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"><span class="tag">微服务</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E5%AE%89%E5%85%A8/"><span class="tag">微服务安全</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%8E%92%E5%BA%8F/"><span class="tag">排序</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%B3%9B%E5%9E%8B/"><span class="tag">泛型</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">结构型模式</span><span class="tag">6</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E8%A1%8C%E4%B8%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">行为型模式</span><span class="tag">11</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%9B%B6%E6%8B%B7%E8%B4%9D/"><span class="tag">零拷贝</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%9D%A2%E8%AF%95%E9%A2%98/"><span class="tag">面试题</span><span class="tag">2</span></a></div></div></div></div></div><div class="card widget" data-type="subscribe-email"><div class="card-content"><div class="menu"><h3 class="menu-label">Subscribe for updates</h3><form action="https://feedburner.google.com/fb/a/mailverify" method="post" target="popupwindow" onsubmit="window.open(&#039;https://feedburner.google.com/fb/a/mailverify?uri=&#039;,&#039;popupwindow&#039;,&#039;scrollbars=yes,width=550,height=520&#039;);return true"><input type="hidden" value="" name="uri"><input type="hidden" name="loc" value="en_US"><div class="field has-addons"><div class="control has-icons-left is-expanded"><input class="input" name="email" type="email" placeholder="Email"><span class="icon is-small is-left"><i class="fas fa-envelope"></i></span></div><div class="control"><input class="button" type="submit" value="Subscribe"></div></div></form></div></div></div><div class="card widget"><div class="card-content"><div class="notification is-danger">You need to set <code>client_id</code> and <code>slot_id</code> to show this AD unit. Please set it in <code>_config.yml</code>.</div></div></div><div class="card widget" data-type="subscribe-email"><div class="card-content"><div class="menu"><h3 class="menu-label">follow.it</h3><form action="" method="post" target="_blank"><div class="field has-addons"><div class="control has-icons-left is-expanded"><input class="input" name="email" type="email" placeholder="Email"><span class="icon is-small is-left"><i class="fas fa-envelope"></i></span></div><div class="control"><input class="button" type="submit" value="Subscribe"></div></div></form></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="牛觅博客" height="28"></a><p class="is-size-7"><span>&copy; 2021 牛觅</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-Hanss");</script><script>var IcarusThemeSettings = {
-            article: {
-                highlight: {
-                    clipboard: true,
-                    fold: 'unfolded'
-                }
-            }
-        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
-      window.cookieconsent.initialise({
-        type: "info",
-        theme: "edgeless",
-        static: false,
-        position: "bottom-left",
-        content: {
-          message: "This website uses cookies to improve your experience.",
-          dismiss: "Got it!",
-          allow: "Allow cookies",
-          deny: "Decline",
-          link: "Learn more",
-          policy: "Cookie Policy",
-          href: "https://www.cookiesandyou.com/",
-        },
-        palette: {
-          popup: {
-            background: "#edeff5",
-            text: "#838391"
-          },
-          button: {
-            background: "#4b81e8"
-          },
-        },
-      });
-    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
-            if (typeof $.fn.lightGallery === 'function') {
-                $('.article').lightGallery({ selector: '.gallery-item' });
-            }
-            if (typeof $.fn.justifiedGallery === 'function') {
-                if ($('.justified-gallery > p > .gallery-item').length) {
-                    $('.justified-gallery > p > .gallery-item').unwrap();
-                }
-                $('.justified-gallery').justifiedGallery();
-            }
-        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
-            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
-        });</script></body></html>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/32223.html" rel="prev" title="Netty：编解码">
+      <i class="fa fa-chevron-left"></i> Netty：编解码
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/10314.html" rel="next" title="Hbase：分布式集群环境搭建">
+      Hbase：分布式集群环境搭建 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#HBase-%20%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">HBase 概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E5%B1%95%E5%8E%86%E5%8F%B2"><span class="nav-number">1.1.</span> <span class="nav-text">发展历史</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hbase%20%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.2.</span> <span class="nav-text">Hbase 优缺点 </span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E7%82%B9"><span class="nav-number">1.2.1.</span> <span class="nav-text"> 优点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9"><span class="nav-number">1.2.2.</span> <span class="nav-text">缺点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.3.</span> <span class="nav-text">数据模型 </span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E8%A7%86%E5%9B%BE"><span class="nav-number">1.3.1.</span> <span class="nav-text"> 逻辑视图 </span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E8%A7%86%E5%9B%BE"><span class="nav-number">1.3.2.</span> <span class="nav-text">物理视图</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HBase-%20%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">HBase 原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#LSM"><span class="nav-number">2.1.</span> <span class="nav-text">LSM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">整体架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#HBase%20%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">2.2.1.</span> <span class="nav-text">HBase 客户端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ZooKeeper"><span class="nav-number">2.2.2.</span> <span class="nav-text">ZooKeeper</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Master"><span class="nav-number">2.2.3.</span> <span class="nav-text">Master</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RegionServer"><span class="nav-number">2.2.4.</span> <span class="nav-text">RegionServer</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HDFS"><span class="nav-number">2.2.5.</span> <span class="nav-text">HDFS</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HBase-%20%E8%AF%BB%E5%86%99%E6%B5%81%E7%A8%8B"><span class="nav-number">2.3.</span> <span class="nav-text">HBase 读写流程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#HBase-Region%20%E6%9F%A5%E6%89%BE"><span class="nav-number">2.3.1.</span> <span class="nav-text">HBase Region 查找</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%99%E6%B5%81%E7%A8%8B"><span class="nav-number">2.3.2.</span> <span class="nav-text">写流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%BB%E6%B5%81%E7%A8%8B"><span class="nav-number">2.3.3.</span> <span class="nav-text">读流程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HBase-Compaction"><span class="nav-number">2.4.</span> <span class="nav-text">HBase Compaction</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HBase%20%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">HBase 热点问题 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%84%E5%88%86%E5%8C%BA"><span class="nav-number">3.1.</span> <span class="nav-text">预分区 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RowKey%20%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.2.</span> <span class="nav-text">RowKey 设计 </span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="nav-number">3.2.1.</span> <span class="nav-text"> 设计原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%94%AF%E4%B8%80%E6%80%A7"><span class="nav-number">3.2.1.1.</span> <span class="nav-text">唯一性</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%95%BF%E5%BA%A6%E5%8E%9F%E5%88%99"><span class="nav-number">3.2.1.2.</span> <span class="nav-text">长度原则</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%95%A3%E5%88%97%E5%8E%9F%E5%88%99"><span class="nav-number">3.2.1.3.</span> <span class="nav-text">散列原则</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%A3%E5%88%97%E5%B8%B8%E8%A7%81%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95"><span class="nav-number">3.2.2.</span> <span class="nav-text">散列常见设计方法</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Salting%EF%BC%88%E5%8A%A0%E7%9B%90%EF%BC%89"><span class="nav-number">3.2.2.1.</span> <span class="nav-text">Salting（加盐）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Hashing%EF%BC%88%E5%93%88%E5%B8%8C%EF%BC%89"><span class="nav-number">3.2.2.2.</span> <span class="nav-text">Hashing（哈希）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Reversing%EF%BC%88%E5%8F%8D%E8%BD%AC%EF%BC%89"><span class="nav-number">3.2.2.3.</span> <span class="nav-text">Reversing（反转）</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">77</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div id="pjax">
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['blockmao'],
+      id          : '5fcb3424925c0017455284a79ec49258',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+    </div>
+</body>
+</html>

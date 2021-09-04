@@ -1,147 +1,571 @@
-<!doctype html>
-<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>Category: JVM - 牛觅博客</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="牛觅博客"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="牛觅博客"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="温故知新"><meta property="og:type" content="blog"><meta property="og:title" content="牛觅博客"><meta property="og:url" content="http://blog.blockmao.cn/"><meta property="og:site_name" content="牛觅博客"><meta property="og:description" content="温故知新"><meta property="og:image" content="http://blog.blockmao.cn/img/og_image.png"><meta property="article:author" content="牛觅"><meta property="twitter:card" content="summary"><meta property="twitter:image" content="/img/og_image.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://blog.blockmao.cn"},"headline":"牛觅博客","image":["http://blog.blockmao.cn/img/og_image.png"],"author":{"@type":"Person","name":"牛觅"},"publisher":{"@type":"Organization","name":"牛觅博客","logo":{"@type":"ImageObject","url":"http://blog.blockmao.cn/img/logo.svg"}},"description":"温故知新"}</script><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.2/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css"><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script><!--!--><!--!--><meta name="generator" content="Hexo 5.4.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="牛觅博客" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-8-widescreen"><div class="card"><div class="card-content"><nav class="breadcrumb" aria-label="breadcrumbs"><ul><li><a href="/categories">Categories</a></li><li class="is-active"><a href="#" aria-current="page">JVM</a></li></ul></nav></div></div><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-07-21T12:58:45.000Z" title="2021/7/21下午8:58:45">2021-07-21</time></span><span class="level-item">Updated&nbsp;<time dateTime="2021-07-22T12:36:36.172Z" title="2021/7/22下午8:36:36">2021-07-22</time></span><span class="level-item"><a class="link-muted" href="/categories/JVM/">JVM</a></span><span class="level-item">39 minutes read (About 5858 words)</span></div></div><h1 class="title is-3 is-size-4-mobile"><a class="link-muted" href="/posts/51998.html">Java类加载：classloader的原理及应用</a></h1><div class="content"><span id="more"></span>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
-<h1 id="什么是-classloader"><a href="#什么是-classloader" class="headerlink" title="什么是 classloader"></a><strong>什么是 classloader</strong></h1><p>classloader 顾名思义，即是类加载。虚拟机把描述类的数据从 class 字节码文件加载到内存，并对数据进行检验、转换解析和初始化，最终形成可以被虚拟机直接使用的 Java 类型，这就是虚拟机的类加载机制。了解 java 的类加载机制，可以快速解决运行时的各种加载问题并快速定位其背后的本质原因，也是解决疑难杂症的利器。因此学好类加载原理也至关重要。  </p>
-<h2 id="classloader-的加载过程"><a href="#classloader-的加载过程" class="headerlink" title="classloader 的加载过程"></a>classloader 的加载过程</h2><p>类从被加载到虚拟机内存到被卸载，整个完整的生命周期包括：类加载、验证、准备、解析、初始化、使用和卸载七个阶段。其中验证，准备，解析三个部分统称为连接。接下来我们可以详细了解下类加载的各个过程。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589127-fda38564-ef0f-48f1-9ecb-13d2fd24c423.png"></p>
-<p>classloader 的整个加载过程还是非常复杂的，具体的细节可以参考《深入理解 java 虚拟机》进行深入了解。为了方便记忆，我们可以使用一句话来表达其加载的整个过程，“家宴准备了西式菜”，即家 (加载) 宴(验证)准备 (准备) 了西 (解析) 式(初始化)菜。保证你以后能够很快的想起来。</p>
-<p>虽然 classloader 的加载过程有复杂的 5 步，但事实上除了加载之外的四步，其它都是由 JVM 虚拟机控制的，我们除了适应它的规范进行开发外，能够干预的空间并不多。而<strong>加载则是我们控制 classloader 实现特殊目的最重要的手段</strong>了。也是接下来我们介绍的重点了。</p>
-<h2 id="classloader-双亲委托机制"><a href="#classloader-双亲委托机制" class="headerlink" title="classloader 双亲委托机制"></a>classloader 双亲委托机制</h2><p>classloader 的双亲委托机制<strong>是指多个类加载器之间存在父子关系的时候，某个 class 类具体由哪个加载器进行加载的问题</strong>。</p>
-<p>其具体的过程表现为：当一个类加载的过程中，它首先不会去加载，而是委托给自己的父类去加载，父类又委托给自己的父类。因此所有的类加载都会委托给顶层的父类，即 Bootstrap Classloader 进行加载，然后父类自己无法完成这个加载请求，子加载器才会尝试自己去加载。</p>
-<p>使用双亲委派模型，Java 类随着它的加载器一起具备了一种带有优先级的层次关系，通过这种层次模型，可以避免类的重复加载，也可以避免核心类被不同的类加载器加载到内存中造成冲突和混乱，从而保证了 Java 核心库的安全。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589131-6ce8a108-21a5-4aab-9fc9-7cb4e5152b5d.png"></p>
-<ul>
-<li><strong>启动类加载器 (Bootstrap Classloader)</strong> 负责将 &lt; JAVA_HOME&gt;/lib 目录下并且被虚拟机识别的类库加载到虚拟机内存中。我们常用基础库，例如 java.util.**，java.io.<strong>，java.lang.</strong> 等等都是由根加载器加载。</li>
-<li><strong>扩展类加载器 (Extention Classloader)</strong> 负责加载 JVM 扩展类，比如 swing 系列、内置的 js 引擎、xml 解析器等，这些类库以 javax 开头，它们的 jar 包位于 &lt; JAVA_HOME&gt;/lib/ext 目录中。</li>
-<li><strong>应用程序加载器 (Application Classloader)</strong> 也叫系统类加载器，它负责加载用户路径 (ClassPath) 上所指定的类库。我们自己编写的代码以及使用的第三方的 jar 包都是由它来加载的。</li>
-<li><strong>自定义加载器 (Custom Classloader)</strong> 通常是我们为了某些特殊目的实现的自定义加载器。</li>
-</ul>
-<p>双亲委托机制看起来比较复杂，但是其本身的核心代码逻辑却是非常的清晰简单，我们着重抽取了类加载的双亲委托的核心代码如下，不过二十行左右。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589220-48460001-1975-4e6e-b38b-b365e4da97ec.png"></p>
-<p>根据<code>java.lang.ClassLoader#loadClass(java.lang.String, boolean)</code>方法可以得到如下结论：</p>
-<ul>
-<li><p>如果不想打破双亲委派模型，那么只需要重写<code>findClass</code>方法即可。</p>
-</li>
-<li><p>如果想打破双亲委派模型，那么就重写整个<code>loadClass</code>方法。</p>
-</li>
-</ul>
-<blockquote>
-<p>defineClass方法可以把二进制流字节组成的文件转换为一个java.lang.Class—-只要二进制字节流的内容符合Class文件规范。</p>
-</blockquote>
-<h2 id="打破双亲委派机制案例"><a href="#打破双亲委派机制案例" class="headerlink" title="打破双亲委派机制案例"></a>打破双亲委派机制案例</h2><h3 id="案例一：tomcat"><a href="#案例一：tomcat" class="headerlink" title="案例一：tomcat"></a>案例一：tomcat</h3><p>tomcat 通过 war 包进行应用的发布，它其实是违反了双亲委派机制原则的。简单看一下 tomcat 类加载器的层次结构。</p>
-<p><img src="https://gitee.com/niumi/drawing/raw/master/20210722202914esESMu.jpg" alt="20210722202914esESMu"></p>
-<p>对于一些需要加载的非基础类，会由一个叫作 WebAppClassLoader 的类加载器优先加载。等它加载不到的时候，再交给上层的 ClassLoader 进行加载。这个加载器用来隔绝不同应用的 .class 文件，比如你的两个应用，可能会依赖同一个第三方的不同版本，它们是相互没有影响的。</p>
-<p>如何在同一个 JVM 里，运行着不兼容的两个版本，当然是需要自定义加载器才能完成的事。</p>
-<p>那么 tomcat 是怎么打破双亲委派机制的呢？可以看图中的 WebAppClassLoader，它加载自己目录下的 .class 文件，并不会传递给父类的加载器。但是，它却可以使用 SharedClassLoader 所加载的类，实现了共享和分离的功能。</p>
-<p>但是你自己写一个 ArrayList，放在应用目录里，tomcat 依然不会加载。它只是自定义的加载器顺序不同，但对于顶层来说，还是一样的。</p>
-<h3 id="案例二：SPI"><a href="#案例二：SPI" class="headerlink" title="案例二：SPI"></a>案例二：SPI</h3><p>Java 中有一个 SPI 机制，全称是 Service Provider Interface，是 Java 提供的一套用来被第三方实现或者扩展的 API，它可以用来启用框架扩展和替换组件。</p>
-<p>这个说法可能比较晦涩，但是拿我们常用的数据库驱动加载来说，就比较好理解了。在使用 JDBC 写程序之前，通常会调用下面这行代码，用于加载所需要的驱动类。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Class.forName(<span class="string">&quot;com.mysql.jdbc.Driver&quot;</span>)</span><br></pre></td></tr></table></figure>
+<link rel="stylesheet" href="/css/main.css">
 
-<p>这只是一种初始化模式，通过 static 代码块显式地声明了驱动对象，然后把这些信息，保存到底层的一个 List 中。这种方式我们不做过多的介绍，因为这明显就是一个接口编程的思路，没什么好奇怪的。</p>
-<p><strong>但是你会发现，即使删除了 Class.forName 这一行代码，也能加载到正确的驱动类，什么都不需要做，非常的神奇，它是怎么做到的呢？</strong></p>
-<p>我们翻开 MySQL 的驱动代码，发现了一个奇怪的文件。之所以能够发生这样神奇的事情，就是在这里实现的。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql-connector-java-8.0.15.jar!&#x2F;META-INF&#x2F;services&#x2F;java.sql.Driver</span><br></pre></td></tr></table></figure>
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
 
-<p>里面的内容是：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">com.mysql.cj.jdbc.Driver</span><br></pre></td></tr></table></figure>
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
 
-<p>通过在 META-INF/services 目录下，创建一个以接口全限定名为命名的文件（内容为实现类的全限定名），即可自动加载这一种实现，这就是 SPI。</p>
-<p>SPI 实际上是“基于接口的编程＋策略模式＋配置文件”组合实现的动态加载机制，主要使用 java.util.ServiceLoader 类进行动态装载。</p>
-<p><img src="https://gitee.com/niumi/drawing/raw/master/20210722203354q529ze.jpg" alt="20210722203354q529ze"></p>
-<p>这种方式，同样打破了双亲委派的机制。</p>
-<p>DriverManager 类和 ServiceLoader 类都是属于 rt.jar 的。它们的类加载器是 Bootstrap ClassLoader，也就是最上层的那个。而具体的数据库驱动，却属于业务代码，这个启动类加载器是无法加载的。这就比较尴尬了，虽然凡事都要祖先过问，但祖先没有能力去做这件事情，怎么办？</p>
-<p>我们可以一步步跟踪代码，来看一下这个过程。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//part1:DriverManager::loadInitialDrivers</span></span><br><span class="line">  <span class="comment">//jdk1.8 之后，变成了lazy的ensureDriversInitialized</span></span><br><span class="line">  ...</span><br><span class="line">  ServiceLoader &lt;Driver&gt; loadedDrivers = ServiceLoader.load(Driver.class);</span><br><span class="line">  Iterator&lt;Driver&gt; driversIterator = loadedDrivers.iterator();</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  <span class="comment">//part2:ServiceLoader::load</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">ServiceLoader&lt;T&gt; <span class="title">load</span><span class="params">(Class&lt;T&gt; service)</span> </span>&#123;</span><br><span class="line">      ClassLoader cl = Thread.currentThread().getContextClassLoader();</span><br><span class="line">      <span class="keyword">return</span> ServiceLoader.load(service, cl);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+  <meta name="description" content="温故知新">
+<meta property="og:type" content="website">
+<meta property="og:title" content="牛觅博客">
+<meta property="og:url" content="http://blog.blockmao.cn/categories/JVM/index.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:description" content="温故知新">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://blog.blockmao.cn/categories/JVM/">
 
 
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
 
-<p>通过代码你可以发现 Java 玩了个魔术，它把当前的类加载器，设置成了线程的上下文类加载器。那么，对于一个刚刚启动的应用程序来说，它当前的加载器是谁呢？也就是说，启动 main 方法的那个加载器，到底是哪一个？</p>
-<p>所以我们继续跟踪代码。找到 Launcher 类，就是 jre 中用于启动入口函数 main 的类。我们在 Launcher 中找到以下代码。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Launcher</span><span class="params">()</span> </span>&#123;</span><br><span class="line"> Launcher.ExtClassLoader var1;</span><br><span class="line"> <span class="keyword">try</span> &#123;</span><br><span class="line">     var1 = Launcher.ExtClassLoader.getExtClassLoader();</span><br><span class="line"> &#125; <span class="keyword">catch</span> (IOException var10) &#123;</span><br><span class="line">     <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(<span class="string">&quot;Could not create extension class loader&quot;</span>, var10);</span><br><span class="line"> &#125;</span><br><span class="line"> </span><br><span class="line"> <span class="keyword">try</span> &#123;</span><br><span class="line">     <span class="keyword">this</span>.loader = Launcher.AppClassLoader.getAppClassLoader(var1);</span><br><span class="line"> &#125; <span class="keyword">catch</span> (IOException var9) &#123;</span><br><span class="line">     <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(<span class="string">&quot;Could not create application class loader&quot;</span>, var9);</span><br><span class="line"> &#125;</span><br><span class="line"> Thread.currentThread().setContextClassLoader(<span class="keyword">this</span>.loader);</span><br><span class="line"> ...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+  <title>分类: JVM | 牛觅博客</title>
+  
 
-<p>到此为止，事情就比较明朗了，当前线程上下文的类加载器，是应用程序类加载器。使用它来加载第三方驱动，是没有什么问题的。</p>
-<p>我们之所以花大量的篇幅来介绍这个过程，第一，可以让你更好的看到一个打破规则的案例。第二，这个问题面试时出现的几率也是比较高的，你需要好好理解。</p>
-<h2 id="classloader-的应用场景"><a href="#classloader-的应用场景" class="headerlink" title="classloader 的应用场景"></a>classloader 的应用场景</h2><p>类加载器是 java 语言的一项创新，也是 java 语言流行的重要原因这一。通过灵活定义 classloader 的加载机制，我们可以完成很多事情，例如解决类冲突问题，实现热加载以及热部署，甚至可以实现 jar 包的加密保护。接下来，我们会针对这些特殊场景进行逐一介绍。</p>
-<h3 id="依赖冲突"><a href="#依赖冲突" class="headerlink" title="依赖冲突"></a>依赖冲突</h3><p>做过多人协同开发的大型项目的同学可能深有感触。基于 maven 的 pom 进制可以方便的进行依赖管理，但是由于 maven 依赖的传递性，会导致我们的依赖错综复杂，这样就会导致引入类冲突的问题。最典型的就是 NoSuchMethodException 异常了。</p>
-<p>在阿里平时的项目开发中是否也会遇到类似的问题吗，答案是肯定的。例如阿里内部也很多成熟的中间件，由不同的中间件团队来负责。那么当一个项目引入不同的中间件的时候，该如何避免依赖冲突的问题呢？首先我们用一个非常简单的场景来描述为什么会出现类冲突的问题。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589143-aa9444bf-7ef6-40d7-8133-1fdf72d9d2b5.png"></p>
-<p>某个业务引用了消息中间件 (例如 metaq) 和微服务中间件 (例如 dubbo)，这两个中间件也同时引用了 fastjson-2.0 和 fastjson-3.0 版本，而业务自己本身也引用了 fastjson-1.0 版本。这三个版本表现不同之处在于 classA 类中方法数目不相同，我们根据 maven 依赖处理的机制，引用路径最短的 fastjson-1.0 会真正作为应用最终的依赖，其它两个版本的 fastjson 则会被忽略，那么中间件在调用 method2() 方法的时候，则会抛出方法找不到异常。</p>
-<p>或许你会说，将所有依赖 fastjson 的版本都升级到 3.0 不是就能解解决问题吗？确实这样能够解决问题，但是在实际操作中不太现实，首先，中间件团队和业务团队之间并不是一个团队，并不能做到高效协同，其次是中间件的稳定性是需要保障的，不可能因为包冲突问题，就升级版本，更何况一个中间件依赖的包可能有上百个，如果纯粹依赖包升级来解决，不仅稳定性难以保障，排包耗费的时间恐怕就让人窒息了。  </p>
-<p><strong>那如何解决包冲突的问题呢？</strong>答案就是 pandora(潘多拉)，通过自定义类加载器，为每个中间件自定义一个加载器，这些加载器之间的关系是平行的，彼此没有依赖关系。这样每个中间件的 classloader 就可以加载各自版本的 fastjson。</p>
-<p>因为一个类的全限定名以及加载该类的加载器两者共同形成了这个类在 JVM 中的惟一标识，这也是阿里 pandora 实现依赖隔离的基础。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589513-cc0b100f-f8ff-4591-b988-43548eb12480.png"></p>
-<p>可能到这里，你又会有新的疑惑，根据双亲委托模型，App Classloader 分别继承了 Custom Classloader. 那么业务包中的 fastjson 的 class 在加载的时候，会先委托到 Custom ClassLoader。这样不就会导致自身依赖的 fastjson 版本被忽略吗？确实如此，所以潘多拉又是如何做的呢？  </p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589280-a7aa8c57-5208-4120-878b-dbc3c47e827b.png"></p>
-<p>首先每个中间件对应的 ModuleClassLoader 在加载中间对应的 class 文件的同时，根据中间件配置的 export.index 负责将要需要透出的 class(主要是提供 api 接口的相关类) 索引到 exportedClassHashMap 中，然后应用程序的类加载器会持有这个 exportedClassHashMap，因此应用程序代码在 loadClass 的时候，会优先判断 exportedClassHashMap 是否存在当前类，如果存在，则直接返回，如果不存在，则再使用传统的双亲委托机制来进行类加载。</p>
-<p>这样中间件 MoudleClassloader 不仅实现了中间件的加载，也实现了中间件关键服务类的透出。</p>
-<p>我们可以大概看下应用程序类加载的过程：</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589263-0ffd7bec-0d05-4e30-b6af-c4f138761275.png"></p>
-<h3 id="热加载"><a href="#热加载" class="headerlink" title="热加载"></a>热加载</h3><p>在开发项目的时候，我们需要频繁的重启应用进行程序调试，但是 java 项目的启动少则几十秒，多则几分钟。如此慢的启动速度极大地影响了程序开发的效率，那是否可以快速的进行启动，进而能够快速的进行开发验证呢？答案也是肯定的，通过 classloader 我们可以完成对变更内容的加载，然后快速的启动。</p>
-<p>常用的热加载方案有好几个，接下来我们介绍下 spring 官方推荐的热加载方案，即 spring boot devtools。</p>
-<p>首先我们需要思考下，为什么重新启动一个应用会比较慢，那是因为在启动应用的时候，JVM 虚拟机需要将所有的应用程序重新装载到整个虚拟机。可想而知，一个复杂的应用程序所包含的 jar 包可能有上百兆，每次微小的改动都是全量加载，那自然是很慢了。</p>
-<p>那么我们是否可以做到，当我们修改了某个文件后，在 JVM 中替换到这个文件相关的部分而不全量的重新加载呢？而 spring boot devtools 正是基于这个思路进行处理的。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589262-764024cf-11ec-42a4-993b-9e4b43516ed7.png"></p>
-<p>如上图所示，通常一个项目的代码由以上四部分组成，即基础类、扩展类、二方包 / 三方包、以及我们自己编写的业务代码组成。上面的一排是我们通常的类加载结构，其中业务代码和二方包 / 三方包是由应用加载器加载的。</p>
-<p>而实际开发和调试的过程中，主要变化的是业务代码，并且业务代码相对二方包 / 三方包的内容来说会更少一些。因此我们可以将业务代码单独通过一个自定义的加载器 Custom Classloader 来进行加载，当监控发现业务代码发生改变后，我们重新加载启动，老的业务代码的相关类则由虚拟机的垃圾回收机制来自动回收。其工程流程大概如下。有兴趣的同学可以去看下源码，会更加清楚。  </p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/jpeg/514258/1614135589456-bf2eca3b-2cb1-4b16-940d-333d25a1ae0e.jpeg"></p>
-<p>RestartClassLoader 为自定义的类加载器，其核心是 loadClass 的加载方式，我们发现其通过修改了双亲委托机制，默认优先从自己加载，如果自己没有加载到，从从 parent 进行加载。这样保证了业务代码可以优先被 RestartClassLoader 加载。进而通过重新加载 RestartClassLoader 即可完成应用代码部分的重新加载。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589232-132b5c5a-397c-4a19-9c9c-104bfb8eedef.png"></p>
-<h3 id="热部署"><a href="#热部署" class="headerlink" title="热部署"></a>热部署</h3><p>热部署本质其实与热加载并没有太大的区别，通常我们说热加载是指在开发环境中进行的 classloader 加载，而热部署则更多是指在线上环境使用 classloader 的加载机制完成业务的部署。所以这二者使用的技术并没有本质的区别。</p>
-<p>那热部署除了与热加载具有发布更快之外，还有更多的更大的优势就是具有更细的发布粒度。我们可以想像以下的一个业务场景。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589284-b292411a-2334-48c5-9b9e-5dde36bd99d7.png"></p>
-<p>假设某个营销投放平台涉及到 4 个业务方的开发，需要对会场业务进行投放。而这四个业务方的代码全部都在一个应用里面。因此某个业务方有代码变更则需要对整个应用进行发布，同时其它业务方也需要跟着回归。因此每个微小的发动，则需要走整个应用的全量发布。这种方式带来的稳定性风险估且不说，整个发布迭代的效率也可想而知了。这在整个互联网里，时间和效率就是金钱的理念下，显然是无法接受的。</p>
-<p>那么我们完全可以通过类加载机制，将每个业务方通过一个 classloader 来加载。基于类的隔离机制，可以保障各个业务方的代码不会相互影响，同时也可以做到各个业务方进行独立的发布。其实在移动客户端，每个应用模块也可以基于类加载，实现插件化发布。本质上也是一个原理。</p>
-<p>在阿里内部像阿拉丁投放平台，以及 crossbow 容器化平台，本质都是使用 classloader 的热加载技术，实现业务细粒度的开发部署以及多应用的合并部署。</p>
-<h3 id="加密保护"><a href="#加密保护" class="headerlink" title="加密保护"></a>加密保护</h3><p>众所周期，基于 java 开发编译产生的 jar 包是由. class 字节码组成，由于字节码的文件格式是有明确规范的。因此对于字节码进行反编译，就很容易知道其源码实现了。因此大致会存在如下两个方面的诉求。例如在服务端，我们向别人提供三方包实现的时候，不希望别人知道核心代码实现，我们可以考虑对 jar 包进行加密，在客户端则会比较普遍，那就是我们打包好的 apk 的安装包，不希望被人家反编译而被人家翻个底朝天，我们也可以对 apk 进行加密。</p>
-<p>jar 包加密的本质，还是对字节码文件进行操作。但是 JVM 虚拟机加载 class 的规范是统一的，因此我们在最终加载 class 文件的时候，还是需要满足其 class 文件的格式规范，否则虚拟机是不能正常加载的。因此我们可以在打包的时候对 class 进行正向的加密操作，然后，在加载 class 文件之前通过自定义 classloader 先进行反向的解密操作，然后再按照标准的 class 文件标准进行加载，这样就完成了 class 文件正常的加载。因此这个加密的 jar 包只有能够实现解密方法的 classloader 才能正常加载。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589261-6a3a26ad-9239-46d0-b172-ed8461b93a66.png"></p>
-<p>我们可以贴一下简单的实现方案：  </p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/514258/1614135589199-1926d3d8-b7b3-4702-8eb6-544029794c63.png"></p>
-<p>这样整个 jar 包的安全性就有一定程度的提高，至于更高安全的保障则取决于加密算法的安全性了以及如何保障加密算法的密钥不被泄露的问题了。这有种套娃的感觉，所谓安全基本都是相对的。并且这些方法也不是绝对的，例如可以通过对 classloader 进行插码，对解密后的 class 文件进行存储；另外大多数 JVM 本身并不安全，还可以修改 JVM，从 ClassLoader 之外获取解密后的代码并保存到磁盘，从而绕过上述加密所做的一切工作，当然这些操作的成本就比单纯的 class 反编译就高很多了。所以说安全保障只要做到使对方破解的成本高于收益即是安全，所以一定程度的安全性，足以减少很多低成本的攻击了。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文对 classloader 的加载过程和加载原理进行了介绍，并结合类加载机制的特征，介绍了其相应的使用场景。由于篇幅限制，并没有对每种场景的具体实现细节进行介绍，而只是阐述了其基本实现思路。或许大家觉得 classloader 的应用有些复杂，但事实上只要大家对 class 从哪里加载，搞清楚 loadClass 的机制，就已经成功了一大半。正所谓万变不离其宗，抓住了本质，其它问题也就迎刃而解了。</p>
-</div></article></div><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-04-11T09:31:51.000Z" title="2021/4/11下午5:31:51">2021-04-11</time></span><span class="level-item">Updated&nbsp;<time dateTime="2021-07-13T08:33:54.292Z" title="2021/7/13下午4:33:54">2021-07-13</time></span><span class="level-item"><a class="link-muted" href="/categories/JVM/">JVM</a></span><span class="level-item">27 minutes read (About 4093 words)</span></div></div><h1 class="title is-3 is-size-4-mobile"><a class="link-muted" href="/posts/29291.html">JVM：类加载机制</a></h1><div class="content"><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411173320cafe-3537801_960_720.jpg"></p></div><a class="article-more button is-small is-size-7" href="/posts/29291.html#more">Read more</a></article></div><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-04-11T06:46:25.000Z" title="2021/4/11下午2:46:25">2021-04-11</time></span><span class="level-item">Updated&nbsp;<time dateTime="2021-05-12T03:22:29.921Z" title="2021/5/12上午11:22:29">2021-05-12</time></span><span class="level-item"><a class="link-muted" href="/categories/JVM/">JVM</a></span><span class="level-item">an hour read (About 9646 words)</span></div></div><h1 class="title is-3 is-size-4-mobile"><a class="link-muted" href="/posts/27028.html">JVM：垃圾回收</a></h1><div class="content"><p><img src="https://gitee.com/niumi/drawing/raw/master/2021041114482420210411144822z46PCb.jpg" alt="20210411144822z46PCb"></p></div><a class="article-more button is-small is-size-7" href="/posts/27028.html#more">Read more</a></article></div><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-04-11T04:59:34.000Z" title="2021/4/11下午12:59:34">2021-04-11</time></span><span class="level-item">Updated&nbsp;<time dateTime="2021-05-19T14:44:47.074Z" title="2021/5/19下午10:44:47">2021-05-19</time></span><span class="level-item"><a class="link-muted" href="/categories/JVM/">JVM</a></span><span class="level-item">18 minutes read (About 2746 words)</span></div></div><h1 class="title is-3 is-size-4-mobile"><a class="link-muted" href="/posts/19168.html">JVM：通过逃逸分析就能让对象在栈上分配？</a></h1><div class="content"><p><img src="https://gitee.com/niumi/drawing/raw/master/2021041113010420210411130102liImPR.jpg" alt="20210411130102liImPR"></p></div><a class="article-more button is-small is-size-7" href="/posts/19168.html#more">Read more</a></article></div><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-04-11T04:02:22.000Z" title="2021/4/11下午12:02:22">2021-04-11</time></span><span class="level-item">Updated&nbsp;<time dateTime="2021-07-13T08:35:21.673Z" title="2021/7/13下午4:35:21">2021-07-13</time></span><span class="level-item"><a class="link-muted" href="/categories/JVM/">JVM</a></span><span class="level-item">13 minutes read (About 2020 words)</span></div></div><h1 class="title is-3 is-size-4-mobile"><a class="link-muted" href="/posts/48830.html">JVM：如何处理对象分配、布局和访问？</a></h1><div class="content"><p><img src="https://gitee.com/niumi/drawing/raw/master/20210411120709tjNABX.jpg" alt="20210411120709tjNABX"></p></div><a class="article-more button is-small is-size-7" href="/posts/48830.html#more">Read more</a></article></div></div><div class="column column-left is-4-tablet is-4-desktop is-4-widescreen  order-1"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar" src="/img/avatar.png" alt="牛觅"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">牛觅</p><p class="is-size-6 is-block">Your title</p><p class="is-size-6 is-flex justify-content-center"><i class="fas fa-map-marker-alt mr-1"></i><span>中国-杭州</span></p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">77</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">19</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">18</p></a></div></div></nav><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com/ppoffice"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Facebook" href="https://facebook.com"><i class="fab fa-facebook"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Dribbble" href="https://dribbble.com"><i class="fab fa-dribbble"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="RSS" href="/"><i class="fas fa-rss"></i></a></div></div></div><!--!--><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://hexo.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Hexo</span></span><span class="level-right"><span class="level-item tag">hexo.io</span></span></a></li><li><a class="level is-mobile" href="https://bulma.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Bulma</span></span><span class="level-right"><span class="level-item tag">bulma.io</span></span></a></li></ul></div></div></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/DDD/"><span class="level-start"><span class="level-item">DDD</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Dubbo/"><span class="level-start"><span class="level-item">Dubbo</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/Git/"><span class="level-start"><span class="level-item">Git</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Hbase/"><span class="level-start"><span class="level-item">Hbase</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/JVM/"><span class="level-start"><span class="level-item">JVM</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/JavaSE/"><span class="level-start"><span class="level-item">JavaSE</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/"><span class="level-start"><span class="level-item">Java并发编程</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/MySQL/"><span class="level-start"><span class="level-item">MySQL</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Mybatis/"><span class="level-start"><span class="level-item">Mybatis</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Netty/"><span class="level-start"><span class="level-item">Netty</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/Spring/"><span class="level-start"><span class="level-item">Spring</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/SpringCloud/"><span class="level-start"><span class="level-item">SpringCloud</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/"><span class="level-start"><span class="level-item">分布式</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84/"><span class="level-start"><span class="level-item">微服务架构</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"><span class="level-start"><span class="level-item">数据结构与算法</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E6%97%A5%E5%BF%97/"><span class="level-start"><span class="level-item">日志</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"><span class="level-start"><span class="level-item">计算机网络</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%BE%E8%AE%A1/"><span class="level-start"><span class="level-item">设计</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"><span class="level-start"><span class="level-item">设计模式</span></span><span class="level-end"><span class="level-item tag">21</span></span></a></li></ul></div></div></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">Recents</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-08-09T10:36:51.000Z">2021-08-09</time></p><p class="title"><a href="/posts/22384.html">MySQL：索引</a></p><p class="categories"><a href="/categories/MySQL/">MySQL</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-08-07T03:38:43.000Z">2021-08-07</time></p><p class="title"><a href="/posts/60776.html">Java Agent</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-21T12:58:45.000Z">2021-07-21</time></p><p class="title"><a href="/posts/51998.html">Java类加载：classloader的原理及应用</a></p><p class="categories"><a href="/categories/JVM/">JVM</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-19T05:47:30.000Z">2021-07-19</time></p><p class="title"><a href="/posts/19955.html">Netty：ByteBuf与内存管理</a></p><p class="categories"><a href="/categories/Netty/">Netty</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-16T03:00:08.000Z">2021-07-16</time></p><p class="title"><a href="/posts/7199.html">微服务安全架构：基于OAuth 2.0/JWT的微服务参考架构</a></p></div></article></div></div><div class="card widget" data-type="archives"><div class="card-content"><div class="menu"><h3 class="menu-label">Archives</h3><ul class="menu-list"><li><a class="level is-mobile" href="/archives/2021/08/"><span class="level-start"><span class="level-item">August 2021</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/07/"><span class="level-start"><span class="level-item">July 2021</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/06/"><span class="level-start"><span class="level-item">June 2021</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/05/"><span class="level-start"><span class="level-item">May 2021</span></span><span class="level-end"><span class="level-item tag">13</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/04/"><span class="level-start"><span class="level-item">April 2021</span></span><span class="level-end"><span class="level-item tag">51</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/03/"><span class="level-start"><span class="level-item">March 2021</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div><div class="card widget" data-type="tags"><div class="card-content"><div class="menu"><h3 class="menu-label">Tags</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/JVM/"><span class="tag">JVM</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Java-8/"><span class="tag">Java 8</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Mybatis/"><span class="tag">Mybatis</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Netty/"><span class="tag">Netty</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/OAuth2/"><span class="tag">OAuth2</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/TODO/"><span class="tag">TODO</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"><span class="tag">分布式</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/"><span class="tag">分布式事务</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%BC%93%E5%AD%98/"><span class="tag">分布式缓存</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%9B%E5%BB%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">创建型模式</span><span class="tag">4</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"><span class="tag">微服务</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E5%AE%89%E5%85%A8/"><span class="tag">微服务安全</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%8E%92%E5%BA%8F/"><span class="tag">排序</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%B3%9B%E5%9E%8B/"><span class="tag">泛型</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">结构型模式</span><span class="tag">6</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E8%A1%8C%E4%B8%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">行为型模式</span><span class="tag">11</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%9B%B6%E6%8B%B7%E8%B4%9D/"><span class="tag">零拷贝</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%9D%A2%E8%AF%95%E9%A2%98/"><span class="tag">面试题</span><span class="tag">2</span></a></div></div></div></div></div><div class="card widget" data-type="subscribe-email"><div class="card-content"><div class="menu"><h3 class="menu-label">Subscribe for updates</h3><form action="https://feedburner.google.com/fb/a/mailverify" method="post" target="popupwindow" onsubmit="window.open(&#039;https://feedburner.google.com/fb/a/mailverify?uri=&#039;,&#039;popupwindow&#039;,&#039;scrollbars=yes,width=550,height=520&#039;);return true"><input type="hidden" value="" name="uri"><input type="hidden" name="loc" value="en_US"><div class="field has-addons"><div class="control has-icons-left is-expanded"><input class="input" name="email" type="email" placeholder="Email"><span class="icon is-small is-left"><i class="fas fa-envelope"></i></span></div><div class="control"><input class="button" type="submit" value="Subscribe"></div></div></form></div></div></div><div class="card widget"><div class="card-content"><div class="notification is-danger">You need to set <code>client_id</code> and <code>slot_id</code> to show this AD unit. Please set it in <code>_config.yml</code>.</div></div></div><div class="card widget" data-type="subscribe-email"><div class="card-content"><div class="menu"><h3 class="menu-label">follow.it</h3><form action="" method="post" target="_blank"><div class="field has-addons"><div class="control has-icons-left is-expanded"><input class="input" name="email" type="email" placeholder="Email"><span class="icon is-small is-left"><i class="fas fa-envelope"></i></span></div><div class="control"><input class="button" type="submit" value="Subscribe"></div></div></form></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="牛觅博客" height="28"></a><p class="is-size-7"><span>&copy; 2021 牛觅</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-Hanss");</script><script>var IcarusThemeSettings = {
-            article: {
-                highlight: {
-                    clipboard: true,
-                    fold: 'unfolded'
-                }
-            }
-        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
-      window.cookieconsent.initialise({
-        type: "info",
-        theme: "edgeless",
-        static: false,
-        position: "bottom-left",
-        content: {
-          message: "This website uses cookies to improve your experience.",
-          dismiss: "Got it!",
-          allow: "Allow cookies",
-          deny: "Decline",
-          link: "Learn more",
-          policy: "Cookie Policy",
-          href: "https://www.cookiesandyou.com/",
-        },
-        palette: {
-          popup: {
-            background: "#edeff5",
-            text: "#838391"
-          },
-          button: {
-            background: "#4b81e8"
-          },
-        },
-      });
-    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
-            if (typeof $.fn.lightGallery === 'function') {
-                $('.article').lightGallery({ selector: '.gallery-item' });
-            }
-            if (typeof $.fn.justifiedGallery === 'function') {
-                if ($('.justified-gallery > p > .gallery-item').length) {
-                    $('.justified-gallery > p > .gallery-item').unwrap();
-                }
-                $('.justified-gallery').justifiedGallery();
-            }
-        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
-            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
-        });</script></body></html>
+
+  <script data-pjax>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content category">
+            
+
+  
+  
+  
+  <div class="post-block">
+    <div class="posts-collapse">
+      <div class="collection-title">
+        <h2 class="collection-header">JVM
+          <small>分类</small>
+        </h2>
+      </div>
+
+      
+    <div class="collection-year">
+      <span class="collection-header">2021</span>
+    </div>
+
+  <article itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <div class="post-meta">
+        <time itemprop="dateCreated"
+              datetime="2021-07-21T20:58:45+08:00"
+              content="2021-07-21">
+          07-21
+        </time>
+      </div>
+
+      <div class="post-title">
+          <a class="post-title-link" href="/posts/51998.html" itemprop="url">
+            <span itemprop="name">Java 类加载：classloader 的原理及应用</span>
+          </a>
+      </div>
+
+    </header>
+  </article>
+
+  <article itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <div class="post-meta">
+        <time itemprop="dateCreated"
+              datetime="2021-04-11T17:31:51+08:00"
+              content="2021-04-11">
+          04-11
+        </time>
+      </div>
+
+      <div class="post-title">
+          <a class="post-title-link" href="/posts/29291.html" itemprop="url">
+            <span itemprop="name">JVM：类加载机制</span>
+          </a>
+      </div>
+
+    </header>
+  </article>
+
+  <article itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <div class="post-meta">
+        <time itemprop="dateCreated"
+              datetime="2021-04-11T14:46:25+08:00"
+              content="2021-04-11">
+          04-11
+        </time>
+      </div>
+
+      <div class="post-title">
+          <a class="post-title-link" href="/posts/27028.html" itemprop="url">
+            <span itemprop="name">JVM：垃圾回收</span>
+          </a>
+      </div>
+
+    </header>
+  </article>
+
+  <article itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <div class="post-meta">
+        <time itemprop="dateCreated"
+              datetime="2021-04-11T12:59:34+08:00"
+              content="2021-04-11">
+          04-11
+        </time>
+      </div>
+
+      <div class="post-title">
+          <a class="post-title-link" href="/posts/19168.html" itemprop="url">
+            <span itemprop="name">JVM：通过逃逸分析就能让对象在栈上分配？</span>
+          </a>
+      </div>
+
+    </header>
+  </article>
+
+  <article itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <div class="post-meta">
+        <time itemprop="dateCreated"
+              datetime="2021-04-11T12:02:22+08:00"
+              content="2021-04-11">
+          04-11
+        </time>
+      </div>
+
+      <div class="post-title">
+          <a class="post-title-link" href="/posts/48830.html" itemprop="url">
+            <span itemprop="name">JVM：如何处理对象分配、布局和访问？</span>
+          </a>
+      </div>
+
+    </header>
+  </article>
+
+    </div>
+  </div>
+  
+  
+  
+
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">77</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div id="pjax">
+  
+
+  
+
+
+    </div>
+</body>
+</html>

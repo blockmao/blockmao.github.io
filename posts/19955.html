@@ -1,29 +1,296 @@
-<!doctype html>
-<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>Netty：ByteBuf与内存管理 - 牛觅博客</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="牛觅博客"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="牛觅博客"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content=""><meta property="og:type" content="blog"><meta property="og:title" content="Netty：ByteBuf与内存管理"><meta property="og:url" content="http://blog.blockmao.cn/posts/19955.html"><meta property="og:site_name" content="牛觅博客"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210720081020iGzojl.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718183353tUNKqD.png"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718184555Czb2nV.png"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718190547mbHToW.png"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718190648IfPCbV.png"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718214241ryWhEg.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718214733xxbEZz.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718215150ilJJ38.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718220316l4SdsX.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021071822112753IgSA.jpg"><meta property="article:published_time" content="2021-07-19T05:47:30.000Z"><meta property="article:modified_time" content="2021-07-20T00:10:29.069Z"><meta property="article:author" content="牛觅"><meta property="twitter:card" content="summary"><meta property="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210720081020iGzojl.jpg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://blog.blockmao.cn/posts/19955.html"},"headline":"Netty：ByteBuf与内存管理","image":["https://gitee.com/niumi/drawing/raw/master/20210720081020iGzojl.jpg","https://gitee.com/niumi/drawing/raw/master/20210718183353tUNKqD.png","https://gitee.com/niumi/drawing/raw/master/20210718184555Czb2nV.png","https://gitee.com/niumi/drawing/raw/master/20210718190547mbHToW.png","https://gitee.com/niumi/drawing/raw/master/20210718190648IfPCbV.png","https://gitee.com/niumi/drawing/raw/master/20210718214241ryWhEg.jpg","https://gitee.com/niumi/drawing/raw/master/20210718214733xxbEZz.jpg","https://gitee.com/niumi/drawing/raw/master/20210718215150ilJJ38.jpg","https://gitee.com/niumi/drawing/raw/master/20210718220316l4SdsX.jpg","https://gitee.com/niumi/drawing/raw/master/2021071822112753IgSA.jpg"],"datePublished":"2021-07-19T05:47:30.000Z","dateModified":"2021-07-20T00:10:29.069Z","author":{"@type":"Person","name":"牛觅"},"publisher":{"@type":"Organization","name":"牛觅博客","logo":{"@type":"ImageObject","url":"http://blog.blockmao.cn/img/logo.svg"}},"description":""}</script><link rel="canonical" href="http://blog.blockmao.cn/posts/19955.html"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.2/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css"><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script><!--!--><!--!--><meta name="generator" content="Hexo 5.4.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="牛觅博客" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-8-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-07-19T05:47:30.000Z" title="2021/7/19下午1:47:30">2021-07-19</time></span><span class="level-item">Updated&nbsp;<time dateTime="2021-07-20T00:10:29.069Z" title="2021/7/20上午8:10:29">2021-07-20</time></span><span class="level-item"><a class="link-muted" href="/categories/Netty/">Netty</a></span><span class="level-item">39 minutes read (About 5799 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">Netty：ByteBuf与内存管理</h1><div class="content"><p><img src="https://gitee.com/niumi/drawing/raw/master/20210720081020iGzojl.jpg" alt="20210720081020iGzojl"></p>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="Netty：ByteBuf 与内存管理">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/19955.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210720081020iGzojl.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718183353tUNKqD.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718184555Czb2nV.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718190547mbHToW.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718190648IfPCbV.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718214241ryWhEg.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718214733xxbEZz.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718215150ilJJ38.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210718220316l4SdsX.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021071822112753IgSA.jpg">
+<meta property="article:published_time" content="2021-07-19T05:47:30.000Z">
+<meta property="article:modified_time" content="2021-07-20T00:10:29.069Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210720081020iGzojl.jpg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/19955.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Netty：ByteBuf 与内存管理 | 牛觅博客</title>
+  
+
+
+  <script data-pjax>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/19955.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Netty：ByteBuf 与内存管理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-07-19 13:47:30" itemprop="dateCreated datePublished" datetime="2021-07-19T13:47:30+08:00">2021-07-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-07-20 08:10:29" itemprop="dateModified" datetime="2021-07-20T08:10:29+08:00">2021-07-20</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Netty/" itemprop="url" rel="index"><span itemprop="name">Netty</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210720081020iGzojl.jpg" alt="20210720081020iGzojl"></p>
 <span id="more"></span>
 
-<h1 id="为什么需要堆外内存？"><a href="#为什么需要堆外内存？" class="headerlink" title="为什么需要堆外内存？"></a>为什么需要堆外内存？</h1><p>在Java 中对象都是在<strong>堆内分配</strong>的，通常说的<strong>JVM 内存也就指的堆内内存</strong>，堆内内存完全被JVM 虚拟机所管理，JVM 有自己的垃圾回收算法，对于使用者来说不必关心对象的内存如何回收。</p>
-<p><strong>堆外内存</strong>与堆内内存相对应，对于整个机器内存而言，除<strong>堆内内存以外部分即为堆外内存</strong>。堆外内存不受 JVM 虚拟机管理，直接由操作系统管理。</p>
+<h1 id="为什么需要堆外内存？"><a href="# 为什么需要堆外内存？" class="headerlink" title="为什么需要堆外内存？"></a>为什么需要堆外内存？</h1><p>在 Java 中对象都是在 <strong> 堆内分配 </strong> 的，通常说的<strong>JVM 内存也就指的堆内内存</strong>，堆内内存完全被 JVM 虚拟机所管理，JVM 有自己的垃圾回收算法，对于使用者来说不必关心对象的内存如何回收。</p>
+<p><strong>堆外内存 </strong> 与堆内内存相对应，对于整个机器内存而言，除 <strong> 堆内内存以外部分即为堆外内存</strong>。堆外内存不受 JVM 虚拟机管理，直接由操作系统管理。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210718183353tUNKqD.png" alt="20210718183353tUNKqD"></p>
-<h2 id="堆外内存-VS-堆内内存"><a href="#堆外内存-VS-堆内内存" class="headerlink" title="堆外内存 VS 堆内内存"></a>堆外内存 VS 堆内内存</h2><ol>
-<li><p>堆内内存由 JVM GC 自动回收内存，降低了 Java 用户的使用心智，但是GC是需要时间开销成本的，堆外内存由于不受 JVM 管理，所以在一定程度上可以降低 GC 对应用运行时带来的影响。</p>
+<h2 id="堆外内存 -VS- 堆内内存"><a href="# 堆外内存 -VS- 堆内内存" class="headerlink" title="堆外内存 VS 堆内内存"></a>堆外内存 VS 堆内内存</h2><ol>
+<li><p>堆内内存由 JVM GC 自动回收内存，降低了 Java 用户的使用心智，但是 GC 是需要时间开销成本的，堆外内存由于不受 JVM 管理，所以在一定程度上可以降低 GC 对应用运行时带来的影响。</p>
 </li>
 <li><p>堆外内存需要手动释放，这一点跟 C/C++ 很像，稍有不慎就会造成应用程序内存泄漏，当出现内存泄漏问题时排查起来会相对困难。</p>
 </li>
 <li><p>当进行网络 I/O 操作、文件读写时，堆内内存都需要转换为堆外内存，然后再与底层设备进行交互，<strong>使用堆外内存可以减少一次内存拷贝</strong>。</p>
 </li>
-<li><p>堆外内存可以实现进程之间、JVM多实例之间的数据共享。</p>
+<li><p>堆外内存可以实现进程之间、JVM 多实例之间的数据共享。</p>
 </li>
 </ol>
-<h1 id="Java中堆外内存的分配方式"><a href="#Java中堆外内存的分配方式" class="headerlink" title="Java中堆外内存的分配方式"></a>Java中堆外内存的分配方式</h1><h2 id="ByteBuffer-allocateDirect"><a href="#ByteBuffer-allocateDirect" class="headerlink" title="ByteBuffer#allocateDirect"></a>ByteBuffer#allocateDirect</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 分配 10M 堆外内存</span></span><br><span class="line">ByteBuffer buffer = ByteBuffer.allocateDirect(<span class="number">10</span> * <span class="number">1024</span> * <span class="number">1024</span>); </span><br></pre></td></tr></table></figure>
+<h1 id="Java 中堆外内存的分配方式"><a href="#Java 中堆外内存的分配方式" class="headerlink" title="Java 中堆外内存的分配方式"></a>Java 中堆外内存的分配方式</h1><h2 id="ByteBuffer-allocateDirect"><a href="#ByteBuffer-allocateDirect" class="headerlink" title="ByteBuffer#allocateDirect"></a>ByteBuffer#allocateDirect</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 分配 10M 堆外内存</span></span><br><span class="line">ByteBuffer buffer = ByteBuffer.allocateDirect(<span class="number">10</span> * <span class="number">1024</span> * <span class="number">1024</span>); </span><br></pre></td></tr></table></figure>
 
-<p>跟进 ByteBuffer.allocateDirect源码，发现其中<strong>直接调用的DirectByteBuffer 构造函数</strong>：</p>
+<p>跟进 ByteBuffer.allocateDirect 源码，发现其中 <strong> 直接调用的 DirectByteBuffer 构造函数</strong>：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">DirectByteBuffer(<span class="keyword">int</span> cap) &#123;</span><br><span class="line">    <span class="keyword">super</span>(-<span class="number">1</span>, <span class="number">0</span>, cap, cap);</span><br><span class="line">    <span class="keyword">boolean</span> pa = VM.isDirectMemoryPageAligned();</span><br><span class="line">    <span class="keyword">int</span> ps = Bits.pageSize();</span><br><span class="line">    <span class="keyword">long</span> size = Math.max(<span class="number">1L</span>, (<span class="keyword">long</span>)cap + (pa ? ps : <span class="number">0</span>));</span><br><span class="line">    Bits.reserveMemory(size, cap);</span><br><span class="line">    <span class="keyword">long</span> base = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        base = unsafe.allocateMemory(size);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (OutOfMemoryError x) &#123;</span><br><span class="line">        Bits.unreserveMemory(size, cap);</span><br><span class="line">        <span class="keyword">throw</span> x;</span><br><span class="line">    &#125;</span><br><span class="line">    unsafe.setMemory(base, size, (<span class="keyword">byte</span>) <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span> (pa &amp;&amp; (base % ps != <span class="number">0</span>)) &#123;</span><br><span class="line">        address = base + ps - (base &amp; (ps - <span class="number">1</span>));</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        address = base;</span><br><span class="line">    &#125;</span><br><span class="line">    cleaner = Cleaner.create(<span class="keyword">this</span>, <span class="keyword">new</span> Deallocator(base, size, cap));</span><br><span class="line">    att = <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>如下图所示，描述了 DirectByteBuffer 的内存引用情况，方便你更好地理解上述源码的初始化过程。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210718184555Czb2nV.png" alt="20210718184555Czb2nV"></p>
 <p>在堆内存放的 DirectByteBuffer 对象并不大，仅仅包含堆外内存的地址、大小等属性，同时还会创建对应的 Cleaner 对象，<strong>通过 ByteBuffer 分配的堆外内存不需要手动回收，它可以被 JVM 自动回收。当堆内的 DirectByteBuffer 对象被 GC 回收时，Cleaner 就会用于回收对应的堆外内存</strong>。</p>
-<h2 id="Unsafe-allocateMemory"><a href="#Unsafe-allocateMemory" class="headerlink" title="Unsafe#allocateMemory"></a>Unsafe#allocateMemory</h2><p>从 DirectByteBuffer的构造函数中可以看出，真正分配堆外内存的逻辑还是通过unsafe.allocateMemory(size)。</p>
+<h2 id="Unsafe-allocateMemory"><a href="#Unsafe-allocateMemory" class="headerlink" title="Unsafe#allocateMemory"></a>Unsafe#allocateMemory</h2><p>从 DirectByteBuffer 的构造函数中可以看出，真正分配堆外内存的逻辑还是通过 unsafe.allocateMemory(size)。</p>
 <p><strong>Unsafe 是一个非常不安全的类，它用于执行内存访问、分配、修改等敏感操作，可以越过 JVM 限制的枷锁</strong>。Unsafe 最初并不是为开发者设计的，使用它时虽然可以获取对底层资源的控制权，但也失去了安全性的保证，所以使用 Unsafe 一定要慎重。</p>
 <p>在 Java 中是不能直接使用 Unsafe 的，但是我们可以通过反射获取 Unsafe 实例。使用方式如下所示。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> Unsafe unsafe = <span class="keyword">null</span>;</span><br><span class="line"><span class="keyword">static</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Field getUnsafe = Unsafe.class.getDeclaredField(<span class="string">&quot;theUnsafe&quot;</span>);</span><br><span class="line">        getUnsafe.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">        unsafe = (Unsafe) getUnsafe.get(<span class="keyword">null</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NoSuchFieldException | IllegalAccessException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -41,14 +308,14 @@
 
 
 <p>对于 Java 开发者而言，常用的是 ByteBuffer.allocateDirect 分配方式，我们平时常说的堆外内存泄漏都与该分配方式有关。</p>
-<h1 id="堆外内存的回收"><a href="#堆外内存的回收" class="headerlink" title="堆外内存的回收"></a>堆外内存的回收</h1><p>DirectByteBuffer 对象有可能长时间存在于堆内内存，所以它很可能晋升到 JVM 的老年代，所以这时候 DirectByteBuffer 对象的回收需要依赖 Old GC 或者 Full GC 才能触发清理。</p>
+<h1 id="堆外内存的回收"><a href="# 堆外内存的回收" class="headerlink" title="堆外内存的回收"></a>堆外内存的回收</h1><p>DirectByteBuffer 对象有可能长时间存在于堆内内存，所以它很可能晋升到 JVM 的老年代，所以这时候 DirectByteBuffer 对象的回收需要依赖 Old GC 或者 Full GC 才能触发清理。</p>
 <p>如果长时间没有 Old GC 或者 Full GC 执行，那么堆外内存即使不再使用，也会一直在占用内存不释放，很容易将机器的物理内存耗尽，这是相当危险的。</p>
-<h2 id="使用-DirectByteBuffer-时如何避免物理内存被耗尽呢？"><a href="#使用-DirectByteBuffer-时如何避免物理内存被耗尽呢？" class="headerlink" title="使用 DirectByteBuffer 时如何避免物理内存被耗尽呢？"></a>使用 DirectByteBuffer 时如何避免物理内存被耗尽呢？</h2><p>由于JVM 并不知道堆外内存是不是已经不足了，所以<strong>最好通过 JVM 参数 -XX:MaxDirectMemorySize 指定堆外内存的上限大小</strong>，当堆外内存的大小超过该阈值时，就会触发一次 Full GC 进行清理回收，如果在 Full GC 之后还是无法满足堆外内存的分配，那么程序将会抛出 OOM 异常。</p>
+<h2 id="使用 -DirectByteBuffer- 时如何避免物理内存被耗尽呢？"><a href="# 使用 -DirectByteBuffer- 时如何避免物理内存被耗尽呢？" class="headerlink" title="使用 DirectByteBuffer 时如何避免物理内存被耗尽呢？"></a>使用 DirectByteBuffer 时如何避免物理内存被耗尽呢？</h2><p>由于 JVM 并不知道堆外内存是不是已经不足了，所以 <strong> 最好通过 JVM 参数 -XX:MaxDirectMemorySize 指定堆外内存的上限大小</strong>，当堆外内存的大小超过该阈值时，就会触发一次 Full GC 进行清理回收，如果在 Full GC 之后还是无法满足堆外内存的分配，那么程序将会抛出 OOM 异常。</p>
 <p>此外在 ByteBuffer.allocateDirect 分配的过程中，如果没有足够的空间分配堆外内存，在 Bits.reserveMemory 方法中也会主动调用 System.gc() 强制执行 Full GC，但是在生产环境一般都是设置了 -XX:+DisableExplicitGC，System.gc() 是不起作用的，所以依赖 System.gc() 并不是一个好办法。</p>
-<h2 id="Cleaner-是如何与-GC-关联起来的呢？"><a href="#Cleaner-是如何与-GC-关联起来的呢？" class="headerlink" title="Cleaner 是如何与 GC 关联起来的呢？"></a>Cleaner 是如何与 GC 关联起来的呢？</h2><p>Java 对象有四种引用方式：强引用 StrongReference、软引用 SoftReference、弱引用 WeakReference 和虚引用 PhantomReference。其中 PhantomReference 是最不常用的一种引用方式，<strong>Cleaner 就属于 PhantomReference 的子类</strong>。</p>
+<h2 id="Cleaner- 是如何与 -GC- 关联起来的呢？"><a href="#Cleaner- 是如何与 -GC- 关联起来的呢？" class="headerlink" title="Cleaner 是如何与 GC 关联起来的呢？"></a>Cleaner 是如何与 GC 关联起来的呢？</h2><p>Java 对象有四种引用方式：强引用 StrongReference、软引用 SoftReference、弱引用 WeakReference 和虚引用 PhantomReference。其中 PhantomReference 是最不常用的一种引用方式，<strong>Cleaner 就属于 PhantomReference 的子类</strong>。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Cleaner</span> <span class="keyword">extends</span> <span class="title">java</span>.<span class="title">lang</span>.<span class="title">ref</span>.<span class="title">PhantomReference</span>&lt;<span class="title">java</span>.<span class="title">lang</span>.<span class="title">Object</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> java.lang.ref.ReferenceQueue&lt;java.lang.Object&gt; dummyQueue;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> sun.misc.Cleaner first;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> sun.misc.Cleaner next;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> sun.misc.Cleaner prev;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> java.lang.Runnable thunk;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">clean</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>PhantomReference不能被单独使用，需要与引用队列 ReferenceQueue 联合使用。</p>
+<p>PhantomReference 不能被单独使用，需要与引用队列 ReferenceQueue 联合使用。</p>
 <p>当初始化堆外内存时，内存中的对象引用情况如下图所示：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210718190547mbHToW.png" alt="20210718190547mbHToW"></p>
 <p>first 是 Cleaner 类中的静态变量，Cleaner 对象在初始化时会加入 Cleaner 链表中。DirectByteBuffer 对象包含堆外内存的地址、大小以及 Cleaner 对象的引用，ReferenceQueue 用于保存需要回收的 Cleaner 对象。</p>
@@ -59,7 +326,7 @@
 <li>将 Cleaner 对象从 Cleaner 链表中移除；</li>
 <li>调用 unsafe.freeMemory 方法清理堆外内存。</li>
 </ol>
-<h1 id="ByteBuffer有哪些缺陷和痛点"><a href="#ByteBuffer有哪些缺陷和痛点" class="headerlink" title="ByteBuffer有哪些缺陷和痛点"></a>ByteBuffer有哪些缺陷和痛点</h1><p><img src="https://gitee.com/niumi/drawing/raw/master/20210718214241ryWhEg.jpg" alt="20210718214241ryWhEg"></p>
+<h1 id="ByteBuffer 有哪些缺陷和痛点"><a href="#ByteBuffer 有哪些缺陷和痛点" class="headerlink" title="ByteBuffer 有哪些缺陷和痛点"></a>ByteBuffer 有哪些缺陷和痛点</h1><p><img src="https://gitee.com/niumi/drawing/raw/master/20210718214241ryWhEg.jpg" alt="20210718214241ryWhEg"></p>
 <p>ByteBuffer 包含以下四个基本属性：</p>
 <ul>
 <li>mark：为某个读取过的关键位置做标记，方便回退到该位置；</li>
@@ -67,8 +334,8 @@
 <li>limit：buffer 中有效的数据长度大小；</li>
 <li>capacity：初始化时的空间容量。</li>
 </ul>
-<p>以上<strong>四个基本属性</strong>的关系是：<strong>mark &lt;= position &lt;= limit &lt;= capacity</strong>。</p>
-<p><strong>ByteBuffer具有以下的缺陷</strong>：</p>
+<p>以上 <strong> 四个基本属性 </strong> 的关系是：<strong>mark &lt;= position &lt;= limit &lt;= capacity</strong>。</p>
+<p><strong>ByteBuffer 具有以下的缺陷</strong>：</p>
 <ol>
 <li>ByteBuffer 分配的长度是固定的，无法动态扩缩容，所以很难控制需要分配多大的容量。<strong>在使用 ByteBuffer 时，为了避免容量不足问题，你必须每次在存放数据的时候对容量大小做校验，如果超出 ByteBuffer 最大容量，那么需要重新开辟一个更大容量的 ByteBuffer，将已有的数据迁移过去。整个过程相对烦琐，对开发者而言是非常不友好的</strong>。</li>
 <li>ByteBuffer 只能通过 position 获取当前可操作的位置，因为读写共用的 position 指针，所以需要频繁调用 flip、rewind 方法切换读写状态，开发者必须很小心处理 ByteBuffer 的数据读写，稍不留意就会出错。</li>
@@ -81,25 +348,25 @@
 <li>支持引用计数；</li>
 <li>支持缓存池</li>
 </ul>
-<h2 id="ByteBuf-内部结构"><a href="#ByteBuf-内部结构" class="headerlink" title="ByteBuf 内部结构"></a>ByteBuf 内部结构</h2><p><img src="https://gitee.com/niumi/drawing/raw/master/20210718214733xxbEZz.jpg" alt="20210718214733xxbEZz"></p>
+<h2 id="ByteBuf- 内部结构"><a href="#ByteBuf- 内部结构" class="headerlink" title="ByteBuf 内部结构"></a>ByteBuf 内部结构</h2><p><img src="https://gitee.com/niumi/drawing/raw/master/20210718214733xxbEZz.jpg" alt="20210718214733xxbEZz"></p>
 <p>ByteBuf 包含三个指针：<strong>读指针 readerIndex</strong>、<strong>写指针 writeIndex</strong>、<strong>最大容量 maxCapacity</strong>，根据指针的位置又可以将 ByteBuf 内部结构可以分为四个部分：</p>
-<p>第一部分是<strong>废弃字节</strong>，表示已经丢弃的无效字节数据。</p>
-<p>第二部分是<strong>可读字节</strong>，表示 ByteBuf 中可以被读取的字节内容，可以通过 writeIndex - readerIndex 计算得出。从 ByteBuf 读取 N 个字节，readerIndex 就会自增 N，readerIndex 不会大于 writeIndex，当 readerIndex == writeIndex 时，表示 ByteBuf 已经不可读。</p>
-<p>第三部分是<strong>可写字节</strong>，向 ByteBuf 中写入数据都会存储到可写字节区域。向 ByteBuf 写入 N 字节数据，writeIndex 就会自增 N，当 writeIndex 超过 capacity，表示 ByteBuf 容量不足，需要扩容。</p>
-<p>第四部分是<strong>可扩容字节</strong>，表示 ByteBuf 最多还可以扩容多少字节，当 writeIndex 超过 capacity 时，会触发 ByteBuf 扩容，最多扩容到 maxCapacity 为止，超过 maxCapacity 再写入就会出错。</p>
+<p>第一部分是 <strong> 废弃字节</strong>，表示已经丢弃的无效字节数据。</p>
+<p>第二部分是 <strong> 可读字节</strong>，表示 ByteBuf 中可以被读取的字节内容，可以通过 writeIndex - readerIndex 计算得出。从 ByteBuf 读取 N 个字节，readerIndex 就会自增 N，readerIndex 不会大于 writeIndex，当 readerIndex == writeIndex 时，表示 ByteBuf 已经不可读。</p>
+<p>第三部分是 <strong> 可写字节</strong>，向 ByteBuf 中写入数据都会存储到可写字节区域。向 ByteBuf 写入 N 字节数据，writeIndex 就会自增 N，当 writeIndex 超过 capacity，表示 ByteBuf 容量不足，需要扩容。</p>
+<p>第四部分是 <strong> 可扩容字节</strong>，表示 ByteBuf 最多还可以扩容多少字节，当 writeIndex 超过 capacity 时，会触发 ByteBuf 扩容，最多扩容到 maxCapacity 为止，超过 maxCapacity 再写入就会出错。</p>
 <p>由此可见，Netty 重新设计的 ByteBuf 有效地区分了可读、可写以及可扩容数据，解决了 ByteBuffer 无法扩容以及读写模式切换烦琐的缺陷。</p>
-<h2 id="引用计数"><a href="#引用计数" class="headerlink" title="引用计数"></a>引用计数</h2><p>ByteBuf 是基于引用计数设计的，它实现了 ReferenceCounted 接口，ByteBuf 的生命周期是由引用计数所管理。</p>
-<p>当新创建一个 ByteBuf 对象时，它的初始引用计数为 1，当 ByteBuf 调用 release() 后，引用计数减 1，所以<strong>不要误以为调用了 release() 就会保证 ByteBuf 对象一定会被回收</strong>。</p>
+<h2 id="引用计数"><a href="# 引用计数" class="headerlink" title="引用计数"></a>引用计数</h2><p>ByteBuf 是基于引用计数设计的，它实现了 ReferenceCounted 接口，ByteBuf 的生命周期是由引用计数所管理。</p>
+<p>当新创建一个 ByteBuf 对象时，它的初始引用计数为 1，当 ByteBuf 调用 release() 后，引用计数减 1，所以 <strong> 不要误以为调用了 release() 就会保证 ByteBuf 对象一定会被回收</strong>。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ByteBuf buffer = ctx.alloc().directbuffer();</span><br><span class="line"><span class="keyword">assert</span> buffer.refCnt() == <span class="number">1</span>;</span><br><span class="line">buffer.release();</span><br><span class="line"><span class="keyword">assert</span> buffer.refCnt() == <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
 
 <p><strong>引用计数对于 Netty 设计缓存池化有非常大的帮助，当引用计数为 0，该 ByteBuf 可以被放入到对象池中，避免每次使用 ByteBuf 都重复创建，对于实现高性能的内存管理有着很大的意义</strong>。</p>
 <p>此外 Netty 可以利用引用计数的特点实现内存泄漏检测工具。JVM 并不知道 Netty 的引用计数是如何实现的，当 ByteBuf 对象不可达时，一样会被 GC 回收掉，但是如果此时 ByteBuf 的引用计数不为 0，那么该对象就不会释放或者被放入对象池，从而发生了内存泄漏。Netty 会对分配的 ByteBuf 进行抽样分析，检测 ByteBuf 是否已经不可达且引用计数大于 0，判定内存泄漏的位置并输出到日志中，你需要关注日志中 LEAK 关键字。</p>
-<h2 id="ByteBuf-分类"><a href="#ByteBuf-分类" class="headerlink" title="ByteBuf 分类"></a>ByteBuf 分类</h2><p>ByteBuf 可以划分为三个不同的维度：<strong>Heap/Direct</strong>、<strong>Pooled/Unpooled</strong>和<strong>Unsafe/非 Unsafe</strong>。</p>
+<h2 id="ByteBuf- 分类"><a href="#ByteBuf- 分类" class="headerlink" title="ByteBuf 分类"></a>ByteBuf 分类 </h2><p>ByteBuf 可以划分为三个不同的维度：<strong>Heap/Direct</strong>、<strong>Pooled/Unpooled</strong> 和<strong>Unsafe/ 非 Unsafe</strong>。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210718215150ilJJ38.jpg" alt="20210718215150ilJJ38"></p>
 <p><strong>Heap/Direct 就是堆内和堆外内存</strong>。Heap 指的是在 JVM 堆内分配，底层依赖的是字节数据；Direct 则是堆外内存，不受 JVM 限制，分配方式依赖 JDK 底层的 ByteBuffer。</p>
 <p><strong>Pooled/Unpooled 表示池化还是非池化内存</strong>。Pooled 是从预先分配好的内存中取出，使用完可以放回 ByteBuf 内存池，等待下一次分配。而 Unpooled 是直接调用系统 API 去申请内存，确保能够被 JVM GC 管理回收。</p>
-<p><strong>Unsafe/非 Unsafe 的区别在于操作方式是否安全。</strong> Unsafe 表示每次调用 JDK 的 Unsafe 对象操作物理内存，依赖 offset + index 的方式操作数据。非 Unsafe 则不需要依赖 JDK 的 Unsafe 对象，直接通过数组下标的方式操作数据。</p>
-<h2 id="ByteBuf核心API"><a href="#ByteBuf核心API" class="headerlink" title="ByteBuf核心API"></a>ByteBuf核心API</h2><h3 id="指针操作-API"><a href="#指针操作-API" class="headerlink" title="指针操作 API"></a>指针操作 API</h3><ul>
+<p><strong>Unsafe/ 非 Unsafe 的区别在于操作方式是否安全。</strong> Unsafe 表示每次调用 JDK 的 Unsafe 对象操作物理内存，依赖 offset + index 的方式操作数据。非 Unsafe 则不需要依赖 JDK 的 Unsafe 对象，直接通过数组下标的方式操作数据。</p>
+<h2 id="ByteBuf 核心 API"><a href="#ByteBuf 核心 API" class="headerlink" title="ByteBuf 核心 API"></a>ByteBuf 核心 API</h2><h3 id="指针操作 -API"><a href="# 指针操作 -API" class="headerlink" title="指针操作 API"></a>指针操作 API</h3><ul>
 <li><p><strong>readerIndex() &amp; writeIndex()</strong></p>
 <p>readerIndex() 返回的是当前的读指针的 readerIndex 位置，writeIndex() 返回的当前写指针 writeIndex 位置。</p>
 </li>
@@ -110,7 +377,7 @@
 </blockquote>
 </li>
 </ul>
-<h3 id="数据读写-API"><a href="#数据读写-API" class="headerlink" title="数据读写 API"></a>数据读写 API</h3><ul>
+<h3 id="数据读写 -API"><a href="# 数据读写 -API" class="headerlink" title="数据读写 API"></a>数据读写 API</h3><ul>
 <li><p><strong>isReadable()</strong></p>
 <p>isReadable() 用于判断 ByteBuf 是否可读，如果 writerIndex 大于 readerIndex，那么 ByteBuf 是可读的，否则是不可读状态。</p>
 </li>
@@ -124,10 +391,10 @@
 <p>readByte() 是从 ByteBuf 中读取一个字节，相应的 readerIndex + 1；同理 writeByte 是向 ByteBuf 写入一个字节，相应的 writerIndex + 1。类似的 Netty 提供了 8 种基础数据类型的读取和写入，例如 readChar()、readShort()、readInt()、readLong()、writeChar()、writeShort()、writeInt()、writeLong() 等。</p>
 </li>
 <li><p><strong>getByte(int index) &amp; setByte(int index, int value)</strong></p>
-<p>与 readByte() 和 writeByte() 相对应的还有 getByte() 和 setByte()，get/set 系列方法也提供了 8 种基础类型的读写，<strong>那么这两个系列的方法有什么区别呢？read/write 方法在读写时会改变readerIndex 和 writerIndex 指针，而 get/set 方法则不会改变指针位置</strong>。</p>
+<p>与 readByte() 和 writeByte() 相对应的还有 getByte() 和 setByte()，get/set 系列方法也提供了 8 种基础类型的读写，<strong>那么这两个系列的方法有什么区别呢？read/write 方法在读写时会改变 readerIndex 和 writerIndex 指针，而 get/set 方法则不会改变指针位置</strong>。</p>
 </li>
 </ul>
-<h3 id="内存管理-API"><a href="#内存管理-API" class="headerlink" title="内存管理 API"></a>内存管理 API</h3><ul>
+<h3 id="内存管理 -API"><a href="# 内存管理 -API" class="headerlink" title="内存管理 API"></a>内存管理 API</h3><ul>
 <li><p><strong>release() &amp; retain()</strong></p>
 <p>之前已经介绍了引用计数的基本概念，每调用一次 release() 引用计数减 1，每调用一次 retain() 引用计数加 1。</p>
 </li>
@@ -145,7 +412,7 @@
 <li>向不可写 Buffer 写入数据时，Buffer 会尝试扩容，但是扩容后 capacity 最大不能超过 maxCapacity，如果写入的数据超过 maxCapacity，程序会直接抛出异常；</li>
 <li>read 系列方法会改变 readerIndex 位置，get/set 系列方法不会改变 readerIndex/writerIndex 位置。</li>
 </ul>
-<h1 id="Netty的零拷贝技术"><a href="#Netty的零拷贝技术" class="headerlink" title="Netty的零拷贝技术"></a>Netty的零拷贝技术</h1><p>Netty 中的零拷贝技术除了操作系统级别的功能封装，更多的是面向用户态的数据操作优化，主要体现在以下 5 个方面：</p>
+<h1 id="Netty 的零拷贝技术"><a href="#Netty 的零拷贝技术" class="headerlink" title="Netty 的零拷贝技术"></a>Netty 的零拷贝技术</h1><p>Netty 中的零拷贝技术除了操作系统级别的功能封装，更多的是面向用户态的数据操作优化，主要体现在以下 5 个方面：</p>
 <ul>
 <li>堆外内存，避免 JVM 堆内存到堆外内存的数据拷贝。</li>
 <li>CompositeByteBuf 类，可以组合多个 Buffer 对象合并成一个逻辑上的对象，避免通过传统内存拷贝的方式将几个 Buffer 合并成一个大的 Buffer。</li>
@@ -153,7 +420,7 @@
 <li>ByteBuf.slice 操作与 Unpooled.wrappedBuffer 相反，slice 操作可以将一个 ByteBuf 对象切分成多个 ByteBuf 对象，切分过程中不会产生内存拷贝，底层共享一个 byte 数组的存储空间。</li>
 <li>Netty 使用 FileRegion 实现文件传输，FileRegion 底层封装了 FileChannel#transferTo() 方法，可以将文件缓冲区的数据直接传输到目标 Channel，避免内核缓冲区和用户态缓冲区之间的数据拷贝，这属于操作系统级别的零拷贝。</li>
 </ul>
-<h2 id="堆外内存"><a href="#堆外内存" class="headerlink" title="堆外内存"></a>堆外内存</h2><p>如果在 JVM 内部执行 I/O 操作时，必须将数据拷贝到堆外内存，才能执行系统调用。这是所有 VM 语言都会存在的问题。</p>
+<h2 id="堆外内存"><a href="# 堆外内存" class="headerlink" title="堆外内存"></a>堆外内存 </h2><p> 如果在 JVM 内部执行 I/O 操作时，必须将数据拷贝到堆外内存，才能执行系统调用。这是所有 VM 语言都会存在的问题。</p>
 <p><strong>那么为什么操作系统不能直接使用 JVM 堆内存进行 I/O 的读写呢？</strong>主要有两点原因：</p>
 <ul>
 <li><p>第一，操作系统并不感知 JVM 的堆内存，而且 JVM 的内存布局与操作系统所分配的是不一样的，操作系统并不会按照 JVM 的行为来读写数据。</p>
@@ -163,7 +430,7 @@
 </ul>
 <p>Netty 在进行 I/O 操作时都是使用的堆外内存，可以避免数据从 JVM 堆内存到堆外内存的拷贝。</p>
 <h2 id="CompositeByteBuf"><a href="#CompositeByteBuf" class="headerlink" title="CompositeByteBuf"></a>CompositeByteBuf</h2><p>CompositeByteBuf 是 Netty 中实现零拷贝机制非常重要的一个数据结构，CompositeByteBuf 可以理解为一个虚拟的 Buffer 对象，它是由多个 ByteBuf 组合而成，但是在 CompositeByteBuf 内部保存着每个 ByteBuf 的引用关系，从逻辑上构成一个整体。</p>
-<p>比较常见的像 HTTP 协议数据可以分为<strong>头部信息 header</strong>和<strong>消息体数据 body</strong>，分别存在两个不同的 ByteBuf 中，通常我们需要将两个 ByteBuf 合并成一个完整的协议数据进行发送，可以使用如下方式完成：</p>
+<p>比较常见的像 HTTP 协议数据可以分为 <strong> 头部信息 header</strong>和 <strong> 消息体数据 body</strong>，分别存在两个不同的 ByteBuf 中，通常我们需要将两个 ByteBuf 合并成一个完整的协议数据进行发送，可以使用如下方式完成：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ByteBuf httpBuf = Unpooled.buffer(header.readableBytes() + body.readableBytes());</span><br><span class="line">httpBuf.writeBytes(header);</span><br><span class="line">httpBuf.writeBytes(body);</span><br></pre></td></tr></table></figure>
 
 <p>可以看出，如果想实现 header 和 body 这两个 ByteBuf 的合并，需要先初始化一个新的 httpBuf，然后再将 header 和 body 分别拷贝到新的 httpBuf。合并过程中涉及两次 CPU 拷贝，这非常浪费性能。</p>
@@ -174,14 +441,14 @@
 <p>CompositeByteBuf 的内部结构如下图所示：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210718220316l4SdsX.jpg" alt="20210718220316l4SdsX"></p>
 <p>CompositeByteBuf 内部维护了一个 Components 数组。在每个 Component 中存放着不同的 ByteBuf，各个 ByteBuf 独立维护自己的读写索引，而 CompositeByteBuf 自身也会单独维护一个读写索引。<strong>由此可见，Component 是实现 CompositeByteBuf 的关键所在</strong>。</p>
-<p>CompositeByteBuf实现原理？</p>
+<p>CompositeByteBuf 实现原理？</p>
 <p>Component 结构定义如下：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Component</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> ByteBuf srcBuf; <span class="comment">// 原始的 ByteBuf</span></span><br><span class="line">    <span class="keyword">final</span> ByteBuf buf; <span class="comment">// srcBuf 去除包装之后的 ByteBuf</span></span><br><span class="line">    <span class="keyword">int</span> srcAdjustment; <span class="comment">// CompositeByteBuf 的起始索引相对于 srcBuf 读索引的偏移</span></span><br><span class="line">    <span class="keyword">int</span> adjustment; <span class="comment">// CompositeByteBuf 的起始索引相对于 buf 的读索引的偏移</span></span><br><span class="line">    <span class="keyword">int</span> offset; <span class="comment">// Component 相对于 CompositeByteBuf 的起始索引位置</span></span><br><span class="line">    <span class="keyword">int</span> endOffset; <span class="comment">// Component 相对于 CompositeByteBuf 的结束索引位置</span></span><br><span class="line">    <span class="comment">// 省略其他代码</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="Unpooled-wrappedBuffer-操作"><a href="#Unpooled-wrappedBuffer-操作" class="headerlink" title="Unpooled.wrappedBuffer 操作"></a>Unpooled.wrappedBuffer 操作</h2><p>Unpooled.wrappedBuffer也是创建 CompositeByteBuf 对象的另一种推荐做法。Unpooled 提供了一系列用于包装数据源的 wrappedBuffer 方法，如下所示：</p>
+<h2 id="Unpooled-wrappedBuffer- 操作"><a href="#Unpooled-wrappedBuffer- 操作" class="headerlink" title="Unpooled.wrappedBuffer 操作"></a>Unpooled.wrappedBuffer 操作</h2><p>Unpooled.wrappedBuffer 也是创建 CompositeByteBuf 对象的另一种推荐做法。Unpooled 提供了一系列用于包装数据源的 wrappedBuffer 方法，如下所示：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/2021071822112753IgSA.jpg" alt="2021071822112753IgSA"></p>
 <p>Unpooled.wrappedBuffer 方法可以将不同的数据源的一个或者多个数据包装成一个大的 ByteBuf 对象，其中数据源的类型包括 byte[]、ByteBuf、ByteBuffer。包装的过程中不会发生数据拷贝操作，包装后生成的 ByteBuf 对象和原始 ByteBuf 对象是共享底层的 byte 数组。</p>
-<h2 id="ByteBuf-slice-操作"><a href="#ByteBuf-slice-操作" class="headerlink" title="ByteBuf.slice 操作"></a>ByteBuf.slice 操作</h2><p>ByteBuf.slice 和 Unpooled.wrappedBuffer 的逻辑正好相反，ByteBuf.slice 是将一个 ByteBuf 对象切分成多个共享同一个底层存储的 ByteBuf 对象。</p>
+<h2 id="ByteBuf-slice- 操作"><a href="#ByteBuf-slice- 操作" class="headerlink" title="ByteBuf.slice 操作"></a>ByteBuf.slice 操作</h2><p>ByteBuf.slice 和 Unpooled.wrappedBuffer 的逻辑正好相反，ByteBuf.slice 是将一个 ByteBuf 对象切分成多个共享同一个底层存储的 ByteBuf 对象。</p>
 <p>ByteBuf 提供了两个 slice 切分方法:</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> ByteBuf <span class="title">slice</span><span class="params">()</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> ByteBuf <span class="title">slice</span><span class="params">(<span class="keyword">int</span> index, <span class="keyword">int</span> length)</span></span>;</span><br></pre></td></tr></table></figure>
 
@@ -191,7 +458,7 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ByteBuf httpBuf = ...</span><br><span class="line">ByteBuf header = httpBuf.slice(<span class="number">0</span>, <span class="number">6</span>);</span><br><span class="line">ByteBuf body = httpBuf.slice(<span class="number">6</span>, <span class="number">4</span>);</span><br></pre></td></tr></table></figure>
 
 <p>通过 slice 切分后都会返回一个新的 ByteBuf 对象，而且新的对象有自己独立的 readerIndex、writerIndex 索引。由于新的 ByteBuf 对象与原始的 ByteBuf 对象数据是共享的，所以通过新的 ByteBuf 对象进行数据操作也会对原始 ByteBuf 对象生效。</p>
-<h2 id="文件传输-FileRegion"><a href="#文件传输-FileRegion" class="headerlink" title="文件传输 FileRegion"></a>文件传输 FileRegion</h2><p>在 Netty 源码的 example 包中，提供了 FileRegion 的使用示例，以下代码片段摘自 FileServerHandler.java。</p>
+<h2 id="文件传输 -FileRegion"><a href="# 文件传输 -FileRegion" class="headerlink" title="文件传输 FileRegion"></a>文件传输 FileRegion</h2><p>在 Netty 源码的 example 包中，提供了 FileRegion 的使用示例，以下代码片段摘自 FileServerHandler.java。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">channelRead0</span><span class="params">(ChannelHandlerContext ctx, String msg)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    RandomAccessFile raf = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">long</span> length = -<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        raf = <span class="keyword">new</span> RandomAccessFile(msg, <span class="string">&quot;r&quot;</span>);</span><br><span class="line">        length = raf.length();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        ctx.writeAndFlush(<span class="string">&quot;ERR: &quot;</span> + e.getClass().getSimpleName() + <span class="string">&quot;: &quot;</span> + e.getMessage() + <span class="string">&#x27;\n&#x27;</span>);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (length &lt; <span class="number">0</span> &amp;&amp; raf != <span class="keyword">null</span>) &#123;</span><br><span class="line">            raf.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ctx.write(<span class="string">&quot;OK: &quot;</span> + raf.length() + <span class="string">&#x27;\n&#x27;</span>);</span><br><span class="line">    <span class="keyword">if</span> (ctx.pipeline().get(SslHandler.class) == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// SSL not enabled - can use zero-copy file transfer.</span></span><br><span class="line">        ctx.write(<span class="keyword">new</span> DefaultFileRegion(raf.getChannel(), <span class="number">0</span>, length));</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// SSL enabled - cannot use zero-copy file transfer.</span></span><br><span class="line">        ctx.write(<span class="keyword">new</span> ChunkedFile(raf));</span><br><span class="line">    &#125;</span><br><span class="line">    ctx.writeAndFlush(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>从 FileRegion 的使用示例可以看出，Netty 使用 FileRegion 实现文件传输的零拷贝。FileRegion 的默认实现类是 DefaultFileRegion，通过 DefaultFileRegion 将文件内容写入到 NioSocketChannel。</p>
@@ -199,48 +466,308 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DefaultFileRegion</span> <span class="keyword">extends</span> <span class="title">AbstractReferenceCounted</span> <span class="keyword">implements</span> <span class="title">FileRegion</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> File f; <span class="comment">// 传输的文件</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> position; <span class="comment">// 文件的起始位置</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> count; <span class="comment">// 传输的字节数</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> transferred; <span class="comment">// 已经写入的字节数</span></span><br><span class="line">    <span class="keyword">private</span> FileChannel file; <span class="comment">// 文件对应的 FileChannel</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">transferTo</span><span class="params">(WritableByteChannel target, <span class="keyword">long</span> position)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="keyword">long</span> count = <span class="keyword">this</span>.count - position;</span><br><span class="line">        <span class="keyword">if</span> (count &lt; <span class="number">0</span> || position &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(</span><br><span class="line">                    <span class="string">&quot;position out of range: &quot;</span> + position +</span><br><span class="line">                    <span class="string">&quot; (expected: 0 - &quot;</span> + (<span class="keyword">this</span>.count - <span class="number">1</span>) + <span class="string">&#x27;)&#x27;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (count == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0L</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (refCnt() == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalReferenceCountException(<span class="number">0</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        open();</span><br><span class="line">        <span class="keyword">long</span> written = file.transferTo(<span class="keyword">this</span>.position + position, count, target);</span><br><span class="line">        <span class="keyword">if</span> (written &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            transferred += written;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (written == <span class="number">0</span>) &#123;</span><br><span class="line">            validate(<span class="keyword">this</span>, position);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> written;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 省略其他代码</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>从源码可以看出，FileRegion 其实就是对 FileChannel 的包装，并没有什么特殊操作，底层使用的是 JDK NIO 中的 FileChannel#transferTo() 方法实现文件传输，所以 FileRegion 是操作系统级别的零拷贝，对于传输大文件会很有帮助。</p>
-</div><div class="article-licensing box"><div class="licensing-title"><p>Netty：ByteBuf与内存管理</p><p><a href="http://blog.blockmao.cn/posts/19955.html">http://blog.blockmao.cn/posts/19955.html</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>牛觅</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2021-07-19</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2021-07-20</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="notification is-danger">You need to set <code>install_url</code> to use ShareThis. Please set it in <code>_config.yml</code>.</div></article></div><div class="card"><div class="card-content"><h3 class="menu-label has-text-centered">Like this article? Support the author with</h3><div class="buttons is-centered"><a class="button donate" href="/" target="_blank" rel="noopener" data-type="afdian"><span class="icon is-small"><i class="fas fa-charging-station"></i></span><span>Afdian.net</span></a><a class="button donate" data-type="alipay"><span class="icon is-small"><i class="fab fa-alipay"></i></span><span>Alipay</span><span class="qrcode"><img src="/" alt="Alipay"></span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="buymeacoffee"><span class="icon is-small"><i class="fas fa-coffee"></i></span><span>Buy me a coffee</span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="patreon"><span class="icon is-small"><i class="fab fa-patreon"></i></span><span>Patreon</span></a><div class="notification is-danger">You forgot to set the <code>business</code> or <code>currency_code</code> for Paypal. Please set it in <code>_config.yml</code>.</div><a class="button donate" data-type="wechat"><span class="icon is-small"><i class="fab fa-weixin"></i></span><span>Wechat</span><span class="qrcode"><img src="/" alt="Wechat"></span></a></div></div></div><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/posts/51998.html"><i class="level-item fas fa-chevron-left"></i><span class="level-item">Java类加载：classloader的原理及应用</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/posts/7199.html"><span class="level-item">微服务安全架构：基于OAuth 2.0/JWT的微服务参考架构</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-4-widescreen  order-1"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar" src="/img/avatar.png" alt="牛觅"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">牛觅</p><p class="is-size-6 is-block">Your title</p><p class="is-size-6 is-flex justify-content-center"><i class="fas fa-map-marker-alt mr-1"></i><span>中国-杭州</span></p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">77</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">19</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">18</p></a></div></div></nav><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com/ppoffice"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Facebook" href="https://facebook.com"><i class="fab fa-facebook"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Dribbble" href="https://dribbble.com"><i class="fab fa-dribbble"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="RSS" href="/"><i class="fas fa-rss"></i></a></div></div></div><!--!--><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://hexo.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Hexo</span></span><span class="level-right"><span class="level-item tag">hexo.io</span></span></a></li><li><a class="level is-mobile" href="https://bulma.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Bulma</span></span><span class="level-right"><span class="level-item tag">bulma.io</span></span></a></li></ul></div></div></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/DDD/"><span class="level-start"><span class="level-item">DDD</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Dubbo/"><span class="level-start"><span class="level-item">Dubbo</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/Git/"><span class="level-start"><span class="level-item">Git</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Hbase/"><span class="level-start"><span class="level-item">Hbase</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/JVM/"><span class="level-start"><span class="level-item">JVM</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/JavaSE/"><span class="level-start"><span class="level-item">JavaSE</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/"><span class="level-start"><span class="level-item">Java并发编程</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/MySQL/"><span class="level-start"><span class="level-item">MySQL</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Mybatis/"><span class="level-start"><span class="level-item">Mybatis</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Netty/"><span class="level-start"><span class="level-item">Netty</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/Spring/"><span class="level-start"><span class="level-item">Spring</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/SpringCloud/"><span class="level-start"><span class="level-item">SpringCloud</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/"><span class="level-start"><span class="level-item">分布式</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84/"><span class="level-start"><span class="level-item">微服务架构</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"><span class="level-start"><span class="level-item">数据结构与算法</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E6%97%A5%E5%BF%97/"><span class="level-start"><span class="level-item">日志</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"><span class="level-start"><span class="level-item">计算机网络</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%BE%E8%AE%A1/"><span class="level-start"><span class="level-item">设计</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"><span class="level-start"><span class="level-item">设计模式</span></span><span class="level-end"><span class="level-item tag">21</span></span></a></li></ul></div></div></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">Recents</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-08-09T10:36:51.000Z">2021-08-09</time></p><p class="title"><a href="/posts/22384.html">MySQL：索引</a></p><p class="categories"><a href="/categories/MySQL/">MySQL</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-08-07T03:38:43.000Z">2021-08-07</time></p><p class="title"><a href="/posts/60776.html">Java Agent</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-21T12:58:45.000Z">2021-07-21</time></p><p class="title"><a href="/posts/51998.html">Java类加载：classloader的原理及应用</a></p><p class="categories"><a href="/categories/JVM/">JVM</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-19T05:47:30.000Z">2021-07-19</time></p><p class="title"><a href="/posts/19955.html">Netty：ByteBuf与内存管理</a></p><p class="categories"><a href="/categories/Netty/">Netty</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-16T03:00:08.000Z">2021-07-16</time></p><p class="title"><a href="/posts/7199.html">微服务安全架构：基于OAuth 2.0/JWT的微服务参考架构</a></p></div></article></div></div><div class="card widget" data-type="archives"><div class="card-content"><div class="menu"><h3 class="menu-label">Archives</h3><ul class="menu-list"><li><a class="level is-mobile" href="/archives/2021/08/"><span class="level-start"><span class="level-item">August 2021</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/07/"><span class="level-start"><span class="level-item">July 2021</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/06/"><span class="level-start"><span class="level-item">June 2021</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/05/"><span class="level-start"><span class="level-item">May 2021</span></span><span class="level-end"><span class="level-item tag">13</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/04/"><span class="level-start"><span class="level-item">April 2021</span></span><span class="level-end"><span class="level-item tag">51</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/03/"><span class="level-start"><span class="level-item">March 2021</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div><div class="card widget" data-type="tags"><div class="card-content"><div class="menu"><h3 class="menu-label">Tags</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/JVM/"><span class="tag">JVM</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Java-8/"><span class="tag">Java 8</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Mybatis/"><span class="tag">Mybatis</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Netty/"><span class="tag">Netty</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/OAuth2/"><span class="tag">OAuth2</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/TODO/"><span class="tag">TODO</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"><span class="tag">分布式</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/"><span class="tag">分布式事务</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%BC%93%E5%AD%98/"><span class="tag">分布式缓存</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%9B%E5%BB%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">创建型模式</span><span class="tag">4</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"><span class="tag">微服务</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E5%AE%89%E5%85%A8/"><span class="tag">微服务安全</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%8E%92%E5%BA%8F/"><span class="tag">排序</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%B3%9B%E5%9E%8B/"><span class="tag">泛型</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">结构型模式</span><span class="tag">6</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E8%A1%8C%E4%B8%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">行为型模式</span><span class="tag">11</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%9B%B6%E6%8B%B7%E8%B4%9D/"><span class="tag">零拷贝</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%9D%A2%E8%AF%95%E9%A2%98/"><span class="tag">面试题</span><span class="tag">2</span></a></div></div></div></div></div><div class="card widget" data-type="subscribe-email"><div class="card-content"><div class="menu"><h3 class="menu-label">Subscribe for updates</h3><form action="https://feedburner.google.com/fb/a/mailverify" method="post" target="popupwindow" onsubmit="window.open(&#039;https://feedburner.google.com/fb/a/mailverify?uri=&#039;,&#039;popupwindow&#039;,&#039;scrollbars=yes,width=550,height=520&#039;);return true"><input type="hidden" value="" name="uri"><input type="hidden" name="loc" value="en_US"><div class="field has-addons"><div class="control has-icons-left is-expanded"><input class="input" name="email" type="email" placeholder="Email"><span class="icon is-small is-left"><i class="fas fa-envelope"></i></span></div><div class="control"><input class="button" type="submit" value="Subscribe"></div></div></form></div></div></div><div class="card widget"><div class="card-content"><div class="notification is-danger">You need to set <code>client_id</code> and <code>slot_id</code> to show this AD unit. Please set it in <code>_config.yml</code>.</div></div></div><div class="card widget" data-type="subscribe-email"><div class="card-content"><div class="menu"><h3 class="menu-label">follow.it</h3><form action="" method="post" target="_blank"><div class="field has-addons"><div class="control has-icons-left is-expanded"><input class="input" name="email" type="email" placeholder="Email"><span class="icon is-small is-left"><i class="fas fa-envelope"></i></span></div><div class="control"><input class="button" type="submit" value="Subscribe"></div></div></form></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="牛觅博客" height="28"></a><p class="is-size-7"><span>&copy; 2021 牛觅</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-Hanss");</script><script>var IcarusThemeSettings = {
-            article: {
-                highlight: {
-                    clipboard: true,
-                    fold: 'unfolded'
-                }
-            }
-        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
-      window.cookieconsent.initialise({
-        type: "info",
-        theme: "edgeless",
-        static: false,
-        position: "bottom-left",
-        content: {
-          message: "This website uses cookies to improve your experience.",
-          dismiss: "Got it!",
-          allow: "Allow cookies",
-          deny: "Decline",
-          link: "Learn more",
-          policy: "Cookie Policy",
-          href: "https://www.cookiesandyou.com/",
-        },
-        palette: {
-          popup: {
-            background: "#edeff5",
-            text: "#838391"
-          },
-          button: {
-            background: "#4b81e8"
-          },
-        },
-      });
-    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
-            if (typeof $.fn.lightGallery === 'function') {
-                $('.article').lightGallery({ selector: '.gallery-item' });
-            }
-            if (typeof $.fn.justifiedGallery === 'function') {
-                if ($('.justified-gallery > p > .gallery-item').length) {
-                    $('.justified-gallery > p > .gallery-item').unwrap();
-                }
-                $('.justified-gallery').justifiedGallery();
-            }
-        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
-            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
-        });</script></body></html>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/7199.html" rel="prev" title="微服务安全架构：基于 OAuth 2.0/JWT 的微服务参考架构">
+      <i class="fa fa-chevron-left"></i> 微服务安全架构：基于 OAuth 2.0/JWT 的微服务参考架构
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/51998.html" rel="next" title="Java 类加载：classloader 的原理及应用">
+      Java 类加载：classloader 的原理及应用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%A0%86%E5%A4%96%E5%86%85%E5%AD%98%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">为什么需要堆外内存？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A0%86%E5%A4%96%E5%86%85%E5%AD%98%20-VS-%20%E5%A0%86%E5%86%85%E5%86%85%E5%AD%98"><span class="nav-number">1.1.</span> <span class="nav-text">堆外内存 VS 堆内内存</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Java%20%E4%B8%AD%E5%A0%86%E5%A4%96%E5%86%85%E5%AD%98%E7%9A%84%E5%88%86%E9%85%8D%E6%96%B9%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">Java 中堆外内存的分配方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ByteBuffer-allocateDirect"><span class="nav-number">2.1.</span> <span class="nav-text">ByteBuffer#allocateDirect</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Unsafe-allocateMemory"><span class="nav-number">2.2.</span> <span class="nav-text">Unsafe#allocateMemory</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A0%86%E5%A4%96%E5%86%85%E5%AD%98%E7%9A%84%E5%9B%9E%E6%94%B6"><span class="nav-number">3.</span> <span class="nav-text">堆外内存的回收</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%20-DirectByteBuffer-%20%E6%97%B6%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E8%A2%AB%E8%80%97%E5%B0%BD%E5%91%A2%EF%BC%9F"><span class="nav-number">3.1.</span> <span class="nav-text">使用 DirectByteBuffer 时如何避免物理内存被耗尽呢？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cleaner-%20%E6%98%AF%E5%A6%82%E4%BD%95%E4%B8%8E%20-GC-%20%E5%85%B3%E8%81%94%E8%B5%B7%E6%9D%A5%E7%9A%84%E5%91%A2%EF%BC%9F"><span class="nav-number">3.2.</span> <span class="nav-text">Cleaner 是如何与 GC 关联起来的呢？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ByteBuffer%20%E6%9C%89%E5%93%AA%E4%BA%9B%E7%BC%BA%E9%99%B7%E5%92%8C%E7%97%9B%E7%82%B9"><span class="nav-number">4.</span> <span class="nav-text">ByteBuffer 有哪些缺陷和痛点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ByteBuf"><span class="nav-number">5.</span> <span class="nav-text">ByteBuf</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ByteBuf-%20%E5%86%85%E9%83%A8%E7%BB%93%E6%9E%84"><span class="nav-number">5.1.</span> <span class="nav-text">ByteBuf 内部结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0"><span class="nav-number">5.2.</span> <span class="nav-text">引用计数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ByteBuf-%20%E5%88%86%E7%B1%BB"><span class="nav-number">5.3.</span> <span class="nav-text">ByteBuf 分类 </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ByteBuf%20%E6%A0%B8%E5%BF%83%20API"><span class="nav-number">5.4.</span> <span class="nav-text">ByteBuf 核心 API</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E9%92%88%E6%93%8D%E4%BD%9C%20-API"><span class="nav-number">5.4.1.</span> <span class="nav-text">指针操作 API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E8%AF%BB%E5%86%99%20-API"><span class="nav-number">5.4.2.</span> <span class="nav-text">数据读写 API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%20-API"><span class="nav-number">5.4.3.</span> <span class="nav-text">内存管理 API</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Netty%20%E7%9A%84%E9%9B%B6%E6%8B%B7%E8%B4%9D%E6%8A%80%E6%9C%AF"><span class="nav-number">6.</span> <span class="nav-text">Netty 的零拷贝技术</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A0%86%E5%A4%96%E5%86%85%E5%AD%98"><span class="nav-number">6.1.</span> <span class="nav-text">堆外内存 </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CompositeByteBuf"><span class="nav-number">6.2.</span> <span class="nav-text">CompositeByteBuf</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Unpooled-wrappedBuffer-%20%E6%93%8D%E4%BD%9C"><span class="nav-number">6.3.</span> <span class="nav-text">Unpooled.wrappedBuffer 操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ByteBuf-slice-%20%E6%93%8D%E4%BD%9C"><span class="nav-number">6.4.</span> <span class="nav-text">ByteBuf.slice 操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%20-FileRegion"><span class="nav-number">6.5.</span> <span class="nav-text">文件传输 FileRegion</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">77</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div id="pjax">
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['blockmao'],
+      id          : '0b64351147073353b0a6dbc9b94f1bad',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+    </div>
+</body>
+</html>

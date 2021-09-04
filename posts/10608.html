@@ -1,87 +1,359 @@
-<!doctype html>
-<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>微服务事务一致性解决方案 - 牛觅博客</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="牛觅博客"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="牛觅博客"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content=""><meta property="og:type" content="blog"><meta property="og:title" content="微服务事务一致性解决方案"><meta property="og:url" content="http://blog.blockmao.cn/posts/10608.html"><meta property="og:site_name" content="牛觅博客"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617120101xHwlS2.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210616182055ZTIiek.png"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210616192803baeFm2.png"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617104658rtRgf1.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617104913D8RpSz.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202106171051385X7QDT.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617105232VG21sb.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617110314Bn7EWI.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617111214rzuv9m.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617210143zdzXVW.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617210218mRvVky.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202106172102513lbn45.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617213131uaLHvt.png"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617210905XhlJ3z.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617112830image-20210617112829881.png"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021061711301517vnCe.png"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617113653AE9mfA.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617113845b9Zfz3.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617114007Ey0vpo.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617115540o1SRic.jpg"><meta property="article:published_time" content="2021-06-17T04:01:54.000Z"><meta property="article:modified_time" content="2021-06-17T13:32:57.507Z"><meta property="article:author" content="牛觅"><meta property="article:tag" content="分布式事务"><meta property="twitter:card" content="summary"><meta property="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210617120101xHwlS2.jpg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://blog.blockmao.cn/posts/10608.html"},"headline":"微服务事务一致性解决方案","image":["https://gitee.com/niumi/drawing/raw/master/20210617120101xHwlS2.jpg","https://gitee.com/niumi/drawing/raw/master/20210616182055ZTIiek.png","https://gitee.com/niumi/drawing/raw/master/20210616192803baeFm2.png","https://gitee.com/niumi/drawing/raw/master/20210617104658rtRgf1.jpg","https://gitee.com/niumi/drawing/raw/master/20210617104913D8RpSz.jpg","https://gitee.com/niumi/drawing/raw/master/202106171051385X7QDT.jpg","https://gitee.com/niumi/drawing/raw/master/20210617105232VG21sb.jpg","https://gitee.com/niumi/drawing/raw/master/20210617110314Bn7EWI.jpg","https://gitee.com/niumi/drawing/raw/master/20210617111214rzuv9m.jpg","https://gitee.com/niumi/drawing/raw/master/20210617210143zdzXVW.jpg","https://gitee.com/niumi/drawing/raw/master/20210617210218mRvVky.jpg","https://gitee.com/niumi/drawing/raw/master/202106172102513lbn45.jpg","https://gitee.com/niumi/drawing/raw/master/20210617213131uaLHvt.png","https://gitee.com/niumi/drawing/raw/master/20210617210905XhlJ3z.jpg","https://gitee.com/niumi/drawing/raw/master/20210617112830image-20210617112829881.png","https://gitee.com/niumi/drawing/raw/master/2021061711301517vnCe.png","https://gitee.com/niumi/drawing/raw/master/20210617113653AE9mfA.jpg","https://gitee.com/niumi/drawing/raw/master/20210617113845b9Zfz3.jpg","https://gitee.com/niumi/drawing/raw/master/20210617114007Ey0vpo.jpg","https://gitee.com/niumi/drawing/raw/master/20210617115540o1SRic.jpg"],"datePublished":"2021-06-17T04:01:54.000Z","dateModified":"2021-06-17T13:32:57.507Z","author":{"@type":"Person","name":"牛觅"},"publisher":{"@type":"Organization","name":"牛觅博客","logo":{"@type":"ImageObject","url":"http://blog.blockmao.cn/img/logo.svg"}},"description":""}</script><link rel="canonical" href="http://blog.blockmao.cn/posts/10608.html"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.2/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css"><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script><!--!--><!--!--><meta name="generator" content="Hexo 5.4.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="牛觅博客" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-8-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-06-17T04:01:54.000Z" title="2021/6/17下午12:01:54">2021-06-17</time></span><span class="level-item">Updated&nbsp;<time dateTime="2021-06-17T13:32:57.507Z" title="2021/6/17下午9:32:57">2021-06-17</time></span><span class="level-item"><a class="link-muted" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></span><span class="level-item">34 minutes read (About 5109 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">微服务事务一致性解决方案</h1><div class="content"><p><img src="https://gitee.com/niumi/drawing/raw/master/20210617120101xHwlS2.jpg" alt="20210617120101xHwlS2"></p>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="微服务事务一致性解决方案">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/10608.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617120101xHwlS2.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210616182055ZTIiek.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210616192803baeFm2.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617104658rtRgf1.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617104913D8RpSz.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202106171051385X7QDT.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617105232VG21sb.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617110314Bn7EWI.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617111214rzuv9m.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617210143zdzXVW.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617210218mRvVky.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202106172102513lbn45.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617213131uaLHvt.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617210905XhlJ3z.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617112830image-20210617112829881.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021061711301517vnCe.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617113653AE9mfA.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617113845b9Zfz3.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617114007Ey0vpo.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210617115540o1SRic.jpg">
+<meta property="article:published_time" content="2021-06-17T04:01:54.000Z">
+<meta property="article:modified_time" content="2021-06-17T13:32:57.507Z">
+<meta property="article:author" content="牛觅">
+<meta property="article:tag" content="分布式事务">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210617120101xHwlS2.jpg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/10608.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>微服务事务一致性解决方案 | 牛觅博客</title>
+  
+
+
+  <script data-pjax>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/10608.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          微服务事务一致性解决方案
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-06-17 12:01:54 / 修改时间：21:32:57" itemprop="dateCreated datePublished" datetime="2021-06-17T12:01:54+08:00">2021-06-17</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">分布式</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210617120101xHwlS2.jpg" alt="20210617120101xHwlS2"></p>
 <span id="more"></span>
 
-<h1 id="微服务事务一致性解决方案"><a href="#微服务事务一致性解决方案" class="headerlink" title="微服务事务一致性解决方案"></a>微服务事务一致性解决方案</h1><h2 id="2PC"><a href="#2PC" class="headerlink" title="2PC"></a>2PC</h2><p>2PC即两阶段提交协议，是将整个事务流程分为两个阶段，<strong>准备阶段</strong>（Prepare phase）、<strong>提交阶段</strong>（commit phase）。</p>
+<h1 id="微服务事务一致性解决方案"><a href="# 微服务事务一致性解决方案" class="headerlink" title="微服务事务一致性解决方案"></a>微服务事务一致性解决方案 </h1><h2 id="2PC"><a href="#2PC" class="headerlink" title="2PC"></a>2PC</h2><p>2PC 即两阶段提交协议，是将整个事务流程分为两个阶段，<strong> 准备阶段 </strong>（Prepare phase）、<strong> 提交阶段</strong>（commit phase）。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210616182055ZTIiek.png" alt="20210616182055ZTIiek"></p>
-<h3 id="整体流程"><a href="#整体流程" class="headerlink" title="整体流程"></a>整体流程</h3><h4 id="阶段一：准备阶段（投票阶段）"><a href="#阶段一：准备阶段（投票阶段）" class="headerlink" title="阶段一：准备阶段（投票阶段）"></a>阶段一：准备阶段（投票阶段）</h4><ol>
+<h3 id="整体流程"><a href="# 整体流程" class="headerlink" title="整体流程"></a>整体流程 </h3><h4 id="阶段一：准备阶段（投票阶段）"><a href="# 阶段一：准备阶段（投票阶段）" class="headerlink" title="阶段一：准备阶段（投票阶段）"></a> 阶段一：准备阶段（投票阶段）</h4><ol>
 <li><p>协调者节点向所有参与者节点询问是否可以执行提交操作，并开始等待各参与者节点的响应。</p>
 </li>
-<li><p>参与者节点执行事务操作，并将Undo和Redo信息记入事务日志中。</p>
+<li><p>参与者节点执行事务操作，并将 Undo 和 Redo 信息记入事务日志中。</p>
 </li>
 <li><p>各参与者响应协调者发起的询问。如果参与者节点的事务操作实际执行成功，则它返回一个”同意”消息；如果参与者节点的事务操作实际执行失败，则它返回一个”中止”消息。</p>
 </li>
 </ol>
-<h4 id="阶段二：提交阶段（完成）"><a href="#阶段二：提交阶段（完成）" class="headerlink" title="阶段二：提交阶段（完成）"></a>阶段二：提交阶段（完成）</h4><h5 id="成功"><a href="#成功" class="headerlink" title="成功"></a>成功</h5><p>当协调者节点从所有参与者节点获得的响应消息都为”同意”时：</p>
+<h4 id="阶段二：提交阶段（完成）"><a href="# 阶段二：提交阶段（完成）" class="headerlink" title="阶段二：提交阶段（完成）"></a>阶段二：提交阶段（完成）</h4><h5 id="成功"><a href="# 成功" class="headerlink" title="成功"></a>成功 </h5><p> 当协调者节点从所有参与者节点获得的响应消息都为”同意”时：</p>
 <ol>
 <li>协调者节点向所有参与者节点发出”正式提交”的请求。</li>
 <li>参与者节点正式完成操作，并释放在整个事务期间内占用的资源。</li>
 <li>参与者节点向协调者节点发送”完成”消息。</li>
 <li>协调者节点收到所有参与者节点反馈的”完成”消息后，完成事务。</li>
 </ol>
-<h5 id="失败"><a href="#失败" class="headerlink" title="失败"></a>失败</h5><p>如果任一参与者节点在第一阶段返回的响应消息为”终止”，或者协调者节点在第一阶段的询问超时之前无法获取所有参与者节点的响应消息时：</p>
+<h5 id="失败"><a href="# 失败" class="headerlink" title="失败"></a>失败 </h5><p> 如果任一参与者节点在第一阶段返回的响应消息为”终止”，或者协调者节点在第一阶段的询问超时之前无法获取所有参与者节点的响应消息时：</p>
 <ol>
 <li>协调者节点向所有参与者节点发出”回滚操作”的请求。</li>
-<li>参与者节点利用之前写入的Undo信息执行回滚，并释放在整个事务期间内占用的资源。</li>
+<li>参与者节点利用之前写入的 Undo 信息执行回滚，并释放在整个事务期间内占用的资源。</li>
 <li>参与者节点向协调者节点发送”回滚完成”消息。</li>
 <li>协调者节点收到所有参与者节点反馈的”回滚完成”消息后，取消事务。</li>
 </ol>
-<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><h4 id="同步阻塞"><a href="#同步阻塞" class="headerlink" title="同步阻塞"></a>同步阻塞</h4><p>在执行过程中，所有参与该事务操作的逻辑都处理于阻塞状态。</p>
-<h4 id="太过保守"><a href="#太过保守" class="headerlink" title="太过保守"></a>太过保守</h4><p>协调者节点指示参与者节点进行提交等操作时，如有参与者节点出现了崩溃等情况而导致协调者始终无法获取所有参与者的响应信息，这时协调者将只能依赖协调者自身的超时机制来生效。但往往超时机制生效时，协调者都会指示参与者进行回滚操作。这样的策略显得比较保守。</p>
-<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><p>XA协议</p>
-<h2 id="TCC模式"><a href="#TCC模式" class="headerlink" title="TCC模式"></a>TCC模式</h2><p>数据库以及分布式的两阶段提交都提供了ACID 的保证。 由于隔离性互斥的要求，在事务执行过程中，所有的资源都是被锁定的，这种情况只适合执行时间确定的短事务。</p>
+<h3 id="缺点"><a href="# 缺点" class="headerlink" title="缺点"></a>缺点 </h3><h4 id="同步阻塞"><a href="# 同步阻塞" class="headerlink" title="同步阻塞"></a> 同步阻塞 </h4><p> 在执行过程中，所有参与该事务操作的逻辑都处理于阻塞状态。</p>
+<h4 id="太过保守"><a href="# 太过保守" class="headerlink" title="太过保守"></a>太过保守 </h4><p> 协调者节点指示参与者节点进行提交等操作时，如有参与者节点出现了崩溃等情况而导致协调者始终无法获取所有参与者的响应信息，这时协调者将只能依赖协调者自身的超时机制来生效。但往往超时机制生效时，协调者都会指示参与者进行回滚操作。这样的策略显得比较保守。</p>
+<h3 id="实现"><a href="# 实现" class="headerlink" title="实现"></a>实现</h3><p>XA 协议</p>
+<h2 id="TCC 模式"><a href="#TCC 模式" class="headerlink" title="TCC 模式"></a>TCC 模式 </h2><p> 数据库以及分布式的两阶段提交都提供了 ACID 的保证。 由于隔离性互斥的要求，在事务执行过程中，所有的资源都是被锁定的，这种情况只适合执行时间确定的短事务。</p>
 <p>后续大家开始通过业务逻辑将互斥锁操作从资源层面上移到业务层面，这并不是完全放弃了 ACID，而是通过放宽一致性要求，借助本地事务来实现最终分布式事务一致性的同时也保证系统的吞吐。</p>
-<h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>TCC 名字的由来是其中包含了 try, confirm, cancel 三个操作。</p>
+<h3 id="概述"><a href="# 概述" class="headerlink" title="概述"></a>概述</h3><p>TCC 名字的由来是其中包含了 try, confirm, cancel 三个操作。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210616192803baeFm2.png" alt="20210616192803baeFm2"></p>
 <ul>
 <li>Try：资源的检测和预留；</li>
 <li>Confirm：执行的业务操作提交；要求 Try 成功 Confirm 一定要能成功；</li>
 <li>Cancel：预留资源释放；</li>
 </ul>
-<h3 id="服务要求"><a href="#服务要求" class="headerlink" title="服务要求"></a>服务要求</h3><h4 id="TCC设计-业务模型分2阶段设计"><a href="#TCC设计-业务模型分2阶段设计" class="headerlink" title="TCC设计 - 业务模型分2阶段设计"></a>TCC设计 - 业务模型分2阶段设计</h4><p><strong>用户接入TCC，最重要的是考虑如何将自己的业务模型拆成两阶段来实现。</strong></p>
-<p>以“扣钱”场景为例，在接入TCC前，对 A 账户的扣钱，只需一条更新账户余额的SQL便能完成；但是在接入TCC之后，用户就需要考虑如何将原来一步就能完成的扣钱操作，拆成两阶段，实现成三个方法，并且保证一阶段Try成功，二阶段Confirm一定能成功。</p>
+<h3 id="服务要求"><a href="# 服务要求" class="headerlink" title="服务要求"></a>服务要求 </h3><h4 id="TCC 设计 - 业务模型分 2 阶段设计"><a href="#TCC 设计 - 业务模型分 2 阶段设计" class="headerlink" title="TCC 设计 - 业务模型分 2 阶段设计"></a>TCC 设计 - 业务模型分 2 阶段设计</h4><p><strong> 用户接入 TCC，最重要的是考虑如何将自己的业务模型拆成两阶段来实现。</strong></p>
+<p>以“扣钱”场景为例，在接入 TCC 前，对 A 账户的扣钱，只需一条更新账户余额的 SQL 便能完成；但是在接入 TCC 之后，用户就需要考虑如何将原来一步就能完成的扣钱操作，拆成两阶段，实现成三个方法，并且保证一阶段 Try 成功，二阶段 Confirm 一定能成功。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210617104658rtRgf1.jpg" alt="20210617104658rtRgf1"></p>
 <p>如上图所示，Try 方法作为一阶段准备方法，需要做资源的检查和预留。在扣钱场景下，Try 要做的事情是就是检查账户余额是否充足，预留转账资金，预留的方式就是冻结 A 账户的 转账资金。Try 方法执行之后，账号 A 余额虽然还是 100，但是其中 30 元已经被冻结了，不能被其他事务使用。</p>
 <p>二阶段 Confirm 方法执行真正的扣钱操作。Confirm 会使用 Try 阶段冻结的资金，执行账号扣款。Confirm 方法执行之后，账号 A 在一阶段中冻结的 30 元已经被扣除，账号 A 余额变成 70 元 。</p>
 <p>如果二阶段是回滚的话，就需要在 Cancel 方法内释放一阶段 Try 冻结的 30 元，使账号 A 的回到初始状态，100 元全部可用。</p>
-<p>用户接入 TCC 模式，最重要的事情就是考虑如何将业务模型拆成 2 阶段，实现成 TCC 的 3 个方法，并且保证 Try 成功 Confirm 一定能成功。<strong>相对于 AT 模式，TCC 模式对业务代码有一定的侵入性，但是TCC 模式无AT模式的全局行锁，TCC性能会比 AT模式高很多</strong>。</p>
-<h4 id="TCC设计-允许空回滚"><a href="#TCC设计-允许空回滚" class="headerlink" title="TCC设计 - 允许空回滚"></a>TCC设计 - 允许空回滚</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210617104913D8RpSz.jpg" alt="20210617104913D8RpSz"></p>
-<p>Cancel接口设计时需要允许空回滚。在 Try 接口因为丢包时没有收到，事务管理器会触发回滚，这时会触发Cancel接口，这时Cancel执行时发现没有对应的事务 xid 或主键时，需要返回回滚成功。让事务服务管理器认为已回滚，否则会不断重试，而Cancel又没有对应的业务数据可以进行回滚。</p>
-<h4 id="TCC设计-防悬挂控制"><a href="#TCC设计-防悬挂控制" class="headerlink" title="TCC设计 - 防悬挂控制"></a>TCC设计 - 防悬挂控制</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/202106171051385X7QDT.jpg" alt="202106171051385X7QDT"></p>
-<p>悬挂的意思是：Cancel比Try 接口先执行，出现的原因是 Try 由于网络拥堵而超时，事务管理器生成回滚，触发 Cancel 接口，而最终又收到了 Try 接口调用，但是 Cancel 比 Try 先到。按照前面允许空回滚的逻辑，回滚会返回成功，事务管理器认为事务已回滚成功，则此时的 Try 接口不应该执行，否则会产生数据不一致，所以我们在 Cancel 空回滚返回成功之前先记录该条事务 xid 或业务主键，标识这条记录已经回滚过，Try接口先检查这条事务xid或业务主键如果已经标记为回滚成功过，则不执行 Try 的业务操作。</p>
-<h4 id="TCC设计-幂等控制"><a href="#TCC设计-幂等控制" class="headerlink" title="TCC设计 - 幂等控制"></a>TCC设计 - 幂等控制</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210617105232VG21sb.jpg" alt="20210617105232VG21sb"></p>
+<p>用户接入 TCC 模式，最重要的事情就是考虑如何将业务模型拆成 2 阶段，实现成 TCC 的 3 个方法，并且保证 Try 成功 Confirm 一定能成功。<strong>相对于 AT 模式，TCC 模式对业务代码有一定的侵入性，但是 TCC 模式无 AT 模式的全局行锁，TCC 性能会比 AT 模式高很多</strong>。</p>
+<h4 id="TCC 设计 - 允许空回滚"><a href="#TCC 设计 - 允许空回滚" class="headerlink" title="TCC 设计 - 允许空回滚"></a>TCC 设计 - 允许空回滚</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210617104913D8RpSz.jpg" alt="20210617104913D8RpSz"></p>
+<p>Cancel 接口设计时需要允许空回滚。在 Try 接口因为丢包时没有收到，事务管理器会触发回滚，这时会触发 Cancel 接口，这时 Cancel 执行时发现没有对应的事务 xid 或主键时，需要返回回滚成功。让事务服务管理器认为已回滚，否则会不断重试，而 Cancel 又没有对应的业务数据可以进行回滚。</p>
+<h4 id="TCC 设计 - 防悬挂控制"><a href="#TCC 设计 - 防悬挂控制" class="headerlink" title="TCC 设计 - 防悬挂控制"></a>TCC 设计 - 防悬挂控制</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/202106171051385X7QDT.jpg" alt="202106171051385X7QDT"></p>
+<p>悬挂的意思是：Cancel 比 Try 接口先执行，出现的原因是 Try 由于网络拥堵而超时，事务管理器生成回滚，触发 Cancel 接口，而最终又收到了 Try 接口调用，但是 Cancel 比 Try 先到。按照前面允许空回滚的逻辑，回滚会返回成功，事务管理器认为事务已回滚成功，则此时的 Try 接口不应该执行，否则会产生数据不一致，所以我们在 Cancel 空回滚返回成功之前先记录该条事务 xid 或业务主键，标识这条记录已经回滚过，Try 接口先检查这条事务 xid 或业务主键如果已经标记为回滚成功过，则不执行 Try 的业务操作。</p>
+<h4 id="TCC 设计 - 幂等控制"><a href="#TCC 设计 - 幂等控制" class="headerlink" title="TCC 设计 - 幂等控制"></a>TCC 设计 - 幂等控制</h4><p><img src="https://gitee.com/niumi/drawing/raw/master/20210617105232VG21sb.jpg" alt="20210617105232VG21sb"></p>
 <p>幂等性的意思是：对同一个系统，使用同样的条件，一次请求和重复的多次请求对系统资源的影响是一致的。因为网络抖动或拥堵可能会超时，事务管理器会对资源进行重试操作，所以很可能一个业务操作会被重复调用，为了不因为重复调用而多次占用资源，需要对服务设计时进行幂等控制，通常我们可以用事务 xid 或业务主键判重来控制。</p>
-<h2 id=""><a href="#" class="headerlink" title=""></a></h2><h2 id="Saga模式"><a href="#Saga模式" class="headerlink" title="Saga模式"></a>Saga模式</h2><h3 id="概述-1"><a href="#概述-1" class="headerlink" title="概述"></a>概述</h3><p>Saga 是一种补偿协议，在 Saga 模式下，分布式事务内有多个参与者，每一个参与者都是一个冲正补偿服务，需要用户根据业务场景实现其正向操作和逆向回滚操作。</p>
+<h2 id=""><a href="#"class="headerlink"title=""></a></h2><h2 id="Saga 模式"><a href="#Saga 模式" class="headerlink" title="Saga 模式"></a>Saga 模式 </h2><h3 id="概述 -1"><a href="# 概述 -1" class="headerlink" title="概述"></a> 概述</h3><p>Saga 是一种补偿协议，在 Saga 模式下，分布式事务内有多个参与者，每一个参与者都是一个冲正补偿服务，需要用户根据业务场景实现其正向操作和逆向回滚操作。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210617110314Bn7EWI.jpg" alt="20210617110314Bn7EWI"></p>
 <p>分布式事务执行过程中，依次执行各参与者的正向操作，如果所有正向操作均执行成功，那么分布式事务提交。如果任何一个正向操作执行失败，那么分布式事务会退回去执行前面各参与者的逆向回滚操作，回滚已提交的参与者，使分布式事务回到初始状态。</p>
 <p>Saga 模式下分布式事务通常是由事件驱动的，各个参与者之间是异步执行的，Saga 模式是一种长事务解决方案。</p>
-<h3 id="服务要求-1"><a href="#服务要求-1" class="headerlink" title="服务要求"></a>服务要求</h3><h3 id="-1"><a href="#-1" class="headerlink" title=""></a><img src="https://gitee.com/niumi/drawing/raw/master/20210617111214rzuv9m.jpg" alt="20210617111214rzuv9m"></h3><p>与TCC实践经验相同的是，Saga 模式中，每个事务参与者的冲正、逆向操作，需要支持：</p>
+<h3 id="服务要求 -1"><a href="# 服务要求 -1" class="headerlink" title="服务要求"></a>服务要求 </h3><h3 id="-1"><a href="#-1" class="headerlink" title=""></a><img src="https://gitee.com/niumi/drawing/raw/master/20210617111214rzuv9m.jpg"alt="20210617111214rzuv9m"></h3><p> 与 TCC 实践经验相同的是，Saga 模式中，每个事务参与者的冲正、逆向操作，需要支持：</p>
 <ul>
 <li>空补偿：逆向操作早于正向操作时；</li>
 <li>防悬挂控制：空补偿后要拒绝正向操作</li>
 <li>幂等</li>
 </ul>
-<h3 id="适应场景"><a href="#适应场景" class="headerlink" title="适应场景"></a>适应场景</h3><ol>
-<li><p>Saga模式适用于业务流程长且需要保证事务最终一致性的业务系统，Saga模式一阶段就会提交本地事务，无锁、长流程情况下可以保证性能。</p>
+<h3 id="适应场景"><a href="# 适应场景" class="headerlink" title="适应场景"></a>适应场景</h3><ol>
+<li><p>Saga 模式适用于业务流程长且需要保证事务最终一致性的业务系统，Saga 模式一阶段就会提交本地事务，无锁、长流程情况下可以保证性能。</p>
 </li>
-<li><p>事务参与者可能是其它公司的服务或者是遗留系统的服务，无法进行改造和提供TCC要求的接口，可以使用Saga 模式。</p>
+<li><p>事务参与者可能是其它公司的服务或者是遗留系统的服务，无法进行改造和提供 TCC 要求的接口，可以使用 Saga 模式。</p>
 </li>
 </ol>
-<h3 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h3><h4 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h4><ul>
+<h3 id="优缺点"><a href="# 优缺点" class="headerlink" title="优缺点"></a>优缺点 </h3><h4 id="优势"><a href="# 优势" class="headerlink" title="优势"></a> 优势</h4><ul>
 <li>一阶段提交本地数据库事务，无锁，高性能；</li>
 <li>参与者可以采用事务驱动异步执行，高吞吐；</li>
 <li>补偿服务即正向服务的“反向”，易于理解，易于实现；</li>
 </ul>
-<h4 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h4><p>Saga 模式由于一阶段已经提交本地数据库事务，且没有进行“预留”动作，所以不能保证隔离性。</p>
-<h2 id="事件驱动架构"><a href="#事件驱动架构" class="headerlink" title="事件驱动架构"></a>事件驱动架构</h2><h3 id="概述-2"><a href="#概述-2" class="headerlink" title="概述"></a>概述</h3><p>和TCC一样，在事件驱动的架构中，长活事务涉及的每个服务都需要支持额外的待处理状态。接收到事务请求的服务会在其数据库中插入一条新的记录， 将该记录状态设为待处理并发送一个新的事件给事务序列中的下一个服务。</p>
+<h4 id="缺点 -1"><a href="# 缺点 -1" class="headerlink" title="缺点"></a>缺点</h4><p>Saga 模式由于一阶段已经提交本地数据库事务，且没有进行“预留”动作，所以不能保证隔离性。</p>
+<h2 id="事件驱动架构"><a href="# 事件驱动架构" class="headerlink" title="事件驱动架构"></a>事件驱动架构 </h2><h3 id="概述 -2"><a href="# 概述 -2" class="headerlink" title="概述"></a> 概述 </h3><p> 和 TCC 一样，在事件驱动的架构中，长活事务涉及的每个服务都需要支持额外的待处理状态。接收到事务请求的服务会在其数据库中插入一条新的记录， 将该记录状态设为待处理并发送一个新的事件给事务序列中的下一个服务。</p>
 <p>因为在插入记录后服务可能崩溃，我们无法确定是否新事件已发送，所以每个服务还需要额外的事件表来跟踪当前长活事务处于哪一步。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210617210143zdzXVW.jpg" alt="20210617210143zdzXVW"></p>
 <p>一旦长活事务中的最后一个服务完成其子事务，它将通知它在事务中的前一个服务。接收到完成事件的服务将其在数据库中的记录状态设为完成。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210617210218mRvVky.jpg" alt="20210617210218mRvVky"></p>
-<p>如果仔细比较，事件驱动的架构就像非集中式的基于事件的TCC实现。如果去掉待处理状态而直接把服务记录设为最终状态，这个架构就像非集中式的基于事件的saga实现。 去中心化能达到服务自治，但也造成了服务之间更紧密的的耦合。假设新的业务需求在服务B和C之间的增加了新的流程D。在事件驱动架构下，服务B和C必须改动代码以适应新的流程D。</p>
+<p>如果仔细比较，事件驱动的架构就像非集中式的基于事件的 TCC 实现。如果去掉待处理状态而直接把服务记录设为最终状态，这个架构就像非集中式的基于事件的 saga 实现。 去中心化能达到服务自治，但也造成了服务之间更紧密的的耦合。假设新的业务需求在服务 B 和 C 之间的增加了新的流程 D。在事件驱动架构下，服务 B 和 C 必须改动代码以适应新的流程 D。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/202106172102513lbn45.jpg" alt="202106172102513lbn45"></p>
-<p>Saga则正好相反，所有这些耦合都在saga系统中，当在长活事务中添加新流程时，现有服务不需要任何改动。</p>
-<h3 id="本地消息表"><a href="#本地消息表" class="headerlink" title="本地消息表"></a>本地消息表</h3><p>本地消息表这个方案最初是 ebay 架构师 Dan Pritchett 在 2008 年发表给 ACM 的文章。该方案中会有消息生产者与消费者两个角色，假设系统 A 是消息生产者，系统 B 是消息消费者，其大致流程如下：</p>
+<p>Saga 则正好相反，所有这些耦合都在 saga 系统中，当在长活事务中添加新流程时，现有服务不需要任何改动。</p>
+<h3 id="本地消息表"><a href="# 本地消息表" class="headerlink" title="本地消息表"></a>本地消息表 </h3><p> 本地消息表这个方案最初是 ebay 架构师 Dan Pritchett 在 2008 年发表给 ACM 的文章。该方案中会有消息生产者与消费者两个角色，假设系统 A 是消息生产者，系统 B 是消息消费者，其大致流程如下：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210617213131uaLHvt.png" alt="20210617213131uaLHvt"></p>
 <ol>
 <li>当系统 A 被其他系统调用发生数据库表更操作，首先会更新数据库的业务表，其次会往相同数据库的消息表中插入一条数据，两个操作发生在同一个事务中</li>
@@ -100,7 +372,7 @@
 <li>步骤 2、3 写 mq 与消费 mq 失败会进行重试</li>
 <li>步骤 3 业务失败系统 B 向系统 A 发起事务回滚操作</li>
 </ol>
-<h3 id="事务消息"><a href="#事务消息" class="headerlink" title="事务消息"></a>事务消息</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/20210617210905XhlJ3z.jpg" alt="20210617210905XhlJ3z"></p>
+<h3 id="事务消息"><a href="# 事务消息" class="headerlink" title="事务消息"></a>事务消息</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/20210617210905XhlJ3z.jpg" alt="20210617210905XhlJ3z"></p>
 <ol>
 <li><p>A 系统先向 mq 发送一条 prepare 消息，如果 prepare 消息发送失败，则直接取消操作</p>
 </li>
@@ -114,14 +386,14 @@
 </li>
 </ol>
 <p>该方案与本地消息最大的不同是去掉了本地消息表，其次本地消息表依赖消息表重试写入 mq 这一步由本方案中的轮询 prepare 消息状态来重试或者回滚该消息替代。其实现条件与余容错方案基本一致。目前市面上实现该方案的只有阿里的 RocketMq。</p>
-<h2 id="Seata"><a href="#Seata" class="headerlink" title="Seata"></a>Seata</h2><h3 id="术语"><a href="#术语" class="headerlink" title="术语"></a>术语</h3><p>Seata中有3个基本组件：</p>
+<h2 id="Seata"><a href="#Seata" class="headerlink" title="Seata"></a>Seata</h2><h3 id="术语"><a href="# 术语" class="headerlink" title="术语"></a>术语</h3><p>Seata 中有 3 个基本组件：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210617112830image-20210617112829881.png" alt="image-20210617112829881"></p>
 <ul>
 <li><strong>Transaction Coordinator(TC):</strong> Maintain status of global and branch transactions, drive the global commit or rollback.</li>
 <li><strong>Transaction Manager(TM):</strong> Define the scope of global transaction: begin a global transaction, commit or rollback a global transaction.</li>
 <li><strong>Resource Manager(RM):</strong> Manage resources that branch transactions working on, talk to TC for registering branch transactions and reporting status of branch transactions, and drive the branch transaction commit or rollback.</li>
 </ul>
-<h3 id="整体流程-1"><a href="#整体流程-1" class="headerlink" title="整体流程"></a>整体流程</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/2021061711301517vnCe.png" alt="2021061711301517vnCe"></p>
+<h3 id="整体流程 -1"><a href="# 整体流程 -1" class="headerlink" title="整体流程"></a>整体流程</h3><p><img src="https://gitee.com/niumi/drawing/raw/master/2021061711301517vnCe.png" alt="2021061711301517vnCe"></p>
 <ol>
 <li>TM asks TC to begin a new global transaction. TC generates an XID representing the global transaction.</li>
 <li>XID is propagated through microservices’ invoke chain.</li>
@@ -129,8 +401,8 @@
 <li>TM asks TC for committing or rollbacking the corresponding global transaction of XID.</li>
 <li>TC drives all branch transactions under the corresponding global transaction of XID to finish branch committing or rollbacking.</li>
 </ol>
-<h3 id="AT模式"><a href="#AT模式" class="headerlink" title="AT模式"></a>AT模式</h3><p>AT模式是一种无侵入的分布式事务解决方案。在AT模式下，用户只需关注自己的“业务 SQL”，用户的 “业务 SQL” 作为一阶段，Seata框架会自动生成事务的二阶段提交和回滚操作。</p>
-<h4 id="整体机制"><a href="#整体机制" class="headerlink" title="整体机制"></a>整体机制</h4><p>两阶段提交协议的演变：</p>
+<h3 id="AT 模式"><a href="#AT 模式" class="headerlink" title="AT 模式"></a>AT 模式</h3><p>AT 模式是一种无侵入的分布式事务解决方案。在 AT 模式下，用户只需关注自己的“业务 SQL”，用户的 “业务 SQL” 作为一阶段，Seata 框架会自动生成事务的二阶段提交和回滚操作。</p>
+<h4 id="整体机制"><a href="# 整体机制" class="headerlink" title="整体机制"></a>整体机制 </h4><p> 两阶段提交协议的演变：</p>
 <ol>
 <li><p><strong>阶段一</strong></p>
 <p>业务数据和回滚日志记录在同一个本地事务中提交，释放本地锁和连接资源。</p>
@@ -145,72 +417,335 @@
 </ul>
 </li>
 </ul>
-<h5 id="阶段一：详细流程"><a href="#阶段一：详细流程" class="headerlink" title="阶段一：详细流程"></a>阶段一：详细流程</h5><p><img src="https://gitee.com/niumi/drawing/raw/master/20210617113653AE9mfA.jpg" alt="20210617113653AE9mfA"></p>
+<h5 id="阶段一：详细流程"><a href="# 阶段一：详细流程" class="headerlink" title="阶段一：详细流程"></a>阶段一：详细流程</h5><p><img src="https://gitee.com/niumi/drawing/raw/master/20210617113653AE9mfA.jpg" alt="20210617113653AE9mfA"></p>
 <p>Seata 会拦截“业务 SQL”，首先解析 SQL 语义，找到“业务 SQL”要更新的业务数据，在业务数据被更新前，将其保存成“before image”，然后执行“业务 SQL”更新业务数据，在业务数据更新之后，再将其保存成“after image”，最后生成行锁。以上操作全部在一个数据库事务内完成，这样保证了一阶段操作的原子性。</p>
-<h5 id="阶段二：提交"><a href="#阶段二：提交" class="headerlink" title="阶段二：提交"></a>阶段二：提交</h5><p>“业务SQL”在阶段一已经提交至数据库， 所以Seata 框架只需将阶段一保存的快照数据和行锁删掉，完成数据清理即可。</p>
+<h5 id="阶段二：提交"><a href="# 阶段二：提交" class="headerlink" title="阶段二：提交"></a>阶段二：提交</h5><p>“业务 SQL”在阶段一已经提交至数据库， 所以 Seata 框架只需将阶段一保存的快照数据和行锁删掉，完成数据清理即可。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210617113845b9Zfz3.jpg" alt="20210617113845b9Zfz3"></p>
-<h5 id="阶段二：回滚"><a href="#阶段二：回滚" class="headerlink" title="阶段二：回滚"></a>阶段二：回滚</h5><p>Seata需要回滚阶段一已经执行的“业务 SQL”，还原业务数据。回滚方式便是用“before image”还原业务数据；但在还原前要首先要校验脏写，对比“数据库当前业务数据”和 “after image”，如果两份数据完全一致就说明没有脏写，可以还原业务数据，如果不一致就说明有脏写，出现脏写就需要转人工处理。</p>
+<h5 id="阶段二：回滚"><a href="# 阶段二：回滚" class="headerlink" title="阶段二：回滚"></a>阶段二：回滚</h5><p>Seata 需要回滚阶段一已经执行的“业务 SQL”，还原业务数据。回滚方式便是用“before image”还原业务数据；但在还原前要首先要校验脏写，对比“数据库当前业务数据”和 “after image”，如果两份数据完全一致就说明没有脏写，可以还原业务数据，如果不一致就说明有脏写，出现脏写就需要转人工处理。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210617114007Ey0vpo.jpg" alt="20210617114007Ey0vpo"></p>
-<h4 id="适应场景-1"><a href="#适应场景-1" class="headerlink" title="适应场景"></a>适应场景</h4><p> 分布式事务的业务逻辑中仅仅纯数据库操作，不包含其他中间件事务逻辑。</p>
-<h4 id="优缺点-1"><a href="#优缺点-1" class="headerlink" title="优缺点"></a>优缺点</h4><h5 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h5><p>改动及代码侵入最小。由Seata来负责Commit和Rollback的自动化触发或回滚操作。</p>
-<h5 id="缺点-2"><a href="#缺点-2" class="headerlink" title="缺点"></a>缺点</h5><ol>
+<h4 id="适应场景 -1"><a href="# 适应场景 -1" class="headerlink" title="适应场景"></a>适应场景</h4><p> 分布式事务的业务逻辑中仅仅纯数据库操作，不包含其他中间件事务逻辑。</p>
+<h4 id="优缺点 -1"><a href="# 优缺点 -1" class="headerlink" title="优缺点"></a>优缺点 </h4><h5 id="优点"><a href="# 优点" class="headerlink" title="优点"></a> 优点 </h5><p> 改动及代码侵入最小。由 Seata 来负责 Commit 和 Rollback 的自动化触发或回滚操作。</p>
+<h5 id="缺点 -2"><a href="# 缺点 -2" class="headerlink" title="缺点"></a>缺点</h5><ol>
 <li><p>如果事务中包含缓存存储或发送消息等不适合。</p>
 </li>
-<li><p>为了保证镜像sql的可靠性，需要用户对sql尽量做简化， 建议做法：将多条SQL语句分解为多个事务中的原子步骤（对应SeataAt模式的分支Branch概念），如果单条SQL语句跨表，也分解成为多个事务中的原子步骤（尽量降低Seata存储镜前SQL结果时的风险）。</p>
+<li><p>为了保证镜像 sql 的可靠性，需要用户对 sql 尽量做简化， 建议做法：将多条 SQL 语句分解为多个事务中的原子步骤（对应 SeataAt 模式的分支 Branch 概念），如果单条 SQL 语句跨表，也分解成为多个事务中的原子步骤（尽量降低 Seata 存储镜前 SQL 结果时的风险）。</p>
 </li>
-<li><p>多次对DB的操作，以及全局行锁的存在对并发处理性能有影响。</p>
+<li><p>多次对 DB 的操作，以及全局行锁的存在对并发处理性能有影响。</p>
 </li>
 </ol>
-<h1 id="微服务事务一致性建议"><a href="#微服务事务一致性建议" class="headerlink" title="微服务事务一致性建议"></a>微服务事务一致性建议</h1><p>与两阶段提交相比，TCC 位于业务服务层， 没有单独的准备阶段，Try 操作可以灵活选择业务资源锁的粒度。TCC 是通过最终一致性来解决系统性能问题的这个设计，对我们设计抉择有很大的启发。 有些时候 <strong>系统的技术问题是可以通过业务建模的方式来解决的</strong>。</p>
+<h1 id="微服务事务一致性建议"><a href="# 微服务事务一致性建议" class="headerlink" title="微服务事务一致性建议"></a>微服务事务一致性建议 </h1><p> 与两阶段提交相比，TCC 位于业务服务层， 没有单独的准备阶段，Try 操作可以灵活选择业务资源锁的粒度。TCC 是通过最终一致性来解决系统性能问题的这个设计，对我们设计抉择有很大的启发。 有些时候 <strong>系统的技术问题是可以通过业务建模的方式来解决的</strong>。</p>
 <blockquote>
 <p>有关领域建模，这里给大家推荐两本书，一个是《领域驱动设计》，还有一个是《实现领域驱动设计》。</p>
 </blockquote>
 <p>微服务架构是一个在限定界限上下文内的松耦合的服务架构。微服务事务一致性的建议是什么呢？就是内刚外柔。在限定上下文内容范围内可以借助数据库提供事务一致性来做强一致。在限定上下文之间依靠最终一致性方案来解决服务间协同问题。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210617115540o1SRic.jpg" alt="20210617115540o1SRic"></p>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p>[]: <a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzI4MTY5NTk4Ng==&amp;mid=2247489026&amp;idx=1&amp;sn=67184a64653164d1c48255e0e87373c8&amp;chksm=eba4159fdcd39c895524eb8430237dd3c6fa3d47fb3dd15766a67588aaccfbaee4e4a17c5398&amp;scene=27#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MzI4MTY5NTk4Ng==&amp;mid=2247489026&amp;idx=1&amp;sn=67184a64653164d1c48255e0e87373c8&amp;chksm=eba4159fdcd39c895524eb8430237dd3c6fa3d47fb3dd15766a67588aaccfbaee4e4a17c5398&amp;scene=27#wechat_redirect</a>    “Saga分布式事务解决方案与实践”<br>[]: <a target="_blank" rel="noopener" href="https://www.jianshu.com/p/f2caa8737b7b">https://www.jianshu.com/p/f2caa8737b7b</a>    “分布式事务 Seata(二) 理解什么是AT、TCC、Saga”<br>[]: <a target="_blank" rel="noopener" href="https://www.cnblogs.com/anhaogoon/p/13033611.html">https://www.cnblogs.com/anhaogoon/p/13033611.html</a>    “Seata解决方案整体介绍”</p>
+<h1 id="参考资料"><a href="# 参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p>[]: <a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzI4MTY5NTk4Ng==&amp;mid=2247489026&amp;idx=1&amp;sn=67184a64653164d1c48255e0e87373c8&amp;chksm=eba4159fdcd39c895524eb8430237dd3c6fa3d47fb3dd15766a67588aaccfbaee4e4a17c5398&amp;scene=27#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MzI4MTY5NTk4Ng==&amp;mid=2247489026&amp;idx=1&amp;sn=67184a64653164d1c48255e0e87373c8&amp;chksm=eba4159fdcd39c895524eb8430237dd3c6fa3d47fb3dd15766a67588aaccfbaee4e4a17c5398&amp;scene=27#wechat_redirect</a>    “Saga 分布式事务解决方案与实践”<br>[]: <a target="_blank" rel="noopener" href="https://www.jianshu.com/p/f2caa8737b7b">https://www.jianshu.com/p/f2caa8737b7b</a>    “分布式事务 Seata(二) 理解什么是 AT、TCC、Saga”<br>[]: <a target="_blank" rel="noopener" href="https://www.cnblogs.com/anhaogoon/p/13033611.html">https://www.cnblogs.com/anhaogoon/p/13033611.html</a>    “Seata 解决方案整体介绍”</p>
 <p>[]: <a target="_blank" rel="noopener" href="https://xiaomi-info.github.io/2020/01/02/distributed-transaction/">https://xiaomi-info.github.io/2020/01/02/distributed-transaction/</a>    “分布式事务，这一篇就够了”</p>
-</div><div class="article-licensing box"><div class="licensing-title"><p>微服务事务一致性解决方案</p><p><a href="http://blog.blockmao.cn/posts/10608.html">http://blog.blockmao.cn/posts/10608.html</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>牛觅</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2021-06-17</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2021-06-17</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/">分布式事务</a></div><div class="notification is-danger">You need to set <code>install_url</code> to use ShareThis. Please set it in <code>_config.yml</code>.</div></article></div><div class="card"><div class="card-content"><h3 class="menu-label has-text-centered">Like this article? Support the author with</h3><div class="buttons is-centered"><a class="button donate" href="/" target="_blank" rel="noopener" data-type="afdian"><span class="icon is-small"><i class="fas fa-charging-station"></i></span><span>Afdian.net</span></a><a class="button donate" data-type="alipay"><span class="icon is-small"><i class="fab fa-alipay"></i></span><span>Alipay</span><span class="qrcode"><img src="/" alt="Alipay"></span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="buymeacoffee"><span class="icon is-small"><i class="fas fa-coffee"></i></span><span>Buy me a coffee</span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="patreon"><span class="icon is-small"><i class="fab fa-patreon"></i></span><span>Patreon</span></a><div class="notification is-danger">You forgot to set the <code>business</code> or <code>currency_code</code> for Paypal. Please set it in <code>_config.yml</code>.</div><a class="button donate" data-type="wechat"><span class="icon is-small"><i class="fab fa-weixin"></i></span><span>Wechat</span><span class="qrcode"><img src="/" alt="Wechat"></span></a></div></div></div><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/posts/45222.html"><i class="level-item fas fa-chevron-left"></i><span class="level-item">Spring：XML配置扩展</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/posts/33457.html"><span class="level-item">MySQL：体系结构与存储引擎</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-4-widescreen  order-1"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar" src="/img/avatar.png" alt="牛觅"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">牛觅</p><p class="is-size-6 is-block">Your title</p><p class="is-size-6 is-flex justify-content-center"><i class="fas fa-map-marker-alt mr-1"></i><span>中国-杭州</span></p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">77</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">19</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">18</p></a></div></div></nav><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com/ppoffice"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Facebook" href="https://facebook.com"><i class="fab fa-facebook"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Dribbble" href="https://dribbble.com"><i class="fab fa-dribbble"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="RSS" href="/"><i class="fas fa-rss"></i></a></div></div></div><!--!--><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://hexo.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Hexo</span></span><span class="level-right"><span class="level-item tag">hexo.io</span></span></a></li><li><a class="level is-mobile" href="https://bulma.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Bulma</span></span><span class="level-right"><span class="level-item tag">bulma.io</span></span></a></li></ul></div></div></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/DDD/"><span class="level-start"><span class="level-item">DDD</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Dubbo/"><span class="level-start"><span class="level-item">Dubbo</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/Git/"><span class="level-start"><span class="level-item">Git</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Hbase/"><span class="level-start"><span class="level-item">Hbase</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/JVM/"><span class="level-start"><span class="level-item">JVM</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/JavaSE/"><span class="level-start"><span class="level-item">JavaSE</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/"><span class="level-start"><span class="level-item">Java并发编程</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/MySQL/"><span class="level-start"><span class="level-item">MySQL</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Mybatis/"><span class="level-start"><span class="level-item">Mybatis</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Netty/"><span class="level-start"><span class="level-item">Netty</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/Spring/"><span class="level-start"><span class="level-item">Spring</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/SpringCloud/"><span class="level-start"><span class="level-item">SpringCloud</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/"><span class="level-start"><span class="level-item">分布式</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84/"><span class="level-start"><span class="level-item">微服务架构</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"><span class="level-start"><span class="level-item">数据结构与算法</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E6%97%A5%E5%BF%97/"><span class="level-start"><span class="level-item">日志</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"><span class="level-start"><span class="level-item">计算机网络</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%BE%E8%AE%A1/"><span class="level-start"><span class="level-item">设计</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"><span class="level-start"><span class="level-item">设计模式</span></span><span class="level-end"><span class="level-item tag">21</span></span></a></li></ul></div></div></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">Recents</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-08-09T10:36:51.000Z">2021-08-09</time></p><p class="title"><a href="/posts/22384.html">MySQL：索引</a></p><p class="categories"><a href="/categories/MySQL/">MySQL</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-08-07T03:38:43.000Z">2021-08-07</time></p><p class="title"><a href="/posts/60776.html">Java Agent</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-21T12:58:45.000Z">2021-07-21</time></p><p class="title"><a href="/posts/51998.html">Java类加载：classloader的原理及应用</a></p><p class="categories"><a href="/categories/JVM/">JVM</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-19T05:47:30.000Z">2021-07-19</time></p><p class="title"><a href="/posts/19955.html">Netty：ByteBuf与内存管理</a></p><p class="categories"><a href="/categories/Netty/">Netty</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-16T03:00:08.000Z">2021-07-16</time></p><p class="title"><a href="/posts/7199.html">微服务安全架构：基于OAuth 2.0/JWT的微服务参考架构</a></p></div></article></div></div><div class="card widget" data-type="archives"><div class="card-content"><div class="menu"><h3 class="menu-label">Archives</h3><ul class="menu-list"><li><a class="level is-mobile" href="/archives/2021/08/"><span class="level-start"><span class="level-item">August 2021</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/07/"><span class="level-start"><span class="level-item">July 2021</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/06/"><span class="level-start"><span class="level-item">June 2021</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/05/"><span class="level-start"><span class="level-item">May 2021</span></span><span class="level-end"><span class="level-item tag">13</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/04/"><span class="level-start"><span class="level-item">April 2021</span></span><span class="level-end"><span class="level-item tag">51</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/03/"><span class="level-start"><span class="level-item">March 2021</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div><div class="card widget" data-type="tags"><div class="card-content"><div class="menu"><h3 class="menu-label">Tags</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/JVM/"><span class="tag">JVM</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Java-8/"><span class="tag">Java 8</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Mybatis/"><span class="tag">Mybatis</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Netty/"><span class="tag">Netty</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/OAuth2/"><span class="tag">OAuth2</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/TODO/"><span class="tag">TODO</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"><span class="tag">分布式</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/"><span class="tag">分布式事务</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%BC%93%E5%AD%98/"><span class="tag">分布式缓存</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%9B%E5%BB%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">创建型模式</span><span class="tag">4</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"><span class="tag">微服务</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E5%AE%89%E5%85%A8/"><span class="tag">微服务安全</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%8E%92%E5%BA%8F/"><span class="tag">排序</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%B3%9B%E5%9E%8B/"><span class="tag">泛型</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">结构型模式</span><span class="tag">6</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E8%A1%8C%E4%B8%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">行为型模式</span><span class="tag">11</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%9B%B6%E6%8B%B7%E8%B4%9D/"><span class="tag">零拷贝</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%9D%A2%E8%AF%95%E9%A2%98/"><span class="tag">面试题</span><span class="tag">2</span></a></div></div></div></div></div><div class="card widget" data-type="subscribe-email"><div class="card-content"><div class="menu"><h3 class="menu-label">Subscribe for updates</h3><form action="https://feedburner.google.com/fb/a/mailverify" method="post" target="popupwindow" onsubmit="window.open(&#039;https://feedburner.google.com/fb/a/mailverify?uri=&#039;,&#039;popupwindow&#039;,&#039;scrollbars=yes,width=550,height=520&#039;);return true"><input type="hidden" value="" name="uri"><input type="hidden" name="loc" value="en_US"><div class="field has-addons"><div class="control has-icons-left is-expanded"><input class="input" name="email" type="email" placeholder="Email"><span class="icon is-small is-left"><i class="fas fa-envelope"></i></span></div><div class="control"><input class="button" type="submit" value="Subscribe"></div></div></form></div></div></div><div class="card widget"><div class="card-content"><div class="notification is-danger">You need to set <code>client_id</code> and <code>slot_id</code> to show this AD unit. Please set it in <code>_config.yml</code>.</div></div></div><div class="card widget" data-type="subscribe-email"><div class="card-content"><div class="menu"><h3 class="menu-label">follow.it</h3><form action="" method="post" target="_blank"><div class="field has-addons"><div class="control has-icons-left is-expanded"><input class="input" name="email" type="email" placeholder="Email"><span class="icon is-small is-left"><i class="fas fa-envelope"></i></span></div><div class="control"><input class="button" type="submit" value="Subscribe"></div></div></form></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="牛觅博客" height="28"></a><p class="is-size-7"><span>&copy; 2021 牛觅</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-Hanss");</script><script>var IcarusThemeSettings = {
-            article: {
-                highlight: {
-                    clipboard: true,
-                    fold: 'unfolded'
-                }
-            }
-        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
-      window.cookieconsent.initialise({
-        type: "info",
-        theme: "edgeless",
-        static: false,
-        position: "bottom-left",
-        content: {
-          message: "This website uses cookies to improve your experience.",
-          dismiss: "Got it!",
-          allow: "Allow cookies",
-          deny: "Decline",
-          link: "Learn more",
-          policy: "Cookie Policy",
-          href: "https://www.cookiesandyou.com/",
-        },
-        palette: {
-          popup: {
-            background: "#edeff5",
-            text: "#838391"
-          },
-          button: {
-            background: "#4b81e8"
-          },
-        },
-      });
-    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
-            if (typeof $.fn.lightGallery === 'function') {
-                $('.article').lightGallery({ selector: '.gallery-item' });
-            }
-            if (typeof $.fn.justifiedGallery === 'function') {
-                if ($('.justified-gallery > p > .gallery-item').length) {
-                    $('.justified-gallery > p > .gallery-item').unwrap();
-                }
-                $('.justified-gallery').justifiedGallery();
-            }
-        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
-            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
-        });</script></body></html>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" rel="tag"># 分布式事务</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/33457.html" rel="prev" title="MySQL：体系结构与存储引擎">
+      <i class="fa fa-chevron-left"></i> MySQL：体系结构与存储引擎
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/45222.html" rel="next" title="Spring：XML 配置扩展">
+      Spring：XML 配置扩展 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%BA%8B%E5%8A%A1%E4%B8%80%E8%87%B4%E6%80%A7%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">1.</span> <span class="nav-text">微服务事务一致性解决方案 </span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2PC"><span class="nav-number">1.1.</span> <span class="nav-text">2PC</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E6%B5%81%E7%A8%8B"><span class="nav-number">1.1.1.</span> <span class="nav-text">整体流程 </span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%98%B6%E6%AE%B5%E4%B8%80%EF%BC%9A%E5%87%86%E5%A4%87%E9%98%B6%E6%AE%B5%EF%BC%88%E6%8A%95%E7%A5%A8%E9%98%B6%E6%AE%B5%EF%BC%89"><span class="nav-number">1.1.1.1.</span> <span class="nav-text"> 阶段一：准备阶段（投票阶段）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%98%B6%E6%AE%B5%E4%BA%8C%EF%BC%9A%E6%8F%90%E4%BA%A4%E9%98%B6%E6%AE%B5%EF%BC%88%E5%AE%8C%E6%88%90%EF%BC%89"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">阶段二：提交阶段（完成）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%88%90%E5%8A%9F"><span class="nav-number">1.1.1.2.1.</span> <span class="nav-text">成功 </span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A4%B1%E8%B4%A5"><span class="nav-number">1.1.1.2.2.</span> <span class="nav-text">失败 </span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9"><span class="nav-number">1.1.2.</span> <span class="nav-text">缺点 </span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E9%98%BB%E5%A1%9E"><span class="nav-number">1.1.2.1.</span> <span class="nav-text"> 同步阻塞 </span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%AA%E8%BF%87%E4%BF%9D%E5%AE%88"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">太过保守 </span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.1.3.</span> <span class="nav-text">实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCC%20%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">TCC 模式 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.2.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E8%A6%81%E6%B1%82"><span class="nav-number">1.2.2.</span> <span class="nav-text">服务要求 </span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#TCC%20%E8%AE%BE%E8%AE%A1%20-%20%E4%B8%9A%E5%8A%A1%E6%A8%A1%E5%9E%8B%E5%88%86%202%20%E9%98%B6%E6%AE%B5%E8%AE%BE%E8%AE%A1"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">TCC 设计 - 业务模型分 2 阶段设计</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCC%20%E8%AE%BE%E8%AE%A1%20-%20%E5%85%81%E8%AE%B8%E7%A9%BA%E5%9B%9E%E6%BB%9A"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">TCC 设计 - 允许空回滚</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCC%20%E8%AE%BE%E8%AE%A1%20-%20%E9%98%B2%E6%82%AC%E6%8C%82%E6%8E%A7%E5%88%B6"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">TCC 设计 - 防悬挂控制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCC%20%E8%AE%BE%E8%AE%A1%20-%20%E5%B9%82%E7%AD%89%E6%8E%A7%E5%88%B6"><span class="nav-number">1.2.2.4.</span> <span class="nav-text">TCC 设计 - 幂等控制</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">1.3.</span> <span class="nav-text"></span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Saga%20%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.4.</span> <span class="nav-text">Saga 模式 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0%20-1"><span class="nav-number">1.4.1.</span> <span class="nav-text"> 概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E8%A6%81%E6%B1%82%20-1"><span class="nav-number">1.4.2.</span> <span class="nav-text">服务要求 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#-1"><span class="nav-number">1.4.3.</span> <span class="nav-text"></span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%82%E5%BA%94%E5%9C%BA%E6%99%AF"><span class="nav-number">1.4.4.</span> <span class="nav-text">适应场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.4.5.</span> <span class="nav-text">优缺点 </span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E5%8A%BF"><span class="nav-number">1.4.5.1.</span> <span class="nav-text"> 优势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9%20-1"><span class="nav-number">1.4.5.2.</span> <span class="nav-text">缺点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E6%9E%B6%E6%9E%84"><span class="nav-number">1.5.</span> <span class="nav-text">事件驱动架构 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0%20-2"><span class="nav-number">1.5.1.</span> <span class="nav-text"> 概述 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E6%B6%88%E6%81%AF%E8%A1%A8"><span class="nav-number">1.5.2.</span> <span class="nav-text">本地消息表 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF"><span class="nav-number">1.5.3.</span> <span class="nav-text">事务消息</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Seata"><span class="nav-number">1.6.</span> <span class="nav-text">Seata</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AF%E8%AF%AD"><span class="nav-number">1.6.1.</span> <span class="nav-text">术语</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E6%B5%81%E7%A8%8B%20-1"><span class="nav-number">1.6.2.</span> <span class="nav-text">整体流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AT%20%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.6.3.</span> <span class="nav-text">AT 模式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E6%9C%BA%E5%88%B6"><span class="nav-number">1.6.3.1.</span> <span class="nav-text">整体机制 </span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%98%B6%E6%AE%B5%E4%B8%80%EF%BC%9A%E8%AF%A6%E7%BB%86%E6%B5%81%E7%A8%8B"><span class="nav-number">1.6.3.1.1.</span> <span class="nav-text">阶段一：详细流程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%98%B6%E6%AE%B5%E4%BA%8C%EF%BC%9A%E6%8F%90%E4%BA%A4"><span class="nav-number">1.6.3.1.2.</span> <span class="nav-text">阶段二：提交</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%98%B6%E6%AE%B5%E4%BA%8C%EF%BC%9A%E5%9B%9E%E6%BB%9A"><span class="nav-number">1.6.3.1.3.</span> <span class="nav-text">阶段二：回滚</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%82%E5%BA%94%E5%9C%BA%E6%99%AF%20-1"><span class="nav-number">1.6.3.2.</span> <span class="nav-text">适应场景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E7%BC%BA%E7%82%B9%20-1"><span class="nav-number">1.6.3.3.</span> <span class="nav-text">优缺点 </span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BC%98%E7%82%B9"><span class="nav-number">1.6.3.3.1.</span> <span class="nav-text"> 优点 </span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9%20-2"><span class="nav-number">1.6.3.3.2.</span> <span class="nav-text">缺点</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%BA%8B%E5%8A%A1%E4%B8%80%E8%87%B4%E6%80%A7%E5%BB%BA%E8%AE%AE"><span class="nav-number">2.</span> <span class="nav-text">微服务事务一致性建议 </span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">3.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">77</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div id="pjax">
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['blockmao'],
+      id          : '1fc4f15f6b848e76021721fbeca3b8e9',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+    </div>
+</body>
+</html>

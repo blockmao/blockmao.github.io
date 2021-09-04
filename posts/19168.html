@@ -1,5 +1,277 @@
-<!doctype html>
-<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>JVM：通过逃逸分析就能让对象在栈上分配？ - 牛觅博客</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="牛觅博客"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="牛觅博客"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content=""><meta property="og:type" content="blog"><meta property="og:title" content="JVM：通过逃逸分析就能让对象在栈上分配？"><meta property="og:url" content="http://blog.blockmao.cn/posts/19168.html"><meta property="og:site_name" content="牛觅博客"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041113010420210411130102liImPR.jpg"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021051922440420210411130120564a245dc00446b982b6939c25518176~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202105192244132021041113012060a9e6af409f41059c16439761e81f1c~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021051922441820210411130120d28c03423061405f9e2d572e66740ace~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111301205d71423cdd754b5793b1a09c7c675648~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411130120b05e7e69e307435ea559292013c7fef0~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041113012062fd4ced7c564097ac969c576af0e0d2~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411130120bef7d5348179451c929e8868be4e4b25~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111301206173b59c52214baab01dc4a17635895a~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041113012135a4d09d09454f35a548f4c1a8e2c0f3~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111301212ea8358476b5468db7b20a6aafaba589~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411130121b19f51bf08e74ce294cf2ec0cc0d3947~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111301210aeeca3d127c42d4b6f210f11b0fc3a6~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411130121898635c42be841319218a0f02f19d516~tplv-k3u1fbpfcp-zoom-1.image"><meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041113012132ea51550ab44cb3a5da722a2b80e00d~tplv-k3u1fbpfcp-zoom-1.image"><meta property="article:published_time" content="2021-04-11T04:59:34.000Z"><meta property="article:modified_time" content="2021-05-19T14:44:47.074Z"><meta property="article:author" content="牛觅"><meta property="twitter:card" content="summary"><meta property="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/2021041113010420210411130102liImPR.jpg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://blog.blockmao.cn/posts/19168.html"},"headline":"JVM：通过逃逸分析就能让对象在栈上分配？","image":["https://gitee.com/niumi/drawing/raw/master/2021041113010420210411130102liImPR.jpg"],"datePublished":"2021-04-11T04:59:34.000Z","dateModified":"2021-05-19T14:44:47.074Z","author":{"@type":"Person","name":"牛觅"},"publisher":{"@type":"Organization","name":"牛觅博客","logo":{"@type":"ImageObject","url":"http://blog.blockmao.cn/img/logo.svg"}},"description":""}</script><link rel="canonical" href="http://blog.blockmao.cn/posts/19168.html"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.2/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css"><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script><!--!--><!--!--><meta name="generator" content="Hexo 5.4.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="牛觅博客" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-8-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-04-11T04:59:34.000Z" title="2021/4/11下午12:59:34">2021-04-11</time></span><span class="level-item">Updated&nbsp;<time dateTime="2021-05-19T14:44:47.074Z" title="2021/5/19下午10:44:47">2021-05-19</time></span><span class="level-item"><a class="link-muted" href="/categories/JVM/">JVM</a></span><span class="level-item">18 minutes read (About 2746 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">JVM：通过逃逸分析就能让对象在栈上分配？</h1><div class="content"><p><img src="https://gitee.com/niumi/drawing/raw/master/2021041113010420210411130102liImPR.jpg" alt="20210411130102liImPR"></p>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="JVM：通过逃逸分析就能让对象在栈上分配？">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/19168.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041113010420210411130102liImPR.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021051922440420210411130120564a245dc00446b982b6939c25518176~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202105192244132021041113012060a9e6af409f41059c16439761e81f1c~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021051922441820210411130120d28c03423061405f9e2d572e66740ace~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111301205d71423cdd754b5793b1a09c7c675648~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411130120b05e7e69e307435ea559292013c7fef0~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041113012062fd4ced7c564097ac969c576af0e0d2~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411130120bef7d5348179451c929e8868be4e4b25~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111301206173b59c52214baab01dc4a17635895a~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041113012135a4d09d09454f35a548f4c1a8e2c0f3~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111301212ea8358476b5468db7b20a6aafaba589~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411130121b19f51bf08e74ce294cf2ec0cc0d3947~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202104111301210aeeca3d127c42d4b6f210f11b0fc3a6~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210411130121898635c42be841319218a0f02f19d516~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021041113012132ea51550ab44cb3a5da722a2b80e00d~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="article:published_time" content="2021-04-11T04:59:34.000Z">
+<meta property="article:modified_time" content="2021-05-19T14:44:47.074Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/2021041113010420210411130102liImPR.jpg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/19168.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JVM：通过逃逸分析就能让对象在栈上分配？ | 牛觅博客</title>
+  
+
+
+  <script data-pjax>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/19168.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JVM：通过逃逸分析就能让对象在栈上分配？
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-11 12:59:34" itemprop="dateCreated datePublished" datetime="2021-04-11T12:59:34+08:00">2021-04-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-05-19 22:44:47" itemprop="dateModified" datetime="2021-05-19T22:44:47+08:00">2021-05-19</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/2021041113010420210411130102liImPR.jpg" alt="20210411130102liImPR"></p>
 <span id="more"></span>
 
 
@@ -8,15 +280,15 @@
 <p><strong>原文地址</strong>：<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/Pub_K7PSCNE82F-96y2v6g?scene=25#wechat_redirect">https://mp.weixin.qq.com/s/Pub_K7PSCNE82F-96y2v6g?scene=25#wechat_redirect</a></p>
 </blockquote>
 <p>经常会有面试官会问一个问题：<strong>Java 中的对象都是在”堆”中创建吗？</strong></p>
-<p>然后跟求职者大谈特谈<strong>逃逸分析</strong>，说通过<strong>逃逸分析</strong>，JVM 会将实例对象分配在<strong>栈</strong>上。其实这种说法，是并不是很严谨，最起码目前在 HotSpot 中，并没有在栈中存储对象的实现代码！</p>
-<h2 id="什么是逃逸分析？"><a href="#什么是逃逸分析？" class="headerlink" title="什么是逃逸分析？"></a>什么是逃逸分析？</h2><p>首先逃逸分析是一种算法，这套算法在 Java 即时编译器（JIT），编译 Java 源代码时使用。通过逃逸分析算法，可以分析出某一个方法中的某个对象，是否会被其它方法或者线程访问到。</p>
+<p>然后跟求职者大谈特谈 <strong> 逃逸分析 </strong>，说通过<strong> 逃逸分析 </strong>，JVM 会将实例对象分配在<strong> 栈</strong>上。其实这种说法，是并不是很严谨，最起码目前在 HotSpot 中，并没有在栈中存储对象的实现代码！</p>
+<h2 id="什么是逃逸分析？"><a href="# 什么是逃逸分析？" class="headerlink" title="什么是逃逸分析？"></a>什么是逃逸分析？</h2><p>首先逃逸分析是一种算法，这套算法在 Java 即时编译器（JIT），编译 Java 源代码时使用。通过逃逸分析算法，可以分析出某一个方法中的某个对象，是否会被其它方法或者线程访问到。</p>
 <p>如果分析结果显示，某对象并不会被其它线程访问，则有可能在编译期间，对其做一些深层次的优化，具体有哪些优化稍后讲解。</p>
 <blockquote>
 <p>执行 java 程序时，可以通过如下参数开启或者关闭”逃逸分析”。</p>
 <p>开启逃逸分析：-XX:+DoEscapeAnalysis</p>
 <p>关闭逃逸分析：-XX:-DoEscapeAnalysis</p>
 </blockquote>
-<h2 id="逃逸分析原则"><a href="#逃逸分析原则" class="headerlink" title="逃逸分析原则"></a>逃逸分析原则</h2><p>在 HotSpot 源码中的 escape.hpp 中定义了对象进行逃逸分析后的几种状态。（路径：src/share/vm/opto/escape.hpp）</p>
+<h2 id="逃逸分析原则"><a href="# 逃逸分析原则" class="headerlink" title="逃逸分析原则"></a>逃逸分析原则 </h2><p> 在 HotSpot 源码中的 escape.hpp 中定义了对象进行逃逸分析后的几种状态。（路径：src/share/vm/opto/escape.hpp）</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/2021051922440420210411130120564a245dc00446b982b6939c25518176~tplv-k3u1fbpfcp-zoom-1.image" alt="图片"></p>
 <h3 id="1、全局逃逸（GlobalEscape）"><a href="#1、全局逃逸（GlobalEscape）" class="headerlink" title="1、全局逃逸（GlobalEscape）"></a>1、全局逃逸（GlobalEscape）</h3><p>即一个对象的作用范围，逃出了当前方法或者当前线程，有以下几种场景：</p>
 <ul>
@@ -26,10 +298,10 @@
 </ul>
 <h3 id="2、参数逃逸（ArgEscape）"><a href="#2、参数逃逸（ArgEscape）" class="headerlink" title="2、参数逃逸（ArgEscape）"></a>2、参数逃逸（ArgEscape）</h3><p>即一个对象，被作为方法参数传递，或者被参数引用，但在调用过程中，不会再被其它方法或者线程访问。</p>
 <h3 id="3、没有逃逸（NoEscape）"><a href="#3、没有逃逸（NoEscape）" class="headerlink" title="3、没有逃逸（NoEscape）"></a>3、没有逃逸（NoEscape）</h3><p>即方法中的对象，没有发生逃逸，这种对象会被 Java 即时编译器进一步的优化。</p>
-<h2 id="逃逸分析优化"><a href="#逃逸分析优化" class="headerlink" title="逃逸分析优化"></a>逃逸分析优化</h2><p>经过「逃逸分析」之后，如果一个对象的逃逸状态是 GlobalEscape 或者 ArgEscape，则此对象必须被分配在「堆」内存中，但是对于 NoEscape 状态的对象，则不一定，具体会有以下几种优化情况。</p>
-<h3 id="1、锁消除"><a href="#1、锁消除" class="headerlink" title="1、锁消除"></a>1、锁消除</h3><p>比如以下代码。</p>
+<h2 id="逃逸分析优化"><a href="# 逃逸分析优化" class="headerlink" title="逃逸分析优化"></a>逃逸分析优化 </h2><p> 经过「逃逸分析」之后，如果一个对象的逃逸状态是 GlobalEscape 或者 ArgEscape，则此对象必须被分配在「堆」内存中，但是对于 NoEscape 状态的对象，则不一定，具体会有以下几种优化情况。</p>
+<h3 id="1、锁消除"><a href="#1、锁消除" class="headerlink" title="1、锁消除"></a>1、锁消除 </h3><p> 比如以下代码。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/202105192244132021041113012060a9e6af409f41059c16439761e81f1c~tplv-k3u1fbpfcp-zoom-1.image" alt="图片"></p>
-<p>在<code>lockElimination()</code>方法中，对象 <code>a</code> 永远不会被其它方法或者线程访问到，因此 <code>a</code>是非逃逸对象，这就导致<code>synchronized(a)</code> 没有任何意义，因为在任何线程中，<code>a</code> 都是不同的锁对象。所以 JVM 会对上述代码进行优化，删除同步相关代码，以下：</p>
+<p>在 <code>lockElimination()</code> 方法中，对象 <code>a</code> 永远不会被其它方法或者线程访问到，因此 <code>a</code>是非逃逸对象，这就导致<code>synchronized(a)</code> 没有任何意义，因为在任何线程中，<code>a</code> 都是不同的锁对象。所以 JVM 会对上述代码进行优化，删除同步相关代码，以下：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/2021051922441820210411130120d28c03423061405f9e2d572e66740ace~tplv-k3u1fbpfcp-zoom-1.image" alt="图片"></p>
 <p>对于锁消除，还有一个比较经典的使用场景：<strong>StringBuffer</strong>。</p>
 <p>StringBuffer 是一个使用同步方法的线程安全的类，可以用来高效地拼接不可变的字符串对象。StringBuffer 内部对所有 <code>append()</code> 方法都进行了同步操作，如下所示：</p>
@@ -39,7 +311,7 @@
 <p>调用 StringBuffer 的 <code>append()</code> 方法的线程，必须得获取到这个对象的内部锁（也叫监视器锁）才能进入到方法内部，在退出方法前也必须要释放掉这个锁。而 StringBuilder 就不需要进行这个操作，因此它的执行性能比 StringBuffer 的要高–至少乍看上去是这样的。</p>
 <p>不过在 HotSpot 虚拟机引入了「逃逸分析」之后，在调用 StringBuffer 对象的同步方法时，就能够自动地把锁消除掉了。从而提高 StringBuffer 的性能，比如以下代码：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/2021041113012062fd4ced7c564097ac969c576af0e0d2~tplv-k3u1fbpfcp-zoom-1.image" alt="图片"></p>
-<p>在<code>getString()</code>方法中的 StringBuffer 是方法内部的局部变量，并且并没有被当做方法返回值返回给调用者，因此 StringBuffer 是一个”非逃逸（NoEscape）”对象。</p>
+<p>在 <code>getString()</code> 方法中的 StringBuffer 是方法内部的局部变量，并且并没有被当做方法返回值返回给调用者，因此 StringBuffer 是一个”非逃逸（NoEscape）”对象。</p>
 <p>执行上述代码，结果如下：</p>
 <blockquote>
 <p>java TestLockEliminate 一共耗费：720 ms</p>
@@ -49,7 +321,7 @@
 <p>java  <strong>-XX:-EliminateLocks</strong> TestLockEliminate 一共耗费：<strong>1043 ms</strong></p>
 </blockquote>
 <p>可以看出，关闭锁消除后性能会降低，耗时更多。</p>
-<h3 id="2、对象分配消除"><a href="#2、对象分配消除" class="headerlink" title="2、对象分配消除"></a>2、对象分配消除</h3><p>除了锁消除，JVM 还会对无逃逸（NoEscape）对象进行<strong>对象分配消除</strong>优化。对象分配消除是指将本该在「堆」中分配的对象，转化为由「栈」中分配。乍听一下，很不可思议，但是我们可以通过一个案例来验证一下。</p>
+<h3 id="2、对象分配消除"><a href="#2、对象分配消除" class="headerlink" title="2、对象分配消除"></a>2、对象分配消除 </h3><p> 除了锁消除，JVM 还会对无逃逸（NoEscape）对象进行 <strong> 对象分配消除 </strong> 优化。对象分配消除是指将本该在「堆」中分配的对象，转化为由「栈」中分配。乍听一下，很不可思议，但是我们可以通过一个案例来验证一下。</p>
 <p>比如以下代码，在一个 1 千万次的循环中，分别创建 EscapeTest 对象 t1 和 t2。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210411130120bef7d5348179451c929e8868be4e4b25~tplv-k3u1fbpfcp-zoom-1.image" alt="图片"></p>
 <p>使用如下命令执行上述代码</p>
@@ -78,7 +350,7 @@
 <p>mixed mode 代表混合模式。</p>
 <p>在 Hotspot 中采用的是解释器和编译器并行架构，所谓的混合模式，就是解释器和编译器搭配使用，当程序启动初期，采用解释器执行（同时会记录相关的数据，比如函数的调用次数，循环语句执行次数），节省编译的时间。在使用解释器执行期间，记录的函数运行的数据，通过这些数据发现某些代码是热点代码，采用编译器对热点代码进行编译，以及优化（逃逸分析就是其中一种优化技术）。</p>
 </blockquote>
-<h3 id="3、标量替换"><a href="#3、标量替换" class="headerlink" title="3、标量替换"></a>3、标量替换</h3><p>上文中，我提到当「逃逸分析」后，对象状态为 NoEscape 时会在「栈」中进行分配。但是实际上，这种说法并不是完全准确的，「栈」中直接分配对象难度太大，需要修改 JVM 中大量堆优先分配的代码，因此在 HotSpot 中并没有真正的实现”栈”中分配对象的功能，取而代之的是一个叫做「标量替换」的折中办法。</p>
+<h3 id="3、标量替换"><a href="#3、标量替换" class="headerlink" title="3、标量替换"></a>3、标量替换 </h3><p> 上文中，我提到当「逃逸分析」后，对象状态为 NoEscape 时会在「栈」中进行分配。但是实际上，这种说法并不是完全准确的，「栈」中直接分配对象难度太大，需要修改 JVM 中大量堆优先分配的代码，因此在 HotSpot 中并没有真正的实现”栈”中分配对象的功能，取而代之的是一个叫做「标量替换」的折中办法。</p>
 <p>首先要明白标量和聚合量，基础类型和对象的引用可以理解为标量，它们不能被进一步分解。而能被进一步分解的量，就是聚合量。</p>
 <p>对象就是聚合量，它可以被进一步分解成标量，将其成员变量分解为分散的变量，这就叫做「标量替换」。这样如果一个对象没有发生逃逸，那压根就不需要在「堆」中创建它，只会在栈或者寄存器上创建一些能够映射这个对象标量即可，节省了内存空间，也提升了应用程序性能。</p>
 <p>比如以下两个计算和的方法：</p>
@@ -87,51 +359,311 @@
 <p>但是结果却是两个方法的执行效率相差无几。这是为什么呢？在 <code>sumMutableWrapper()</code>方法中，MutableWrapper 是不可逃逸对象，也就是说没有必要在「堆」中创建真正的 MutableWrapper 对象，Java 即时编译器会使用标量替换对其进行优化，优化结果为下：</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/2021041113012132ea51550ab44cb3a5da722a2b80e00d~tplv-k3u1fbpfcp-zoom-1.image" alt="图片"></p>
 <p>仔细查看，上述优化够的代码中的 value 也是一个中间变量，通过内联之后，会被优化为如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">total +&#x3D; i;</span><br></pre></td></tr></table></figure>
+<figure class="highlight fix"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">total +</span>=<span class="string"> i;</span></span><br></pre></td></tr></table></figure>
 
-<p>也就是说，java 源代码中的一大坨在真正执行时，只有简单的一行操作。因此<code>sumPrimitive</code>和 <code>sumMutableWrapper()</code> 两个方法的执行效率基本一致。</p>
-</div><div class="article-licensing box"><div class="licensing-title"><p>JVM：通过逃逸分析就能让对象在栈上分配？</p><p><a href="http://blog.blockmao.cn/posts/19168.html">http://blog.blockmao.cn/posts/19168.html</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>牛觅</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2021-04-11</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2021-05-19</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="notification is-danger">You need to set <code>install_url</code> to use ShareThis. Please set it in <code>_config.yml</code>.</div></article></div><div class="card"><div class="card-content"><h3 class="menu-label has-text-centered">Like this article? Support the author with</h3><div class="buttons is-centered"><a class="button donate" href="/" target="_blank" rel="noopener" data-type="afdian"><span class="icon is-small"><i class="fas fa-charging-station"></i></span><span>Afdian.net</span></a><a class="button donate" data-type="alipay"><span class="icon is-small"><i class="fab fa-alipay"></i></span><span>Alipay</span><span class="qrcode"><img src="/" alt="Alipay"></span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="buymeacoffee"><span class="icon is-small"><i class="fas fa-coffee"></i></span><span>Buy me a coffee</span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="patreon"><span class="icon is-small"><i class="fab fa-patreon"></i></span><span>Patreon</span></a><div class="notification is-danger">You forgot to set the <code>business</code> or <code>currency_code</code> for Paypal. Please set it in <code>_config.yml</code>.</div><a class="button donate" data-type="wechat"><span class="icon is-small"><i class="fab fa-weixin"></i></span><span>Wechat</span><span class="qrcode"><img src="/" alt="Wechat"></span></a></div></div></div><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/posts/6926.html"><i class="level-item fas fa-chevron-left"></i><span class="level-item">Java并发编程：AQS</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/posts/27252.html"><span class="level-item">彻底搞懂Git-Rebase</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-4-widescreen  order-1"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar" src="/img/avatar.png" alt="牛觅"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">牛觅</p><p class="is-size-6 is-block">Your title</p><p class="is-size-6 is-flex justify-content-center"><i class="fas fa-map-marker-alt mr-1"></i><span>中国-杭州</span></p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">77</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">19</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">18</p></a></div></div></nav><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com/ppoffice"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Facebook" href="https://facebook.com"><i class="fab fa-facebook"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Dribbble" href="https://dribbble.com"><i class="fab fa-dribbble"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="RSS" href="/"><i class="fas fa-rss"></i></a></div></div></div><!--!--><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://hexo.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Hexo</span></span><span class="level-right"><span class="level-item tag">hexo.io</span></span></a></li><li><a class="level is-mobile" href="https://bulma.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Bulma</span></span><span class="level-right"><span class="level-item tag">bulma.io</span></span></a></li></ul></div></div></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/DDD/"><span class="level-start"><span class="level-item">DDD</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Dubbo/"><span class="level-start"><span class="level-item">Dubbo</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/Git/"><span class="level-start"><span class="level-item">Git</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Hbase/"><span class="level-start"><span class="level-item">Hbase</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/JVM/"><span class="level-start"><span class="level-item">JVM</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/JavaSE/"><span class="level-start"><span class="level-item">JavaSE</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/"><span class="level-start"><span class="level-item">Java并发编程</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/MySQL/"><span class="level-start"><span class="level-item">MySQL</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Mybatis/"><span class="level-start"><span class="level-item">Mybatis</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Netty/"><span class="level-start"><span class="level-item">Netty</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/Spring/"><span class="level-start"><span class="level-item">Spring</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/SpringCloud/"><span class="level-start"><span class="level-item">SpringCloud</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/"><span class="level-start"><span class="level-item">分布式</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile" href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84/"><span class="level-start"><span class="level-item">微服务架构</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"><span class="level-start"><span class="level-item">数据结构与算法</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E6%97%A5%E5%BF%97/"><span class="level-start"><span class="level-item">日志</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"><span class="level-start"><span class="level-item">计算机网络</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%BE%E8%AE%A1/"><span class="level-start"><span class="level-item">设计</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"><span class="level-start"><span class="level-item">设计模式</span></span><span class="level-end"><span class="level-item tag">21</span></span></a></li></ul></div></div></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">Recents</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-08-09T10:36:51.000Z">2021-08-09</time></p><p class="title"><a href="/posts/22384.html">MySQL：索引</a></p><p class="categories"><a href="/categories/MySQL/">MySQL</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-08-07T03:38:43.000Z">2021-08-07</time></p><p class="title"><a href="/posts/60776.html">Java Agent</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-21T12:58:45.000Z">2021-07-21</time></p><p class="title"><a href="/posts/51998.html">Java类加载：classloader的原理及应用</a></p><p class="categories"><a href="/categories/JVM/">JVM</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-19T05:47:30.000Z">2021-07-19</time></p><p class="title"><a href="/posts/19955.html">Netty：ByteBuf与内存管理</a></p><p class="categories"><a href="/categories/Netty/">Netty</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2021-07-16T03:00:08.000Z">2021-07-16</time></p><p class="title"><a href="/posts/7199.html">微服务安全架构：基于OAuth 2.0/JWT的微服务参考架构</a></p></div></article></div></div><div class="card widget" data-type="archives"><div class="card-content"><div class="menu"><h3 class="menu-label">Archives</h3><ul class="menu-list"><li><a class="level is-mobile" href="/archives/2021/08/"><span class="level-start"><span class="level-item">August 2021</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/07/"><span class="level-start"><span class="level-item">July 2021</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/06/"><span class="level-start"><span class="level-item">June 2021</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/05/"><span class="level-start"><span class="level-item">May 2021</span></span><span class="level-end"><span class="level-item tag">13</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/04/"><span class="level-start"><span class="level-item">April 2021</span></span><span class="level-end"><span class="level-item tag">51</span></span></a></li><li><a class="level is-mobile" href="/archives/2021/03/"><span class="level-start"><span class="level-item">March 2021</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div><div class="card widget" data-type="tags"><div class="card-content"><div class="menu"><h3 class="menu-label">Tags</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/JVM/"><span class="tag">JVM</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Java-8/"><span class="tag">Java 8</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Mybatis/"><span class="tag">Mybatis</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Netty/"><span class="tag">Netty</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/OAuth2/"><span class="tag">OAuth2</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/TODO/"><span class="tag">TODO</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"><span class="tag">分布式</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/"><span class="tag">分布式事务</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%BC%93%E5%AD%98/"><span class="tag">分布式缓存</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%88%9B%E5%BB%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">创建型模式</span><span class="tag">4</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"><span class="tag">微服务</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E5%AE%89%E5%85%A8/"><span class="tag">微服务安全</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%8E%92%E5%BA%8F/"><span class="tag">排序</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%B3%9B%E5%9E%8B/"><span class="tag">泛型</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">结构型模式</span><span class="tag">6</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E8%A1%8C%E4%B8%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F/"><span class="tag">行为型模式</span><span class="tag">11</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%9B%B6%E6%8B%B7%E8%B4%9D/"><span class="tag">零拷贝</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%9D%A2%E8%AF%95%E9%A2%98/"><span class="tag">面试题</span><span class="tag">2</span></a></div></div></div></div></div><div class="card widget" data-type="subscribe-email"><div class="card-content"><div class="menu"><h3 class="menu-label">Subscribe for updates</h3><form action="https://feedburner.google.com/fb/a/mailverify" method="post" target="popupwindow" onsubmit="window.open(&#039;https://feedburner.google.com/fb/a/mailverify?uri=&#039;,&#039;popupwindow&#039;,&#039;scrollbars=yes,width=550,height=520&#039;);return true"><input type="hidden" value="" name="uri"><input type="hidden" name="loc" value="en_US"><div class="field has-addons"><div class="control has-icons-left is-expanded"><input class="input" name="email" type="email" placeholder="Email"><span class="icon is-small is-left"><i class="fas fa-envelope"></i></span></div><div class="control"><input class="button" type="submit" value="Subscribe"></div></div></form></div></div></div><div class="card widget"><div class="card-content"><div class="notification is-danger">You need to set <code>client_id</code> and <code>slot_id</code> to show this AD unit. Please set it in <code>_config.yml</code>.</div></div></div><div class="card widget" data-type="subscribe-email"><div class="card-content"><div class="menu"><h3 class="menu-label">follow.it</h3><form action="" method="post" target="_blank"><div class="field has-addons"><div class="control has-icons-left is-expanded"><input class="input" name="email" type="email" placeholder="Email"><span class="icon is-small is-left"><i class="fas fa-envelope"></i></span></div><div class="control"><input class="button" type="submit" value="Subscribe"></div></div></form></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="牛觅博客" height="28"></a><p class="is-size-7"><span>&copy; 2021 牛觅</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-Hanss");</script><script>var IcarusThemeSettings = {
-            article: {
-                highlight: {
-                    clipboard: true,
-                    fold: 'unfolded'
-                }
-            }
-        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
-      window.cookieconsent.initialise({
-        type: "info",
-        theme: "edgeless",
-        static: false,
-        position: "bottom-left",
-        content: {
-          message: "This website uses cookies to improve your experience.",
-          dismiss: "Got it!",
-          allow: "Allow cookies",
-          deny: "Decline",
-          link: "Learn more",
-          policy: "Cookie Policy",
-          href: "https://www.cookiesandyou.com/",
-        },
-        palette: {
-          popup: {
-            background: "#edeff5",
-            text: "#838391"
-          },
-          button: {
-            background: "#4b81e8"
-          },
-        },
-      });
-    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
-            if (typeof $.fn.lightGallery === 'function') {
-                $('.article').lightGallery({ selector: '.gallery-item' });
-            }
-            if (typeof $.fn.justifiedGallery === 'function') {
-                if ($('.justified-gallery > p > .gallery-item').length) {
-                    $('.justified-gallery > p > .gallery-item').unwrap();
-                }
-                $('.justified-gallery').justifiedGallery();
-            }
-        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
-            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
-        });</script></body></html>
+<p>也就是说，java 源代码中的一大坨在真正执行时，只有简单的一行操作。因此 <code>sumPrimitive</code> 和 <code>sumMutableWrapper()</code> 两个方法的执行效率基本一致。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/27252.html" rel="prev" title="彻底搞懂 Git-Rebase">
+      <i class="fa fa-chevron-left"></i> 彻底搞懂 Git-Rebase
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/6926.html" rel="next" title="Java 并发编程：AQS">
+      Java 并发编程：AQS <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">什么是逃逸分析？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90%E5%8E%9F%E5%88%99"><span class="nav-number">2.</span> <span class="nav-text">逃逸分析原则 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1%E3%80%81%E5%85%A8%E5%B1%80%E9%80%83%E9%80%B8%EF%BC%88GlobalEscape%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">1、全局逃逸（GlobalEscape）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2%E3%80%81%E5%8F%82%E6%95%B0%E9%80%83%E9%80%B8%EF%BC%88ArgEscape%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">2、参数逃逸（ArgEscape）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3%E3%80%81%E6%B2%A1%E6%9C%89%E9%80%83%E9%80%B8%EF%BC%88NoEscape%EF%BC%89"><span class="nav-number">2.3.</span> <span class="nav-text">3、没有逃逸（NoEscape）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90%E4%BC%98%E5%8C%96"><span class="nav-number">3.</span> <span class="nav-text">逃逸分析优化 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1%E3%80%81%E9%94%81%E6%B6%88%E9%99%A4"><span class="nav-number">3.1.</span> <span class="nav-text">1、锁消除 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2%E3%80%81%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8D%E6%B6%88%E9%99%A4"><span class="nav-number">3.2.</span> <span class="nav-text">2、对象分配消除 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3%E3%80%81%E6%A0%87%E9%87%8F%E6%9B%BF%E6%8D%A2"><span class="nav-number">3.3.</span> <span class="nav-text">3、标量替换 </span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">77</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div id="pjax">
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['blockmao'],
+      id          : '778d3e07f0f24d2403628679b1e8c48e',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+    </div>
+</body>
+</html>
