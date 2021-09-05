@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Microsoft YaHei:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.blockmao.cn","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="MySQL：高可用">
+<meta property="og:url" content="http://blog.blockmao.cn/posts/20863.html">
+<meta property="og:site_name" content="牛觅博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210905114048DIeKZg.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210818181807Fc2kDu.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210818182534fupM5U.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210818204531tUdJKt.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210818205034vcthj7.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210818205313CvGiNC.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210818183120t2Lp6x.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210818182534fupM5U.jpg">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202108281631127aAzGR.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210828172650nD8oBJ.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210828173111lLJFRk.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210828173644kIlxkL.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/2021082817481408KOrj.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210828181753I3nwq5.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210828181858gXsuj8.png">
+<meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202108282217411DDw9a.png">
+<meta property="article:published_time" content="2021-09-05T03:41:25.000Z">
+<meta property="article:modified_time" content="2021-09-05T03:41:44.421Z">
+<meta property="article:author" content="牛觅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/niumi/drawing/raw/master/20210905114048DIeKZg.jpg">
+
+<link rel="canonical" href="http://blog.blockmao.cn/posts/20863.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL：高可用 | 牛觅博客</title>
+  
+
+
+  <script data-pjax>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a83b1fd818b3df8c1797aa2a2bb38b3e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">牛觅博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.blockmao.cn/posts/20863.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="牛觅">
+      <meta itemprop="description" content="温故知新">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="牛觅博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL：高可用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-09-05 11:41:25 / 修改时间：11:41:44" itemprop="dateCreated datePublished" datetime="2021-09-05T11:41:25+08:00">2021-09-05</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="https://gitee.com/niumi/drawing/raw/master/20210905114048DIeKZg.jpg" alt="20210905114048DIeKZg"></p>
+<span id="more"></span>
+
+<h1 id="主备同步"><a href="# 主备同步" class="headerlink" title="主备同步"></a>主备同步 </h1><h2 id="原理"><a href="# 原理" class="headerlink" title="原理"></a> 原理 </h2><p> 一个 update 语句在节点 A 执行，然后同步到节点 B 的完整流程图。如下图所示：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210818181807Fc2kDu.jpg" alt="20210818181807Fc2kDu"></p>
+<blockquote>
+<p>备库 B 跟主库 A 之间维持了一个长连接。主库 A 内部有一个线程，专门用于服务备库 B 的这个长连接。</p>
+</blockquote>
+<p>一个事务日志同步的完整过程是这样的：</p>
+<ol>
+<li>在备库 B 上通过 <code>change master</code> 命令，设置主库 A 的 IP、端口、用户名、密码，以及要从哪个位置开始请求 binlog，这个位置包含文件名和日志偏移量。 </li>
+<li>在备库 B 上执行<code>start slave</code> 命令，这时候备库会启动两个线程，就是图中的 io_thread 和 sql_thread。其中 io_thread 负责与主库建立连接。 </li>
+<li>主库 A 校验完用户名、密码后，开始按照备库 B 传过来的位置，从本地读取 binlog， 发给 B。 </li>
+<li>备库 B 拿到 binlog 后，写到本地文件，称为中转日志（relay log）。 </li>
+<li>sql_thread 读取中转日志，解析出日志里的命令，并执行。</li>
+</ol>
+<h2 id="切换流程"><a href="# 切换流程" class="headerlink" title="切换流程"></a>切换流程 </h2><p> 主备切换流程如下所示：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210818182534fupM5U.jpg" alt="20210818182534fupM5U"></p>
+<p>在状态 1 中，客户端的读写都直接访问节点 A，而节点 B 是 A 的备库，只是将 A 的更新都同步过来，到本地执行。这样可以保持节点 B 和 A 的数据是相同的。</p>
+<p> 当需要切换的时候，就切成状态 2。这时候客户端读写访问的都是节点 B，而节点 A 是 B 的备库。 </p>
+<p>在状态 1 中，虽然节点 B 没有被直接访问，但是我依然建议你把节点 B（也就是备库）设 置成只读（readonly）模式。这样做，有以下几个考虑：</p>
+<ol>
+<li>有时候一些运营类的查询语句会被放到备库上去查，设置为只读可以防止误操作； </li>
+<li>防止切换逻辑有 bug，比如切换过程中出现双写，造成主备不一致；</li>
+<li>可以用 readonly 状态，来判断节点的角色。 </li>
+</ol>
+<blockquote>
+<p>你可能会问，我把备库设置成只读了，还怎么跟主库保持同步更新呢？ </p>
+<p>这个问题，你不用担心。因为 readonly 设置对超级 (super) 权限用户是无效的，而用于同 步更新的线程，就拥有超级权限。</p>
+</blockquote>
+<h2 id="binlog 格式"><a href="#binlog 格式" class="headerlink" title="binlog 格式"></a>binlog 格式</h2><h3 id="statement 和 row 格式"><a href="#statement 和 row 格式" class="headerlink" title="statement 和 row 格式"></a>statement 和 row 格式</h3><p>binlog 存在三种格式：statement、row 和 mixed。为了便于描述 binlog 的这三种格式间的区别，我创建了一个表，并初始化几行数据。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `t` (</span><br><span class="line">   `id` <span class="type">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">   `a` <span class="type">int</span>(<span class="number">11</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">   `t_modified` <span class="type">timestamp</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="built_in">CURRENT_TIMESTAMP</span>,</span><br><span class="line">   <span class="keyword">PRIMARY</span> KEY (`id`),</span><br><span class="line">   KEY `a` (`a`),</span><br><span class="line">   KEY `t_modified`(`t_modified`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB;</span><br><span class="line"></span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> t <span class="keyword">values</span>(<span class="number">1</span>,<span class="number">1</span>,<span class="string">&#x27;2018-11-13&#x27;</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> t <span class="keyword">values</span>(<span class="number">2</span>,<span class="number">2</span>,<span class="string">&#x27;2018-11-12&#x27;</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> t <span class="keyword">values</span>(<span class="number">3</span>,<span class="number">3</span>,<span class="string">&#x27;2018-11-11&#x27;</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> t <span class="keyword">values</span>(<span class="number">4</span>,<span class="number">4</span>,<span class="string">&#x27;2018-11-10&#x27;</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> t <span class="keyword">values</span>(<span class="number">5</span>,<span class="number">5</span>,<span class="string">&#x27;2018-11-09&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>如果要在表中删除一行数据的话，我们来看看这个 delete 语句的 binlog 是怎么记录的。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">delete</span> <span class="keyword">from</span> t <span class="comment">/*comment*/</span> <span class="keyword">where</span> a<span class="operator">&gt;=</span><span class="number">4</span> <span class="keyword">and</span> t_modified<span class="operator">&lt;=</span><span class="string">&#x27;2018-11-10&#x27;</span> limit <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意，下面这个语句包含注释，如果你用 MySQL 客户端来做这个实验的话，要记得加 -c 参数，否则客户端会自动去掉注释。</p>
+</blockquote>
+<p>当 <code>binlog_format=statement</code> 时，binlog 里面记录的就是 SQL 语句的原文。你可以用 <code>show binlog events in &#39;master.000001&#39;</code> 命令查看 binlog 中的内容，如下所示：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210818204531tUdJKt.jpg" alt="20210818204531tUdJKt"></p>
+<p>在 statement 格式下，记录到 binlog 里的是语句原文，因此可能会出现这样一种情况：在主库执行这条 SQL 语句的时候，用的是索引 a；而在备库执行这条 SQL 语句的时候，却使用了索引 t_modified。因此是存在风险的。</p>
+<p>如果把 binlog 的格式改为<code>binlog_format=‘row’</code>，binlog 中的内容如下：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210818205034vcthj7.jpg" alt="20210818205034vcthj7"></p>
+<p>可以看到，与 statement 格式的 binlog 相比，前后的 BEGIN 和 COMMIT 是一样的。但是，row 格式的 binlog 里没有了 SQL 语句的原文，而是替换成了两个 event：Table_map 和 Delete_rows。</p>
+<ol>
+<li>Table_map event，用于说明接下来要操作的表是 test 库的表 t;</li>
+<li>Delete_rows event，用于定义删除的行为。</li>
+</ol>
+<p>看不到详细信息的，还需要借助 mysqlbinlog 工具，用下面这个命令解析和查看 binlog 中的内容。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqlbinlog  <span class="operator">-</span>vv data<span class="operator">/</span>master<span class="number">.000001</span> <span class="comment">--start-position=8900;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这个事务的 binlog 是从 8900 这个位置开始的，所以可以用 start-position 参数来指定从这个位置的日志开始解析。</p>
+</blockquote>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210818205313CvGiNC.jpg" alt="20210818205313CvGiNC"></p>
+<p>可以看到以下几个信息：</p>
+<ul>
+<li>server id 1，表示这个事务是在 server_id=1 的这个库上执行的。</li>
+<li>每个 event 都有 CRC32 的值，这是因为我把参数 binlog_checksum 设置成了 CRC32。</li>
+<li>Table_map event 显示了接下来要打开的表，map 到数字 226。现在这条 SQL 语句只操作了一张表，如果要操作多张表呢？每个表都有一个对应的 Table_map event、都会 map 到一个单独的数字，用于区分对不同表的操作。</li>
+<li>我们在 mysqlbinlog 的命令中，使用了 -vv 参数是为了把内容都解析出来，所以从结果里面可以看到各个字段的值（比如，@1=4、 @2=4 这些值）。</li>
+<li>binlog_row_image 的默认配置是 FULL，因此 Delete_event 里面，包含了删掉的行的所有字段的值。如果把 binlog_row_image 设置为 MINIMAL，则只会记录必要的信息，在这个例子里，就是只会记录 id=4 这个信息。</li>
+<li>最后的 Xid event，用于表示事务被正确地提交了。</li>
+</ul>
+<p>当 binlog_format 使用 row 格式的时候，binlog 里面记录了真实删除行的主键 id，这样 binlog 传到备库去的时候，就肯定会删除 id=4 的行，不会有主备删除不同行的问题。</p>
+<h3 id="mixed- 格式"><a href="#mixed- 格式" class="headerlink" title="mixed 格式"></a>mixed 格式 </h3><p><strong> 为什么会有 mixed 这种 binlog 格式的存在场景？</strong>推论过程是这样的：</p>
+<ul>
+<li>因为有些 statement 格式的 binlog 可能会导致主备不一致，所以要使用 row 格式。</li>
+<li>但 row 格式的缺点是，很占空间。比如你用一个 delete 语句删掉 10 万行数据，用 statement 的话就是一个 SQL 语句被记录到 binlog 中，占用几十个字节的空间。但如果用 row 格式的 binlog，就要把这 10 万条记录都写到 binlog 中。这样做，不仅会占用更大的空间，同时写 binlog 也要耗费 IO 资源，影响执行速度。</li>
+<li>所以，MySQL 就取了个折中方案，也就是有了 mixed 格式的 binlog。mixed 格式的意思是，MySQL 自己会判断这条 SQL 语句是否可能引起主备不一致，如果有可能，就用 row 格式，否则就用 statement 格式。</li>
+</ul>
+<p>比如我们这个例子，设置为 mixed 后，就会记录为 row 格式；而如果执行的语句去掉 limit 1，就会记录为 statement 格式。</p>
+<p>也就是说，mixed 格式可以利用 statment 格式的优点，同时又避免了数据不一致的风险。因此，如果你的线上 MySQL 设置的 binlog 格式是 statement 的话，那基本上就可以认为这是一个不合理的设置。你至少应该把 binlog 的格式设置为 mixed。</p>
+<p>越来越多的场景要求把 MySQL 的 binlog 格式设置成 row。这么做的理由有很多，我来给你举一个可以直接看出来的好处：<strong>恢复数据</strong>。</p>
+<p>接下来，我们就分别从 delete、insert 和 update 这三种 SQL 语句的角度，来看看数据恢复的问题。</p>
+<ul>
+<li><p>delete 语句，row 格式的 binlog 也会把被删掉的行的整行信息保存起来。所以，如果你在执行完一条 delete 语句以后，发现删错数据了，可以直接把 binlog 中记录的 delete 语句转成 insert，把被错删的数据插入回去就可以恢复了。</p>
+</li>
+<li><p>insert 语句，row 格式的 binlog 里会记录所有的字段信息，这些信息可以用来精确定位刚刚被插入的那一行。这时，你直接把 insert 语句转成 delete 语句，删除掉这被误插入的一行数据就可以了。</p>
+</li>
+<li><p>update 语句，binlog 里面会记录修改前整行的数据和修改后的整行数据。所以，如果你误执行了 update 语句的话，只需要把这个 event 前后的两行信息对调一下，再去数据库里面执行，就能恢复这个更新操作了。</p>
+</li>
+</ul>
+<h2 id="循环复制"><a href="# 循环复制" class="headerlink" title="循环复制"></a>循环复制 </h2><p> 在实际生产上使用比较多的是双 M 结构，如下所示：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210818183120t2Lp6x.jpg" alt="双 M 结构"></p>
+<p>双 M 结构和 M-S 结构，其实区别只是多了一条线，即： <strong>节点 A 和 B 之间总是互为主备关系。这样在切换的时候就不用再修改主备关系</strong>。</p>
+<p>业务逻辑在节点 A 上更新了一条语句，然后再把生成的 binlog 发给节点 B，节点 B 执行完这条更新语句后也会生成 binlog。（建议你把参数 log_slave_updates 设置为 on， 表示备库执行 relay log 后生成 binlog）。节点 A 同时是节点 B 的备库，相当于又把节点 B 新生成的 binlog 拿过来执行 了一次，然后节点 A 和 B 间，会不断地循环执行这个更新语句，也就是循环复制。</p>
+<p>MySQL 在 binlog 中记录了这个命令第一次执行时所在实例的 server id。因此，我们可以用下面的逻辑，来解决两个节点间的循环复制的问题：</p>
+<ol>
+<li>规定两个库的 server id 必须不同，如果相同，则它们之间不能设定为主备关系； </li>
+<li>一个备库接到 binlog 并在重放的过程中，生成与原 binlog 的 server id 相同的新的 binlog； </li>
+<li>每个库在收到从自己的主库发过来的日志后，先判断 server id，如果跟自己的相同，表 示这个日志是自己生成的，就直接丢弃这个日志。</li>
+</ol>
+<p>按照这个逻辑，如果我们设置了双 M 结构，日志的执行流就会变成这样： </p>
+<ol>
+<li>从节点 A 更新的事务，binlog 里面记的都是 A 的 server id；</li>
+<li>传到节点 B 执行一次以后，节点 B 生成的 binlog 的 server id 也是 A 的 server id；</li>
+<li> 再传回给节点 A，A 判断到这个 server id 与自己的相同，就不会再处理这个日志。所以，死循环在这里就断掉了。</li>
+</ol>
+<h1 id="主备延迟"><a href="# 主备延迟" class="headerlink" title="主备延迟"></a>主备延迟 </h1><h2 id="概述"><a href="# 概述" class="headerlink" title="概述"></a> 概述 </h2><p><strong> 所谓主备延迟，就是同一个事务，在备库执行完成的时间和主库执行完成的时间之间的差值</strong>。与数据同步有关的时间点主要包括如下三个：</p>
+<ol>
+<li>主库 A 执行完成一个事务，写入 binlog，我们把这个时刻记为 T1; </li>
+<li>之后传给备库 B，我们把备库 B 接收完这个 binlog 的时刻记为 T2;</li>
+<li>备库 B 执行完成这个事务，我们把这个时刻记为 T3。</li>
+</ol>
+<p>主备延迟就是 T3 - T1。</p>
+<p>可以在 <strong> 备库 </strong> 上执行 <code>show slave status</code> 命令，它的返回结果里面会显示 <code>seconds_behind_master</code>，用于表示当前备库延迟了多少秒。</p>
+<p>seconds_behind_master 的计算方法是这样的:</p>
+<ol>
+<li>每个事务的 binlog 里面都有一个时间字段，用于记录主库上写入的时间;</li>
+<li>备库取出当前正在执行的事务的时间字段的值，计算它与当前系统时间的差值，得到 seconds_behind_master。</li>
+</ol>
+<p>可以看到，其实 <code>seconds_behind_master</code> 这个参数计算的就是 T3-T1。所以，可以用<code>seconds_behind_master</code> 来作为主备延迟的值，这个值的时间精度是秒。</p>
+<p><strong>如果主备库机器的系统时间设置不一致，会不会导致主备延迟的值不准</strong>?</p>
+<p>其实不会的。因为，备库连接到主库的时候，会通过执行 <code>SELECT UNIX_TIMESTAMP()</code> 函 数来获得当前主库的系统时间。如果这时候发现主库的系统时间与自己不一致，备库在执行 <code>seconds_behind_master</code> 计算的时候会自动扣掉这个差值。</p>
+<p>在网络正常的时候，日志从主库传给备库所需的时间是很短的，即 T2-T1 的值是非常小的。也就是说，网络正常情况下，<strong>主备延迟的主要来源是备库接收完 binlog 和执行完这个事务之间的时间差</strong>。</p>
+<p>所以说，主备延迟最直接的表现是，备库消费中转日志 (relay log) 的速度，比主库生产 binlog 的速度要慢。</p>
+<h2 id="主备延迟的来源"><a href="# 主备延迟的来源" class="headerlink" title="主备延迟的来源"></a>主备延迟的来源 </h2><h3 id="备库所在机器的性能差"><a href="# 备库所在机器的性能差" class="headerlink" title="备库所在机器的性能差"></a> 备库所在机器的性能差 </h3><p> 一般情况下，有人这么部署时的想法是，反正备库没有请求，所以可以用差一点儿的机器。 或者，他们会把 20 个主库放在 4 台机器上，而把备库集中在一台机器上。</p>
+<p><strong>更新请求对 IOPS 的压力，在主库和备库上是无差别的</strong>。所以，做这种部 署时，一般都会将备库设置为“非双 1”的模式。</p>
+<p>但实际上，更新过程中也会触发大量的读操作。所以，<strong>当备库主机上的多个备库都在争抢资源的时候，就可能会导致主备延迟了</strong>。</p>
+<h3 id="备库的压力大"><a href="# 备库的压力大" class="headerlink" title="备库的压力大"></a>备库的压力大 </h3><p> 一般的想法是，主库既然提供了写能力，那 么备库可以提供一些读能力。或者一些运营后台需要的分析语句，不能影响正常业务，所以 只能在备库上跑。</p>
+<p>由于主库直接影响业务，大家使用起来会比较克制，反而忽视 了备库的压力控制。结果就是备库上的查询耗费了大量的 CPU 资源，影响了同步速度， 造成主备延迟。</p>
+<p>对于这种情况，一般可以这么处理:</p>
+<ol>
+<li>一主多从。除了备库外，可以多接几个从库，让这些从库来分担读的压力。</li>
+<li>通过 binlog 输出到外部系统，比如 Hadoop 这类系统，让外部系统提供统计类查询的能力。</li>
+</ol>
+<p>其中，一主多从的方式大都会被采用。因为作为数据库系统，还必须保证有定期全量备份的能力。而从库就很适合用来做备份。</p>
+<h3 id="大事务"><a href="# 大事务" class="headerlink" title="大事务"></a>大事务 </h3><p> 主库上必须等事务执行完成才会写入 binlog，再传给备库。所以，如果一个主库上的语句执行 10 分钟，那这个事务很可能就会导致从库延迟 10 分钟。</p>
+<p><strong>一次性地用 delete 语句删除太多数 据</strong>。其实，这就是一个典型的大事务场景。比如，一些归档类的数据，平时没有注意删除历史数据，等到空间快满了，业务开发人员要一次性地删掉大量历史数据。同时，又因为要避免在高峰期操作会影响业务(至少有这个意识还是很不错的)，所以会在晚上执行这些大量数据的删除操作。</p>
+<p>结果，负责的 DBA 同学半夜就会收到延迟报警。然后，DBA 团队就要求你后续再删除数 据的时候，要控制每个事务删除的数据量，分成多次删除。</p>
+<h3 id="备库的并行复制能力"><a href="# 备库的并行复制能力" class="headerlink" title="备库的并行复制能力"></a><strong>备库的并行复制能力 </strong></h3><p> 见后文</p>
+<h1 id="主备切换策略"><a href="# 主备切换策略" class="headerlink" title="主备切换策略"></a>主备切换策略 </h1><p> 由于主备延迟的存在，所以在主备切换的时候，就相应的有不同的策略。</p>
+<h2 id="可靠性优先策略"><a href="# 可靠性优先策略" class="headerlink" title="可靠性优先策略"></a>可靠性优先策略 </h2><p> 在双 M 结构下，从状态 1 到状态 2 切换的详细过程是这样的:</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210818182534fupM5U.jpg" alt="20210818182534fupM5U"></p>
+<ol>
+<li>判断备库 B 现在的 seconds_behind_master，如果小于某个值 (比如 5 秒) 继续下一 步，否则持续重试这一步;</li>
+<li>把主库 A 改成只读状态，即把 readonly 设置为 true;</li>
+<li>判断备库 B 的 seconds_behind_master 的值，直到这个值变成 0 为止; </li>
+<li>把备库 B 改成可读写状态，也就是把 readonly 设置为 false;</li>
+<li>把业务请求切到备库 B。</li>
+</ol>
+<p>这个切换流程，一般是由专门的 HA 系统来完成 p 的，我们暂时称之为 <strong> 可靠性优先流程</strong>。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202108281631127aAzGR.png" alt="202108281631127aAzGR"></p>
+<blockquote>
+<p>图中的 SBM，是 seconds_behind_master 参数的简写。</p>
+</blockquote>
+<p>可以看到，这个切换流程中是有不可用时间的。因为在步骤 2 之后，主库 A 和备库 B 都处 于 readonly 状态，也就是说这时系统处于不可写状态，直到步骤 5 完成后才能恢复。</p>
+<p>在这个不可用状态中，比较耗费时间的是步骤 3，可能需要耗费好几秒的时间。这也是为什么需要在步骤 1 先做判断，确保 seconds_behind_master 的值足够小。</p>
+<p>试想如果一开始主备延迟就长达 30 分钟，而不先做判断直接切换的话，系统的不可用时间 就会长达 30 分钟，这种情况一般业务都是不可接受的。</p>
+<p>当然，系统的不可用时间，是由这个数据可靠性优先的策略决定的。可以选择可用性优先的策略，来把这个不可用时间几乎降为 0。</p>
+<h2 id="可用性优先策略"><a href="# 可用性优先策略" class="headerlink" title="可用性优先策略"></a><strong>可用性优先策略 </strong></h2><p> 如果强行把步骤 4、5 调整到最开始执行，也就是说不等主备数据同步，直接把连接切到备库 B，并且让备库 B 可以读写，那么系统几乎就没有不可用时间了。</p>
+<p>我们把这个切换流程，暂时称作可用性优先流程。这个切换流程的代价，就是可能出现数据不一致的情况。</p>
+<p>接下来分享一个可用性优先流程产生数据不一致的例子。假设有一个表 t:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE &#96;t&#96; (</span><br><span class="line">  &#96;id&#96; int(11) unsigned NOT NULL AUTO_INCREMENT,</span><br><span class="line">  &#96;c&#96; int(11) unsigned DEFAULT NULL,</span><br><span class="line">  PRIMARY KEY (&#96;id&#96;)</span><br><span class="line">) ENGINE&#x3D;InnoDB;</span><br><span class="line"></span><br><span class="line">insert into t(c) values(1),(2),(3);</span><br></pre></td></tr></table></figure>
+
+<p>这个表定义了一个自增主键 id，初始化数据后，主库和备库上都是 3 行数据。接下来，业 务人员要继续在表 t 上执行两条插入语句的命令，依次是:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">insert into t(c) values(4);</span><br><span class="line">insert into t(c) values(5);</span><br></pre></td></tr></table></figure>
+
+<p>假设，现在主库上其他的数据表有大量的更新，导致主备延迟达到 5 秒。在插入一条 c=4 的语句后，发起了主备切换。</p>
+<p>下图是 <strong> 可用性优先策略，且 binlog_format=mixed</strong>时的切换流程和数据结果。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210828172650nD8oBJ.png" alt="20210828172650nD8oBJ"></p>
+<p>这个切换流程:</p>
+<ol>
+<li>步骤 2 中，主库 A 执行完 insert 语句，插入了一行数据(4,4)，之后开始进行主备切 换。</li>
+<li>步骤 3 中，由于主备之间有 5 秒的延迟，所以备库 B 还没来得及应用“插入 c=4”这个 中转日志，就开始接收客户端“插入 c=5”的命令。</li>
+<li>步骤 4 中，备库 B 插入了一行数据(4,5)，并且把这个 binlog 发给主库 A。</li>
+<li>步骤 5 中，备库 B 执行“插入 c=4”这个中转日志，插入了一行数据(5,4)。而直接在备库 B 执行的“插入 c=5”这个语句，传到主库 A，就插入了一行新数据(5,5)。</li>
+</ol>
+<p>最后的结果就是，主库 A 和备库 B 上出现了两行不一致的数据。</p>
+<p><strong>设置 binlog_format=row，情况又会怎样呢</strong>?</p>
+<p>因为 row 格式在记录 binlog 的时候，会记录新插入的行的所有字段值，所以最后只会有一行不一致。而且，两边的主备同步的应用线程会报错 duplicate key error 并停止。也就 是说，这种情况下，备库 B 的 (5,4) 和主库 A 的 (5,5) 这两行数据，都不会被对方执行。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210828173111lLJFRk.png" alt="20210828173111lLJFRk"></p>
+<p>从上面的分析中，你可以看到一些结论:</p>
+<ol>
+<li><p>使用 row 格式的 binlog 时，数据不一致的问题更容易被发现。而使用 mixed 或者 statement 格式的 binlog 时，数据很可能悄悄地就不一致了。如果你过了很久才发现数据不一致的问题，很可能这时的数据不一致已经不可查，或连带造成了更多的数据逻辑不一致。</p>
+</li>
+<li><p>主备切换的可用性优先策略会导致数据不一致。因此，大多数情况下，我都建议你使用可靠性优先策略。毕竟对数据服务来说的话，数据的可靠性一般还是要优于可用性的。</p>
+</li>
+</ol>
+<h1 id="备库并行复制能力"><a href="# 备库并行复制能力" class="headerlink" title="备库并行复制能力"></a>备库并行复制能力 </h1><p> 在官方的 5.6 版本之前，MySQL 只支持单线程复制，由此在主库并发高、TPS 高时就会出现严重的主备延迟问题。</p>
+<p>从单线程复制到最新版本的多线程复制，中间的演化经历了好几个版本。所有的多线程复制机制，都是把只有一个线程的 sql_thread，拆成 多个线程，也就是都符合下面的这个模型。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210828173644kIlxkL.png" alt="20210828173644kIlxkL"></p>
+<p><strong>coordinator</strong> 就是原来的 sql_thread, 不过现在它不再直接更新数据了，只负责读 取中转日志和分发事务。真正更新日志的，变成了 worker 线程。而 work 线程的个数，就是由参数 slave_parallel_workers 决定的。根据我的经验，把这个值设置为 8~16 之间最好(32 核物理机的情况)，毕竟备库还有可能要提供读查询，不能把 CPU 都吃光了。</p>
+<p>接下来，你需要先思考一个问题：<strong>事务能不能按照轮询的方式分发给各个 worker，也就是第一个事务分给 worker_1，第二个事务发给 worker_2 呢</strong>?</p>
+<p>其实是不行的。因为，事务被分发给 worker 以后，不同的 worker 就独立执行了。但是， 由于 CPU 的调度策略，很可能第二个事务最终比第一个事务先执行。而如果这时候刚好这 两个事务更新的是同一行，也就意味着，同一行上的两个事务，在主库和备库上的执行顺序 相反，会导致主备不一致的问题。</p>
+<p>请你再设想一下另外一个问题：<strong>同一个事务的多个更新语句，能不能分给不同的 worker 来执行呢</strong>?</p>
+<p>答案是，也不行。举个例子，一个事务更新了表 t1 和表 t2 中的各一行，如果这两条更新语句被分到不同 worker 的话，虽然最终的结果是主备一致的，但如果表 t1 执行完成的瞬 间，备库上有一个查询，就会看到这个事务“更新了一半的结果”，破坏了事务逻辑的隔离性。</p>
+<p>所以，<strong>coordinator 在分发的时候，需要满足以下这两个基本要求</strong>:</p>
+<ol>
+<li>不能造成更新覆盖。这就要求更新同一行的两个事务，必须被分发到同一个 worker 中。</li>
+<li>同一个事务不能被拆开，必须放到同一个 worker 中。</li>
+</ol>
+<p>各个版本的多线程复制，都遵循了这两条基本原则。</p>
+<h2 id="MySQL-5-5 版本的并行复制策略"><a href="#MySQL-5-5 版本的并行复制策略" class="headerlink" title="MySQL 5.5 版本的并行复制策略"></a>MySQL 5.5 版本的并行复制策略 </h2><p> 官方 MySQL 5.5 版本是不支持并行复制的，可以通过按表分表策略和按行分发策略实现并行复制。</p>
+<h3 id="按表分发策略"><a href="# 按表分发策略" class="headerlink" title="按表分发策略"></a>按表分发策略 </h3><p><strong> 按表分发事务的基本思路 </strong> 是，如果两个事务更新不同的表，它们就可以并行。因为数据是存储在表里的，所以按表分发，可以保证两个 worker 不会更新同一行。当然，如果有跨表的事务，还是要把两张表放在一起考虑的。</p>
+<p>如下图所示，就是按表分发的规则。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/2021082817481408KOrj.png" alt="2021082817481408KOrj"></p>
+<p>每个 worker 线程对应一个 hash 表，用于保存当前正在这个 worker 的“执行队列”里的事务所涉及的表。hash 表的 key 是“库名. 表名”，value 是一个数字，表示队列中有多少个事务修改这个表。</p>
+<p>当有事务分配给 worker 时，事务里面涉及的表会被加到对应的 hash 表中。worker 执行完成后，这个表会被从 hash 表中去掉。</p>
+<blockquote>
+<p>图中，hash_table_1 表示，现在 worker_1 的“待执行事务队列”里，有 4 个事务涉及 到 db1.t1 表，有 1 个事务涉及到 db2.t2 表;hash_table_2 表示，现在 worker_2 中有一 个事务会更新到表 t3 的数据。</p>
+</blockquote>
+<p>假设在图中的情况下，coordinator 从中转日志中读入一个新事务 T，这个事务修改的行涉及到表 t1 和 t3。事务 T 的分配流程如下：</p>
+<ol>
+<li>由于事务 T 中涉及修改表 t1，而 worker_1 队列中有事务在修改表 t1，事务 T 和队列中的某个事务要修改同一个表的数据，这种情况我们说事务 T 和 worker_1 是冲突的。</li>
+<li>按照这个逻辑，顺序判断事务 T 和每个 worker 队列的冲突关系，会发现事务 T 跟 worker_2 也冲突。</li>
+<li>事务 T 跟多于一个 worker 冲突，coordinator 线程就进入等待。</li>
+<li>每个 worker 继续执行，同时修改 hash_table。假设 hash_table_2 里面涉及到修改表 t3 的事务先执行完成，就会从 hash_table_2 中把 db1.t3 这一项去掉。</li>
+<li>这样 coordinator 会发现跟事务 T 冲突的 worker 只有 worker_1 了，因此就把它分配给 worker_1。</li>
+<li>coordinator 继续读下一个中转日志，继续分配事务。</li>
+</ol>
+<p>也就是说，每个事务在分发的时候，跟所有 worker 的冲突关系包括以下三种情况:</p>
+<ol>
+<li>如果跟所有 worker 都不冲突，coordinator 线程就会把这个事务分配给最空闲的 woker;</li>
+<li>如果跟多于一个 worker 冲突，coordinator 线程就进入等待状态，直到和这个事务存在 冲突关系的 worker 只剩下 1 个;</li>
+<li>如果只跟一个 worker 冲突，coordinator 线程就会把这个事务分配给这个存在冲突关系的 worker。</li>
+</ol>
+<p>这个按表分发的方案，在多个表负载均匀的场景里应用效果很好。但是，如果碰到热点表， 比如所有的更新事务都会涉及到某一个表的时候，所有事务都会被分配到同一个 worker 中，就变成单线程复制了。</p>
+<h3 id="按行分发策略"><a href="# 按行分发策略" class="headerlink" title="按行分发策略"></a><strong>按行分发策略 </strong></h3><p> 要解决热点表的并行复制问题，就需要一个按行并行复制的方案。按行复制的核心思路是: 如果两个事务没有更新相同的行，它们在备库上可以并行执行。显然，这个模式要求 binlog 格式必须是 row。</p>
+<p>这时候判断一个事务 T 和 worker 是否冲突，用的就规则就不是“修改同一个 表”，而是“修改同一行”。按行复制和按表复制的数据结构差不多，也是为每个 worker，分配一个 hash 表。只是要 实现按行分发，这时候的 key，就必须是“库名 + 表名 + 唯一键的值”。</p>
+<p><strong>唯一键”只有主键 id 还是不够的</strong>，考虑下面这种场景，表 t1 中 除了主键，还有唯一索引 a：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE &#96;t1&#96; (</span><br><span class="line">	&#96;id&#96; int(11) NOT NULL,</span><br><span class="line">	&#96;b&#96; int(11) DEFAULT NULL,</span><br><span class="line">	PRIMARY KEY (&#96;id&#96;),</span><br><span class="line">	UNIQUE KEY &#96;a&#96; (&#96;a&#96;)</span><br><span class="line">) ENGINE&#x3D;InnoDB;</span><br><span class="line"></span><br><span class="line">insert into t1 values(1,1,1),(2,2,2),(3,3,3),(4,4,4),(5,5,5)</span><br></pre></td></tr></table></figure>
+
+<p>假设，接下来要在主库执行这两个事务:</p>
+<table>
+<thead>
+<tr>
+<th>session A</th>
+<th>session B</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>update t1 set a = 6 where id = 1;</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>update t1 set a =  1 where id = 2;</td>
+</tr>
+</tbody></table>
+<p>可以看到，这两个事务要更新的行的主键值不同，但是如果它们被分到不同的 worker，就 有可能 session B 的语句先执行。这时候 id=1 的行的 a 的值还是 1，就会报唯一键冲突。</p>
+<p>因此基于行的策略，事务 hash 表中还需要考虑唯一键，即 key 应该是“库名 + 表名 + 索引 a 的名字 +a 的值”。比如，在上面这个例子中，要在表 t1 上执行 <code>update t1 set a=1 where id=2</code> 语句，在 binlog 里面记录了整行的数据修改前各个字段的值，和修改后各个字段的值。</p>
+<p>因此，coordinator 在解析这个语句的 binlog 的时候，这个事务的 hash 表就有三个项:</p>
+<ol>
+<li>key=hash_func(db1+t1+“PRIMARY”+2), value=2; 这里 value=2 是因为修改前后 的行 id 值不变，出现了两次。</li>
+<li>key=hash_func(db1+t1+“a”+2), value=1，表示会影响到这个表 a=2 的行。</li>
+<li>key=hash_func(db1+t1+“a”+1), value=1，表示会影响到这个表 a=1 的行。</li>
+</ol>
+<p>可见，<strong>相比于按表并行分发策略，按行并行策略在决定线程分发的时候，需要消耗更多的计算资源。</strong></p>
+<p>这两个方案其实都有一些约束条件:</p>
+<ol>
+<li><p>要能够从 binlog 里面解析出表名、主键值和唯一索引的值。也就是说，主库的 binlog 格式必须是 row;</p>
+</li>
+<li><p>表必须有主键;</p>
+</li>
+<li><p>不能有外键。表上如果有外键，级联更新的行不会记录在 binlog 中，这样冲突检测就不</p>
+<p>准确。</p>
+</li>
+</ol>
+<p>但这三条约束规则，本来就是 DBA 之前要求业务开发人员必须遵守的线上使用规范。</p>
+<p>对比按表分发和按行分发这两个方案的话，按行分发策略的并行度更高。不过，如果是要操作很多行的大事务的话，按行分发的策略有两个问题:</p>
+<ol>
+<li>耗费内存。比如一个语句要删除 100 万行数据，这时候 hash 表就要记录 100 万个项。 </li>
+<li>耗费 CPU。解析 binlog，然后计算 hash 值，对于大事务，这个成本还是很高的。</li>
+</ol>
+<p>所以，在实现这个策略的时候会设置一个阈值，单个事务如果超过设置的行数阈值(比如，如果单个事务更新的行数超过 10 万行)，就暂时退化为单线程模式，退化过程的逻辑大概是这样的:</p>
+<ol>
+<li>coordinator 暂时先 hold 住这个事务;</li>
+<li>等待所有 worker 都执行完成，变成空队列; </li>
+<li>coordinator 直接执行这个事务;</li>
+<li>恢复并行模式。</li>
+</ol>
+<h2 id="MySQL-5-6- 版本的并行复制策略"><a href="#MySQL-5-6- 版本的并行复制策略" class="headerlink" title="MySQL 5.6 版本的并行复制策略"></a><strong>MySQL 5.6</strong> <strong>版本的并行复制策略 </strong></h2><p><strong> 官方 MySQL5.6 版本，支持了并行复制，只是支持的粒度是按库并行</strong>。理解按表分发策略和按行分发策略，就理解了用于决定分发策略的 hash 表里，key 就是数据库名。</p>
+<p>这个策略的并行效果，取决于压力模型。如果在主库上有多个 DB，并且各个 DB 的压力均 衡，使用这个策略的效果会很好。</p>
+<p>相比于按表和按行分发，这个策略有两个优势:</p>
+<ol>
+<li>构造 hash 值的时候很快，只需要库名; 而且一个实例上 DB 数也不会很多，不会出现需 要构造 100 万个项这种情况。</li>
+<li>不要求 binlog 的格式。因为 statement 格式的 binlog 也可以很容易拿到库名。</li>
+</ol>
+<p>但是，如果你的主库上的表都放在同一个 DB 里面，这个策略就没有效果了；或者如果不同 DB 的热点不同，比如一个是业务逻辑库，一个是系统配置库，那也起不到并行的效果。</p>
+<h2 id="MariaDB 的并行复制策略"><a href="#MariaDB 的并行复制策略" class="headerlink" title="MariaDB 的并行复制策略"></a>MariaDB 的并行复制策略 </h2><p>MariaDB 的并行复制策略利用<strong>redo log 组提交（group commit）优化</strong> 这一特性：</p>
+<ol>
+<li>能够在同一组里提交的事务，一定不会修改同一行;</li>
+<li>主库上可以并行执行的事务，备库上也一定是可以并行执行的。</li>
+</ol>
+<p>在实现上，MariaDB 是这么做的:</p>
+<ol>
+<li>在一组里面一起提交的事务，有一个相同的 commit_id，下一组就是 commit_id+1; </li>
+<li>commit_id 直接写到 binlog 里面;</li>
+<li>传到备库应用的时候，相同 commit_id 的事务分发到多个 worker 执行; </li>
+<li>这一组全部执行完成后，coordinator 再去取下一批。</li>
+</ol>
+<p>当时，这个策略出来的时候是相当惊艳的。因为，之前业界的思路都是在“分析 binlog， 并拆分到 worker”上。而 MariaDB 的这个策略，目标是“模拟主库的并行模式”。</p>
+<p>但是，这个策略有一个问题，它并没有实现“真正的模拟主库并发度”这个目标。在主库 上，一组事务在 commit 的时候，下一组事务是同时处于“执行中”状态的。</p>
+<p>如下图所示，假设了三组事务在主库的执行情况，你可以看到在 trx1、trx2 和 trx3 提交的 时候，trx4、trx5 和 trx6 是在执行的。这样，在第一组事务提交完成的时候，下一组事务很快就会进入 commit 状态。</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210828181753I3nwq5.png" alt="20210828181753I3nwq5"></p>
+<p>而按照 MariaDB 的并行复制策略，备库上的执行效果如下图所示：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/20210828181858gXsuj8.png" alt="20210828181858gXsuj8"></p>
+<p>在备库上执行的时候，要等第一组事务完全执行完成后，第二组事务才能开始执行，这样系统的吞吐量就不够。</p>
+<p>另外，这个方案很容易被大事务拖后腿。假设 trx2 是一个超大事务，那么在备库应用的时 候，trx1 和 trx3 执行完成后，就只能等 trx2 完全执行完成，下一组才能开始执行。这段时间只有一个 worker 线程在工作是对资源的浪费。</p>
+<h2 id="MySQL-5-7- 并行复制策略"><a href="#MySQL-5-7- 并行复制策略" class="headerlink" title="MySQL 5.7 并行复制策略"></a>MySQL 5.7 并行复制策略 </h2><p> 在 MariaDB 并行复制实现之后，官方的 MySQL5.7 版本也提供了类似的功能，由参数 <code>slave-parallel-type</code> 来控制并行复制策略：</p>
+<ol>
+<li>配置为 DATABASE，表示使用 MySQL 5.6 版本的按库并行策略；</li>
+<li>配置为 LOGICAL_CLOCK，表示的就是类似 MariaDB 的策略。不过，MySQL 5.7 这个策略，针对并行度做了优化。</li>
+</ol>
+<p><strong>可以先考虑这样一个问题：同时处于“执行状态”的所有事务，是不是可以并行</strong>?</p>
+<p>答案是：不能。因为可能存在由于锁冲突而处于锁等待状态的事务，如果这些事务在备库上被分配到不同的 worker，就会出现备库跟主库不一致的情况。</p>
+<p>MariaDB 这个策略的核心，是“所有处于 commit”状态的事务可以并行。 事务处于 commit 状态，表示已经通过了锁冲突的检验了。</p>
+<p>两阶段提交过程如下：</p>
+<p><img src="https://gitee.com/niumi/drawing/raw/master/202108282217411DDw9a.png" alt="202108282217411DDw9a"></p>
+<p>实际上不用等到 commit 阶段，只要能够到达 redo log prepare 阶段，就表示事务已经通 过锁冲突的检验了。</p>
+<p>因此，MySQL 5.7 并行复制策略的思想是:</p>
+<ol>
+<li>同时处于 prepare 状态的事务，在备库执行时是可以并行的;</li>
+<li>处于 prepare 状态的事务，与处于 commit 状态的事务之间，在备库执行时也是可以并行的。</li>
+</ol>
+<p><code>binlog_group_commit_sync_delay</code>和 <code>binlog_group_commit_sync_no_delay_count</code> 两个参数是用于控制 binlog 从 write 到 fsync 的时间，以此减少 binlog 的写盘次数。在 MySQL 5.7 的并行复制策略里，它们可以用来制造更多的“同时处于 prepare 阶 段的事务”。这样就增加了备库复制的并行度。</p>
+<p>也就是说，这两个参数，既可以“故意”让主库提交得慢些，又可以让备库执行得快些。在 MySQL 5.7 处理备库延迟的时候，可以考虑调整这两个参数值，来达到提升备库复制并发 度的目的。</p>
+<h2 id="MySQL-5-7-22- 并行复制策略"><a href="#MySQL-5-7-22- 并行复制策略" class="headerlink" title="MySQL 5.7.22 并行复制策略"></a><strong>MySQL 5.7.22</strong> 并行复制策略 </h2><p> 在 2018 年 4 月份发布的 MySQL 5.7.22 版本里，MySQL 增加了一个新的并行复制策略，基于 WRITESET 的并行复制。</p>
+<p>相应地，新增了一个参数 <code>binlog-transaction-dependency-tracking</code>，用来控制是否启用 这个新策略。这个参数的可选值有以下三种。</p>
+<ol>
+<li><p><strong>COMMIT_ORDER</strong>：根据同时进入 prepare 和 commit 来判断 是否可以并行的策略。</p>
+</li>
+<li><p><strong>WRITESET</strong>：表示的是对于事务涉及更新的每一行，计算出这一行的 hash 值，组成集合 writeset。如果两个事务没有操作相同的行，也就是说它们的 writeset 没有交集，就可以并行。</p>
+</li>
+<li><p><strong>WRITESET_SESSION</strong>：是在 WRITESET 的基础上多了一个约束，即在主库上同一个线程先后执行的两个事务，在备库执行的时候，要保证相同的先后顺序。</p>
+</li>
+</ol>
+<p>当然为了唯一标识，这个 hash 值是通过“库名 + 表名 + 索引名 + 值”计算出来的。如果一个表上除了有主键索引外，还有其他唯一索引，那么对于每个唯一索引，insert 语句对应 的 writeset 就要多增加一个 hash 值。</p>
+<p>跟前面介绍的基于 MySQL 5.5 版本的按行分发的策略是差不多的。不过，MySQL 官方的这个实现还是有很大的优势:</p>
+<ol>
+<li>writeset 是在主库生成后直接写入到 binlog 里面的，这样在备库执行的时候，不需要解析 binlog 内容(event 里的行数据)，节省了很多计算量;</li>
+<li>不需要把整个事务的 binlog 都扫一遍才能决定分发到哪个 worker，更省内存;</li>
+<li>由于备库的分发策略不依赖于 binlog 内容，所以 binlog 是 statement 格式也是可以的。</li>
+</ol>
+<p>因此，MySQL 5.7.22 的并行复制策略在通用性上还是有保证的。</p>
+<p>当然，对于“表上没主键”和“外键约束”的场景，WRITESET 策略也是没法并行的，也会暂时退化为单线程模型。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/22384.html" rel="prev" title="MySQL：索引">
+      <i class="fa fa-chevron-left"></i> MySQL：索引
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/10608.html" rel="next" title="微服务事务一致性解决方案">
+      微服务事务一致性解决方案 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BB%E5%A4%87%E5%90%8C%E6%AD%A5"><span class="nav-number">1.</span> <span class="nav-text">主备同步 </span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text"> 原理 </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%87%E6%8D%A2%E6%B5%81%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">切换流程 </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#binlog%20%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.3.</span> <span class="nav-text">binlog 格式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#statement%20%E5%92%8C%20row%20%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.3.1.</span> <span class="nav-text">statement 和 row 格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mixed-%20%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.3.2.</span> <span class="nav-text">mixed 格式 </span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BE%AA%E7%8E%AF%E5%A4%8D%E5%88%B6"><span class="nav-number">1.4.</span> <span class="nav-text">循环复制 </span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BB%E5%A4%87%E5%BB%B6%E8%BF%9F"><span class="nav-number">2.</span> <span class="nav-text">主备延迟 </span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">2.1.</span> <span class="nav-text"> 概述 </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E5%A4%87%E5%BB%B6%E8%BF%9F%E7%9A%84%E6%9D%A5%E6%BA%90"><span class="nav-number">2.2.</span> <span class="nav-text">主备延迟的来源 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%87%E5%BA%93%E6%89%80%E5%9C%A8%E6%9C%BA%E5%99%A8%E7%9A%84%E6%80%A7%E8%83%BD%E5%B7%AE"><span class="nav-number">2.2.1.</span> <span class="nav-text"> 备库所在机器的性能差 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%87%E5%BA%93%E7%9A%84%E5%8E%8B%E5%8A%9B%E5%A4%A7"><span class="nav-number">2.2.2.</span> <span class="nav-text">备库的压力大 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%A7%E4%BA%8B%E5%8A%A1"><span class="nav-number">2.2.3.</span> <span class="nav-text">大事务 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%87%E5%BA%93%E7%9A%84%E5%B9%B6%E8%A1%8C%E5%A4%8D%E5%88%B6%E8%83%BD%E5%8A%9B"><span class="nav-number">2.2.4.</span> <span class="nav-text">备库的并行复制能力 </span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BB%E5%A4%87%E5%88%87%E6%8D%A2%E7%AD%96%E7%95%A5"><span class="nav-number">3.</span> <span class="nav-text">主备切换策略 </span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AF%E9%9D%A0%E6%80%A7%E4%BC%98%E5%85%88%E7%AD%96%E7%95%A5"><span class="nav-number">3.1.</span> <span class="nav-text">可靠性优先策略 </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AF%E7%94%A8%E6%80%A7%E4%BC%98%E5%85%88%E7%AD%96%E7%95%A5"><span class="nav-number">3.2.</span> <span class="nav-text">可用性优先策略 </span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%87%E5%BA%93%E5%B9%B6%E8%A1%8C%E5%A4%8D%E5%88%B6%E8%83%BD%E5%8A%9B"><span class="nav-number">4.</span> <span class="nav-text">备库并行复制能力 </span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL-5-5%20%E7%89%88%E6%9C%AC%E7%9A%84%E5%B9%B6%E8%A1%8C%E5%A4%8D%E5%88%B6%E7%AD%96%E7%95%A5"><span class="nav-number">4.1.</span> <span class="nav-text">MySQL 5.5 版本的并行复制策略 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%89%E8%A1%A8%E5%88%86%E5%8F%91%E7%AD%96%E7%95%A5"><span class="nav-number">4.1.1.</span> <span class="nav-text">按表分发策略 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%89%E8%A1%8C%E5%88%86%E5%8F%91%E7%AD%96%E7%95%A5"><span class="nav-number">4.1.2.</span> <span class="nav-text">按行分发策略 </span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL-5-6-%20%E7%89%88%E6%9C%AC%E7%9A%84%E5%B9%B6%E8%A1%8C%E5%A4%8D%E5%88%B6%E7%AD%96%E7%95%A5"><span class="nav-number">4.2.</span> <span class="nav-text">MySQL 5.6 版本的并行复制策略 </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MariaDB%20%E7%9A%84%E5%B9%B6%E8%A1%8C%E5%A4%8D%E5%88%B6%E7%AD%96%E7%95%A5"><span class="nav-number">4.3.</span> <span class="nav-text">MariaDB 的并行复制策略 </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL-5-7-%20%E5%B9%B6%E8%A1%8C%E5%A4%8D%E5%88%B6%E7%AD%96%E7%95%A5"><span class="nav-number">4.4.</span> <span class="nav-text">MySQL 5.7 并行复制策略 </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL-5-7-22-%20%E5%B9%B6%E8%A1%8C%E5%A4%8D%E5%88%B6%E7%AD%96%E7%95%A5"><span class="nav-number">4.5.</span> <span class="nav-text">MySQL 5.7.22 并行复制策略 </span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="牛觅"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">牛觅</p>
+  <div class="site-description" itemprop="description">温故知新</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">78</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">牛觅</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div id="pjax">
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '62cfcbc7db15e27893d3',
+      clientSecret: '400600f9989ca757a302e19a03f2c05129c74496',
+      repo        : 'blockmao.github.io',
+      owner       : 'blockmao',
+      admin       : ['blockmao'],
+      id          : '67dab0c061ada3172c44eceee97fab0f',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+    </div>
+</body>
+</html>

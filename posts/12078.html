@@ -37,7 +37,7 @@
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/202106061104002xRASq.jpg">
 <meta property="og:image" content="https://gitee.com/niumi/drawing/raw/master/20210606110502jmV0GZ.jpg">
 <meta property="article:published_time" content="2021-06-06T03:08:19.000Z">
-<meta property="article:modified_time" content="2021-06-06T03:13:26.216Z">
+<meta property="article:modified_time" content="2021-09-05T02:59:46.238Z">
 <meta property="article:author" content="牛觅">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cdn.pixabay.com/photo/2020/02/06/16/00/forest-4824761_960_720.png">
@@ -201,10 +201,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-06-06 11:08:19 / 修改时间：11:13:26" itemprop="dateCreated datePublished" datetime="2021-06-06T11:08:19+08:00">2021-06-06</time>
+              <time title="创建时间：2021-06-06 11:08:19" itemprop="dateCreated datePublished" datetime="2021-06-06T11:08:19+08:00">2021-06-06</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-09-05 10:59:46" itemprop="dateModified" datetime="2021-09-05T10:59:46+08:00">2021-09-05</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -276,7 +282,8 @@
 <p>在 MySQL 事务中，锁的实现与隔离级别有关系，在 RR（Repeatable Read）隔离级别下，MySQL 为了解决幻读的问题，以牺牲并行度为代价，通过 Gap 锁来防止数据的写入，而这种锁，因为其并行度不够，冲突很多，经常会引起死锁。</p>
 <p>现在流行的 Row 模式可以避免很多冲突甚至死锁问题，所以推荐默认使用 Row + RC（Read Committed）模式的隔离级别，可以很大程度上提高数据库的读写并行度。</p>
 <h2 id="多版本控制 -MVCC"><a href="# 多版本控制 -MVCC" class="headerlink" title="多版本控制 -MVCC"></a>多版本控制 -MVCC</h2><p>多版本控制也叫作 MVCC，是指在数据库中，为了实现高并发的数据访问，对数据进行多版本处理，并通过事务的可见性来保证事务能看到自己应该看到的数据版本。</p>
-<p>那个多版本是如何生成的呢？每一次对数据库的修改，都会在 Undo 日志中记录当前修改记录的事务号及修改前数据状态的存储地址（即 ROLL_PTR），以便在必要的时候可以回滚到老的数据版本。例如，一个读事务查询到当前记录，而最新的事务还未提交，根据原子性，读事务看不到最新数据，但可以去回滚段中找到老版本的数据，这样就生成了多个版本。</p>
+<p><strong>那个多版本是如何生成的呢</strong>？</p>
+<p>每一次对数据库的修改，都会在 Undo 日志中记录当前修改记录的事务号及修改前数据状态的存储地址（即 ROLL_PTR），以便在必要的时候可以回滚到老的数据版本。例如，一个读事务查询到当前记录，而最新的事务还未提交，根据原子性，读事务看不到最新数据，但可以去回滚段中找到老版本的数据，这样就生成了多个版本。</p>
 <p>多版本控制很巧妙地将稀缺资源的独占互斥转换为并发，大大提高了数据库的吞吐量及读写性能。</p>
 <h1 id="MVCC 实现原理"><a href="#MVCC 实现原理" class="headerlink" title="MVCC 实现原理"></a>MVCC 实现原理</h1><p>MySQL InnoDB 存储引擎，实现的是基于多版本的并发控制协议——MVCC，而不是基于锁的并发控制。</p>
 <p>MVCC 最大的好处是读不加锁，读写不冲突。在读多写少的 OLTP（On-Line Transaction Processing）应用中，读写不冲突是非常重要的，极大的提高了系统的并发性能，这也是为什么现阶段几乎所有的 RDBMS（Relational Database Management System），都支持 MVCC 的原因。</p>
@@ -287,7 +294,7 @@
 <li><p><strong>当前读</strong>：读取的是记录的最新版本，并且当前读返回的记录，都会加锁，保证其他事务不会再并发修改这条记录。 </p>
 </li>
 </ul>
-<p>== 注意：MVCC 只在 Read Commited 和 Repeatable Read 两种隔离级别下工作。==</p>
+<p><strong>注意：MVCC 只在 Read Commited 和 Repeatable Read 两种隔离级别下工作</strong>。</p>
 <p>如何区分快照读和当前读呢？ 可以简单的理解为：</p>
 <ul>
 <li><p><strong>快照读</strong>：简单的 select 操作，属于快照读，不需要加锁。 </p>
@@ -330,10 +337,13 @@
 </li>
 </ol>
 <h1 id="并发事务问题及解决方案"><a href="# 并发事务问题及解决方案" class="headerlink" title="并发事务问题及解决方案"></a>并发事务问题及解决方案 </h1><h2 id="并发事务问题"><a href="# 并发事务问题" class="headerlink" title="并发事务问题"></a> 并发事务问题 </h2><h3 id="脏读"><a href="# 脏读" class="headerlink" title="脏读"></a> 脏读 </h3><p> 一个事务正在对一条记录做修改，在这个事务完成并提交前，这条记录的数据就处于不一致状态；这时，另一个事务也来读取同一条记录，如果不加控制，第二个事务读取了这些“脏”数据，并据此做进一步的处理，就会产生未提交的数据依赖关系。这种现象被形象的叫作”脏读”（Dirty Reads）。</p>
-<h3 id="不可重复读"><a href="# 不可重复读" class="headerlink" title="不可重复读"></a>不可重复读 </h3><p> 一个事务在读取某些数据后的某个时间，再次读取以前读过的数据，却发现其 == 读出的数据已经发生了改变、或某些记录已经被删除了 ==！这种现象就叫作“ 不可重复读”（Non-Repeatable Reads）。</p>
+<h3 id="不可重复读"><a href="# 不可重复读" class="headerlink" title="不可重复读"></a>不可重复读 </h3><p> 一个事务在读取某些数据后的某个时间，再次读取以前读过的数据，<strong>却发现其读出的数据已经发生了改变、或某些记录已经被删除了</strong>！这种现象就叫作“ 不可重复读”（Non-Repeatable Reads）。</p>
 <h3 id="幻读"><a href="# 幻读" class="headerlink" title="幻读"></a>幻读 </h3><p> 一个事务按相同的查询条件重新读取以前检索过的数据，却发现其他事务插入了满足其查询条件的新数据，这种现象就称为“幻读”（Phantom Reads）。</p>
-<h2 id="解决方案"><a href="# 解决方案" class="headerlink" title="解决方案"></a>解决方案 </h2><p> 产生的这些问题，MySQL 数据库是通过事务隔离级别来解决的。要求大家能够记住这种关系的矩阵表；记住各种事务隔离级别及各自都解决了什么问题，如下图所示。</p>
+<h2 id="解决方案"><a href="# 解决方案" class="headerlink" title="解决方案"></a>解决方案 </h2><p> 产生的这些问题，MySQL 数据库是通过事务隔离级别来解决的。要求大家能够记住这种关系的矩阵表，记住各种事务隔离级别及各自都解决了什么问题，如下图所示。</p>
 <p><img src="https://gitee.com/niumi/drawing/raw/master/20210606104641Vsjz90.jpg" alt="20210606104641Vsjz90"></p>
+<blockquote>
+<p>查看默认隔离级别：<code>SHOW VARIABLES LIKE &quot;tx_isolation&quot;;</code></p>
+</blockquote>
 <h1 id="锁"><a href="# 锁" class="headerlink" title="锁"></a>锁 </h1><h2 id="概述 -1"><a href="# 概述 -1" class="headerlink" title="概述"></a> 概述 </h2><h3 id="MySQL 锁分类"><a href="#MySQL 锁分类" class="headerlink" title="MySQL 锁分类"></a>MySQL 锁分类</h3><p> 在 MySQL 中有三种级别的锁：页级锁、表级锁、行级锁。</p>
 <ul>
 <li><p>表级锁：开销小，加锁快；不会出现死锁；锁定粒度大，发生锁冲突的概率最高，并发度最低。 会发生在：MyISAM、memory、InnoDB、BDB 等存储引擎中。</p>
@@ -539,7 +549,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">77</span>
+          <span class="site-state-item-count">78</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
